@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	testFunction()
+	//testFunction()
 	fileServer := http.FileServer(http.Dir("./static")) // New code
 	http.Handle("/", fileServer)
 	http.HandleFunc("/getRoom", GetRoom)
