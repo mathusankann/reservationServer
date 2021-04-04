@@ -61,7 +61,7 @@ function addButton() {
 
 function createRoom() {
     let api, i, len, method, params, ref, urls;
-    api = new BigBlueButtonApi("https://kon.jitsi-mathu.de/bigbluebutton/api/", "t3NCZ1tQCGvRxQweCO1etI8H22bRunC4it0cVGs7");
+    api = new BigBlueButtonApi("https://kon.jitsi-mathu.de/bigbluebutton/api/", "zLY4hvAAQTrBpMVNhGCM84ZlQl03A14sGjVHJPKT");
     //todo shared secret request
     const username = document.getElementById("name").value
     // A hash of parameters.

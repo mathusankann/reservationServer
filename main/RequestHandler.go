@@ -2,25 +2,16 @@ package main
 
 import (
 	"../room"
+	"crypto/tls"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	_ "go/ast"
-	"io/ioutil"
+	gomail "gopkg.in/mail.v2"
 	"log"
 	"net/http"
-	"os"
 )
-
-type Rooms struct {
-	Roompath string `json:"roompath"`
-}
-
-const PATHSTOROOM = "./UserJsons/"
-
-func GetRoomID() {
-
-}
 
 func GetVideoBridge() {
 
@@ -34,7 +25,36 @@ func editRoom() {
 
 }
 
-func sendInvitation() {
+func sendInvitation(w http.ResponseWriter, r *http.Request) {
+
+	m := gomail.NewMessage()
+
+	// Set E-Mail sender
+	m.SetHeader("From", "mathusan13@live.de")
+
+	// Set E-Mail receivers
+	m.SetHeader("To", "mathusankannathasan@gmail.de")
+
+	// Set E-Mail subject
+	m.SetHeader("Subject", "Gomail test subject")
+
+	// Set E-Mail body. You can set plain text or html with text/html
+	m.SetBody("text/plain", "This is Gomail test body")
+
+	// Settings for SMTP server
+	d := gomail.NewDialer("smtp.office365.com", 587, "mathusan13@live.de", "")
+
+	// This is only needed when SSL/TLS certificate is not valid on server.
+	// In production this should be set to false.
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+
+	// Now send E-Mail
+	if err := d.DialAndSend(m); err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	return
 
 }
 
@@ -48,31 +68,63 @@ func GetRoom(w http.ResponseWriter, r *http.Request) {
 		log.Println("Url Param 'Name' is missing")
 		return
 	}
-	path := "./UserJsons/" + keys[0] + ".json"
-	jsonFile, _ := os.Open(path)
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	defer jsonFile.Close()
+	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	queryStmt := fmt.Sprintf("Select * From room Where name= '%s'", keys[0])
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	var room2 room.Room
+	rows.Next()
+	dberr = rows.Scan(&room2.Roomid, &room2.Name, &room2.Join, &room2.Create, &room2.Invite)
+	if dberr != nil {
+		log.Println(dberr)
+	}
+	rows.Close()
+	fmt.Println(room2)
+	if !room2.Verify() {
+		http.Error(w, "Username not found", http.StatusNotFound)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(byteValue)
+	jsonFile, _ := json.Marshal(room2)
+	w.Write(jsonFile)
+
 }
 
 func GetAllRoomNames(w http.ResponseWriter, r *http.Request) {
-	jsonFile, _ := os.Open("./UserJsons/allRooms.json")
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	defer jsonFile.Close()
-	w.Header().Set("Content-Type", "application/json")
-	_, err := w.Write(byteValue)
-	if err != nil {
-		log.Println(err)
+	var listNames []string
+	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	queryStmt := fmt.Sprintf("Select name From room")
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+	for rows.Next() {
+		var name string
+		err := rows.Scan(&name)
+		if err != nil {
+			log.Println(err)
+		}
+		listNames = append(listNames, name)
+	}
+	jsonFile, _ := json.Marshal(listNames)
+	w.Write(jsonFile)
 }
 
 func startConf(w http.ResponseWriter, r *http.Request) {
-	var test string
-	_ = json.NewDecoder(r.Body).Decode(&test)
+	var link string
+	_ = json.NewDecoder(r.Body).Decode(&link)
 	//fmt.Println(test)
-	resp, err := http.Get(test)
+	resp, err := http.Get(link)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
 	}
@@ -83,67 +135,37 @@ func startConf(w http.ResponseWriter, r *http.Request) {
 func CreateRoom(w http.ResponseWriter, r *http.Request) {
 	var croom room.Room
 	err := json.NewDecoder(r.Body).Decode(&croom)
-	path := "./UserJsons/" + croom.Name + ".json"
-	jsonFile, openerr := os.Open(path)
-	defer jsonFile.Close()
-	if openerr == nil {
-		http.Error(w, "Username existing already", http.StatusFailedDependency)
+	log.Println(croom)
+	if err != nil {
+		log.Println(err)
+	}
+	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	queryStmt := fmt.Sprintf("Select name From room Where name= '%s'", croom.Name)
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+
+	}
+	rows.Close()
+	if rows.Next() {
+		http.Error(w, "Username already exists", http.StatusBadRequest)
 		return
 	}
+	//transaction
+	sqlStmt := fmt.Sprintf(`INSERT INTO room(name,"join","create","invite")VALUES(?,?,?,?)`)
 
+	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		log.Fatalln(err.Error())
 	}
-	if !croom.Verify() {
-		http.Error(w, "Missing data ", http.StatusFailedDependency)
-		return
-	}
-	//log.Println(croom)
-	path = "./UserJsons/" + croom.Name + ".json"
-	roomJson, _ := json.Marshal(croom)
-	err = ioutil.WriteFile(path, roomJson, 0644)
-	appendRoom(croom.Name)
-}
-
-func appendRoom(path string) {
-	if _, err := os.Stat("./UserJsons/allRooms.json"); err == nil {
-		log.Println("true")
-		var rooms []Rooms
-		jsonFile, _ := os.Open("./UserJsons/allRooms.json")
-		byteValue, _ := ioutil.ReadAll(jsonFile)
-		err := json.Unmarshal(byteValue, &rooms)
-		if err != nil {
-			log.Println(err)
-		}
-		defer jsonFile.Close()
-		var newRoom Rooms
-		newRoom.Roompath = path
-		rooms = append(rooms, newRoom)
-		roomJson, _ := json.Marshal(rooms)
-		err = ioutil.WriteFile("./UserJsons/allRooms.json", roomJson, 0644)
-	} else if os.IsNotExist(err) {
-		log.Println("false")
-		var rooms []Rooms
-		var newRoom Rooms
-		newRoom.Roompath = path
-		rooms = append(rooms, newRoom)
-		roomJson, _ := json.Marshal(rooms)
-		err = ioutil.WriteFile("./UserJsons/allRooms.json", roomJson, 0644)
-
-	}
-
-}
-func testFunction() {
-	db, err := sql.Open("sqlite3", "simple.sqlite")
+	_, err = statement.Exec(croom.Name, croom.Join, croom.Create, croom.Invite)
 	if err != nil {
-		log.Panic(err)
+		log.Fatalln(err.Error())
 	}
-
-	sqlStmt := "CREATE TABLE data (id TEXT not null primary key, content TEXT);"
-	_, err = db.Exec(sqlStmt)
-	if err != nil {
-		log.Panic(err)
-	}
+	statement.Close()
+	w.Write([]byte("ok"))
 
 }
