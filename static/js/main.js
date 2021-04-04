@@ -10,7 +10,7 @@ function init(rooms){
     if(rooms!==null) {
         for (let i = 0; i < rooms.length; i++) {
             const roomdiv = document.createElement("div")
-            roomdiv.id = ("room" + i);
+            roomdiv.id = ("structs" + i);
             roomdiv.appendChild(document.createElement("br"))
             roomdiv.className = "rooms"
             roomdiv.innerText = rooms[i].roompath;

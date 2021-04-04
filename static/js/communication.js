@@ -9,6 +9,28 @@ class Room {
     }
 }
 
+class User {
+    constructor(name,passwort,role) {
+        this.name=name;
+        this.password=passwort;
+        this.role =role;
+    }
+
+}
+
+class Meeting {
+    constructor(time_start,time_end,roomid,reminder,mail) {
+        this.time_start=time_start;
+        this.time_end=time_end;
+        this.roomid = roomid;
+        this.reminder = reminder;
+        this.mail= mail;
+    }
+
+}
+
+let user = new User("mathusan","","admin")
+let meeting = new Meeting("2007-01-01 10:00:00","2007-01-01 10:00:00",1,0,"mathusan13@live,de")
 
 function createAjaxRequest(){
     let request;
@@ -34,6 +56,52 @@ function sendRoomPost(data){
     request.open("POST","http://localhost:8080/createRoom",true);
     request.send(data);
 }
+
+function sendMeetingPost(data){
+    const request = createAjaxRequest();
+    request.onreadystatechange = function () {
+        if(4 === this.readyState){
+            if(200 === this.status){
+                location.reload();
+            }else{
+                console.log(this.status + ":" + this.responseText);
+            }
+        }
+    }
+    request.open("POST","http://localhost:8080/setMeeting",true);
+    request.send(JSON.stringify(meeting));
+}
+
+function getUserAuthentication(data){
+    const request = createAjaxRequest();
+    request.onreadystatechange = function () {
+        if(4 === this.readyState){
+            if(200 === this.status){
+                console.log(this.responseText)
+            }else{
+                console.log(this.status + ":" + this.responseText);
+            }
+        }
+    }
+    request.open("POST","http://localhost:8080/getUserAuthentication",true);
+    request.send(data);
+}
+
+function sendUserPost(data){
+    const request = createAjaxRequest();
+    request.onreadystatechange = function () {
+        if(4 === this.readyState){
+            if(200 === this.status){
+                console.log(this.responseText)
+            }else{
+                console.log(this.status + ":" + this.responseText);
+            }
+        }
+    }
+    request.open("POST","http://localhost:8080/addUser",true);
+    request.send(data);
+}
+
 
 function startRoomPost(createRoom) {
     const request = createAjaxRequest();

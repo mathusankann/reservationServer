@@ -1,7 +1,7 @@
 package main
 
 import (
-	"../room"
+	"../structs"
 	"crypto/tls"
 	"database/sql"
 	"encoding/json"
@@ -25,41 +25,124 @@ func editRoom() {
 
 }
 
-func sendInvitation(w http.ResponseWriter, r *http.Request) {
-
-	m := gomail.NewMessage()
-
-	// Set E-Mail sender
-	m.SetHeader("From", "mathusan13@live.de")
-
-	// Set E-Mail receivers
-	m.SetHeader("To", "mathusankannathasan@gmail.de")
-
-	// Set E-Mail subject
-	m.SetHeader("Subject", "Gomail test subject")
-
-	// Set E-Mail body. You can set plain text or html with text/html
-	m.SetBody("text/plain", "This is Gomail test body")
-
-	// Settings for SMTP server
-	d := gomail.NewDialer("smtp.office365.com", 587, "mathusan13@live.de", "")
-
-	// This is only needed when SSL/TLS certificate is not valid on server.
-	// In production this should be set to false.
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-
-	// Now send E-Mail
-	if err := d.DialAndSend(m); err != nil {
-		fmt.Println(err)
-		panic(err)
+func setMeeting(w http.ResponseWriter, r *http.Request) {
+	var incMeeting structs.Meeting
+	err := json.NewDecoder(r.Body).Decode(&incMeeting)
+	if err != nil {
+		log.Println(err)
 	}
+	//todo check if dates already in DB
+	if getRoomByID(incMeeting.Roomid).Verify() {
+		http.Error(w, "Room does not exists", http.StatusBadRequest)
+		return
+	}
+	//transaction
+	db, err := sql.Open("sqlite3", "User.sqlite")
+	sqlStmt := fmt.Sprintf(`INSERT INTO meeting("meeting_date_start","meeting_date_end","roomid","mail","reminder")VALUES(?,?,?,?,?)`)
+	statement, err := db.Prepare(sqlStmt)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = statement.Exec(incMeeting.MeetingDateStart, incMeeting.MeetingDateEnd, incMeeting.Roomid, incMeeting.Mail, incMeeting.Reminder)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	statement.Close()
+	w.Write([]byte("ok"))
 
-	return
+}
+
+func deleteMeeting(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 
 }
 
 func getSharedSecret() {
 
+}
+
+func getUserAuthentication(w http.ResponseWriter, r *http.Request) {
+	var incUser structs.User
+	var dbUser structs.User
+	err := json.NewDecoder(r.Body).Decode(&incUser)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println(incUser.Password)
+	dbUser = getUser(incUser.Name)
+	if !dbUser.Check() {
+		http.Error(w, "User does not exists", http.StatusBadRequest)
+		return
+	}
+
+	if dbUser.ComparePasswords(incUser.Password) {
+		w.Write([]byte("ok"))
+	} else {
+		http.Error(w, "Username or password incorrect  ", http.StatusBadRequest)
+		return
+	}
+
+}
+
+func addUser(w http.ResponseWriter, r *http.Request) {
+	var incUser structs.User
+	err := json.NewDecoder(r.Body).Decode(&incUser)
+	if err != nil {
+		log.Println(err)
+	}
+	if getUser(incUser.Name).Check() {
+		http.Error(w, "Username already exists", http.StatusBadRequest)
+		return
+	}
+	incUser.HashAndSalt([]byte(incUser.Password))
+	//transaction
+	db, err := sql.Open("sqlite3", "User.sqlite")
+	sqlStmt := fmt.Sprintf(`INSERT INTO user(name,"password","role")VALUES(?,?,?)`)
+	statement, err := db.Prepare(sqlStmt)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = statement.Exec(incUser.Name, incUser.Password, incUser.Role)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	statement.Close()
+	w.Write([]byte("ok"))
+}
+
+func sendInvitation(w http.ResponseWriter, r *http.Request) {
+	//incoming
+	//Timestamp of the meeting and Email
+	var incMessage structs.Message
+	err := json.NewDecoder(r.Body).Decode(&incMessage)
+	if err != nil {
+		log.Println(err)
+	}
+	//ro := getRoom(incMessage.User)
+	m := gomail.NewMessage()
+	// Set E-Mail sender
+	m.SetHeader("From", "mathusan13@live.de")
+	//Set E-Mail receivers
+	m.SetHeader("To", "mathusankannathasan@gmail.com")
+	// Set E-Mail subject
+	m.SetHeader("Subject", "Konferenzlink")
+	// Set E-Mail body. You can set plain text or html with text/html
+	body := fmt.Sprintf("Ihr Konferenzlink: %s \n Die Konferenz findet am %s", "ro.Invite", "incMessage.Time") //todo stornierung
+	m.SetBody("text/plain", body)
+	// Settings for SMTP server
+	d := gomail.NewDialer("smtp.office365.com", 587, "mathusan13@live.de", "M@thus4n2017")
+	// This is only needed when SSL/TLS certificate is not valid on server.
+	// In production this should be set to false.
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	// Now send E-Mail
+	if err := d.DialAndSend(m); err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+	return
 }
 
 func GetRoom(w http.ResponseWriter, r *http.Request) {
@@ -68,22 +151,8 @@ func GetRoom(w http.ResponseWriter, r *http.Request) {
 		log.Println("Url Param 'Name' is missing")
 		return
 	}
-	db, dberr := sql.Open("sqlite3", "User.sqlite")
-	if dberr != nil {
-		log.Panic(dberr)
-	}
-	queryStmt := fmt.Sprintf("Select * From room Where name= '%s'", keys[0])
-	rows, dberr := db.Query(queryStmt)
-	if dberr != nil {
-		log.Panic(dberr)
-	}
-	var room2 room.Room
-	rows.Next()
-	dberr = rows.Scan(&room2.Roomid, &room2.Name, &room2.Join, &room2.Create, &room2.Invite)
-	if dberr != nil {
-		log.Println(dberr)
-	}
-	rows.Close()
+	room2 := getRoom(keys[0])
+
 	fmt.Println(room2)
 	if !room2.Verify() {
 		http.Error(w, "Username not found", http.StatusNotFound)
@@ -133,11 +202,15 @@ func startConf(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateRoom(w http.ResponseWriter, r *http.Request) {
-	var croom room.Room
+	var croom structs.Room
 	err := json.NewDecoder(r.Body).Decode(&croom)
 	log.Println(croom)
 	if err != nil {
 		log.Println(err)
+	}
+	if croom.Verify() {
+		http.Error(w, "faulty User", http.StatusBadRequest)
+		return
 	}
 	db, dberr := sql.Open("sqlite3", "User.sqlite")
 	if dberr != nil {
@@ -168,4 +241,64 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 	statement.Close()
 	w.Write([]byte("ok"))
 
+}
+
+func getRoom(key string) structs.Room {
+	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	queryStmt := fmt.Sprintf("Select * From room Where name= '%s'", key)
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	var room2 structs.Room
+	rows.Next()
+	dberr = rows.Scan(&room2.Roomid, &room2.Name, &room2.Join, &room2.Create, &room2.Invite)
+	if dberr != nil {
+		log.Println(dberr)
+	}
+	rows.Close()
+	return room2
+}
+
+func getUser(name string) structs.User {
+	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	queryStmt := fmt.Sprintf("Select * From user Where name= '%s'", name)
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	var user2 structs.User
+	rows.Next()
+	dberr = rows.Scan(&user2.ID, &user2.Name, &user2.Password, &user2.Role)
+	if dberr != nil {
+		log.Println(dberr)
+	}
+	rows.Close()
+	return user2
+}
+
+func getRoomByID(id int) structs.Room {
+	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	queryStmt := fmt.Sprintf("Select * From room Where id= %d", id)
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	var room2 structs.Room
+	rows.Next()
+	dberr = rows.Scan(&room2.Roomid, &room2.Name, &room2.Join, &room2.Create, &room2.Invite)
+	if dberr != nil {
+		log.Println(dberr)
+	}
+	rows.Close()
+	return room2
 }
