@@ -7,5 +7,11 @@
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:C:\Users\ma2\Desktop\reservationServer\simple.sqlite</jdbc-url>
     </data-source>
+    <data-source source="LOCAL" name="User" uuid="3caa0e79-4963-4bb2-bcd9-6479eaabd7f4">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:C:\Users\ma2\Desktop\reservationServer\User.sqlite</jdbc-url>
+    </data-source>
   </component>
 </project>

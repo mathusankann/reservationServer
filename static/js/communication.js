@@ -1,14 +1,33 @@
 
 
 class Room {
-    constructor(name, roomid,join,create) {
+    constructor(name, roomid,join,create,invite) {
         this.name = name;
         this.roomid = roomid;
         this.join = join;
         this.create = create;
+        this.invite = invite
     }
 }
 
+class User {
+    constructor(name,passwort,role) {
+        this.name=name;
+        this.password=passwort;
+        this.role =role;
+    }
+
+}
+
+class Meeting {
+    constructor(time_start,time_end,roomid,reminder,mail) {
+        this.time_start=time_start;
+        this.time_end=time_end;
+        this.roomid = roomid;
+        this.reminder = reminder;
+        this.mail= mail;
+    }
+}
 
 function createAjaxRequest(){
     let request;
@@ -34,6 +53,75 @@ function sendRoomPost(data){
     request.open("POST","http://localhost:8080/createRoom",true);
     request.send(data);
 }
+
+function sendMeetingPost(data){
+    const request = createAjaxRequest();
+    request.onreadystatechange = function () {
+        if(4 === this.readyState){
+            if(200 === this.status){
+                location.reload();
+            }else{
+                console.log(this.status + ":" + this.responseText);
+            }
+        }
+    }
+    request.open("POST","http://localhost:8080/setMeeting",true);
+    request.send(data);
+}
+
+function userLogout() {
+    localStorage.clear()
+    document.getElementById("id01").style.visibility = "block";
+    document.getElementById("login_btn").style.visibility="block";
+    document.getElementById("logout_btn").style.visibility="hidden";
+
+}
+
+function getUserAuthentication(){
+    if (localStorage.getItem('sharedSecre')==null) {
+        let user = new User(document.getElementById("uname").value, document.getElementById("psw").value)
+        const request = createAjaxRequest();
+        request.onreadystatechange = function () {
+            if (4 === this.readyState) {
+                if (200 === this.status) {
+                    let inc = this.responseText.split(" ")
+                    localStorage.clear()
+                    localStorage.setItem('Role', inc[1].toString());
+                    localStorage.setItem('sharedSecret', inc[0].toString());
+                    document.getElementById("id01").style.visibility = "hidden";
+                    document.getElementById("login_btn").style.visibility="hidden";
+                    document.getElementById("logout_btn").style.visibility="block";
+
+                } else {
+                    console.log(this.status + ":" + this.responseText);
+                }
+            }
+        }
+        request.open("POST", "http://localhost:8080/getUserAuthentication", true);
+        request.send(JSON.stringify(user));
+    }
+    else{
+        document.getElementById("id01").style.visibility = "hidden";
+        document.getElementById("id01").innerText = "Logout"
+        document.getElementById("id01").addEventListener("click", userLogout)
+    }
+}
+
+function sendUserPost(data){
+    const request = createAjaxRequest();
+    request.onreadystatechange = function () {
+        if(4 === this.readyState){
+            if(200 === this.status){
+                console.log(this.responseText)
+            }else{
+                console.log(this.status + ":" + this.responseText);
+            }
+        }
+    }
+    request.open("POST","http://localhost:8080/addUser",true);
+    request.send(JSON.stringify(user));
+}
+
 
 function startRoomPost(createRoom) {
     const request = createAjaxRequest();
@@ -69,6 +157,30 @@ function getRoom() {
     request.open("GET","http://localhost:8080/getRoom?name=" +room,true);
     request.send();
 }
+
+function getAllMeetings() {
+    let example = new Date()
+    console.log(example)
+    let starttime = new Date(2021,3,5,0,0)
+    starttime.setTime( starttime.getTime() - new Date().getTimezoneOffset()*60*1000 );
+    starttime =starttime.toISOString()
+    let endtime = new Date(2021,3,6,23,59)
+    endtime.setTime( endtime.getTime() - new Date().getTimezoneOffset()*60*1000 );
+    endtime= endtime.toISOString()
+    const request = createAjaxRequest();
+    request.onreadystatechange =function () {
+        if(4 === this.readyState){
+            if(200 === this.status){
+                console.log(this.responseText)
+            }else{
+                console.log(this.status + ":" + this.responseText);
+            }
+        }
+    }
+    request.open("GET","http://localhost:8080/getAllMeetings?starttime=" +starttime+"&endtime="+endtime,true);
+    request.send();
+}
+
 
 
 

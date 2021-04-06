@@ -1,7 +1,7 @@
 
+
 function openRoom(room) {
     startRoomPost(room);
-
 }
 
 
@@ -10,10 +10,11 @@ function init(rooms){
     if(rooms!==null) {
         for (let i = 0; i < rooms.length; i++) {
             const roomdiv = document.createElement("div")
-            roomdiv.id = ("room" + i);
+            roomdiv.id = ("structs" + i);
             roomdiv.appendChild(document.createElement("br"))
             roomdiv.className = "rooms"
-            roomdiv.innerText = rooms[i].roompath;
+            let rs = rooms[i].replace(" ","\n");
+            roomdiv.innerText = rooms[i];
             const a = document.createElement("div")
             a.className = "img"
             const img = document.createElement("img")
@@ -49,53 +50,75 @@ function init(rooms){
     a.appendChild(img)
     roomdiv.appendChild(a);
     overview.appendChild(roomdiv)
+
 }
+
 
 
 function addButton() {
 
+    
+}
 
-
+function addTermin(startTime, endTime){
+    let date = new Date();
+    date = date.toISOString()
+    let date2 = new Date();
+    date2 = date2.toISOString()
+    let me = new Meeting()
+    me.time_start = date
+    console.log(me.time_start)
+    me.time_end = date2
+    me.reminder=0
+    me.roomid=1
+    me.mail="mathusan13@live.de"
+    sendMeetingPost(JSON.stringify(me))
 }
 
 
 function createRoom() {
-    let api, i, len, method, params, ref, urls;
-    api = new BigBlueButtonApi("https://kon.jitsi-mathu.de/bigbluebutton/api/", "t3NCZ1tQCGvRxQweCO1etI8H22bRunC4it0cVGs7");
-    //todo shared secret request
-    const username = document.getElementById("name").value
-    // A hash of parameters.
-    // The parameter names are the same names BigBlueButton expects to receive in the API calls.
-    // The lib will make sure that, for each API call, only the parameters supported will be used.
-    params = {
-        name: username,
-        meetingID: "2", //todo request MeetingID
-        moderatorPW: "mp",
-        attendeePW: "ap",
-        password: "mp", // usually equals "moderatorPW"
-        welcome: "<br>Welcome to <b>%%CONFNAME%%</b>!",
-        fullName: username,
-        publish: false,
-        // random: "416074726",
-        record: false,
-        recordID: "random-9998650",
-        //voiceBridge: "75858", //todo request videoBridgeID
-        meta_anything: "My Meta Parameter",
-        custom_customParameter: "Will be passed as 'customParameter' to all calls"
-    };
-    console.log(params)
-    urls = [];
+    console.log(localStorage.getItem('sharedSecret')!==null)
+    console.log(localStorage.getItem('sharedSecret')!=="")
+    if(localStorage.getItem('sharedSecret')!==null) {
+        console.log(localStorage.getItem('sharedSecret'))
+        let api, i, len, method, params, ref, urls;
+        api = new BigBlueButtonApi("https://kon.jitsi-mathu.de/bigbluebutton/api", localStorage.getItem('sharedSecret'));
+        //todo shared secret request
 
-    ref = api.availableApiCalls();
-    for (i = 0, len = ref.length; i < len; i++) {
-        method = ref[i];
-        urls.push({
-            name: method,
-            url: api.urlFor(method, params)
-        });
+        const username = document.getElementById("name").value
+        // A hash of parameters.
+        // The parameter names are the same names BigBlueButton expects to receive in the API calls.
+        // The lib will make sure that, for each API call, only the parameters supported will be used.
+        params = {
+            name: username,
+            meetingID: "2", //todo request MeetingID
+            moderatorPW: "mp",
+            attendeePW: "ap",
+            password: "ap", // usually equals "moderatorPW"
+            welcome: "<br>Welcome to <b>%%CONFNAME%%</b>!",
+            fullName: username,
+            publish: false,
+            // random: "416074726",
+            record: false,
+            // recordID: "random-9998650",
+            //voiceBridge: "75858", //todo request videoBridgeID
+            meta_anything: "My Meta Parameter",
+            custom_customParameter: "Will be passed as 'customParameter' to all calls"
+        };
+        urls = [];
+        ref = api.availableApiCalls();
+        console.log(ref)
+        for (i = 0, len = ref.length; i < len; i++) {
+            method = ref[i];
+            urls.push({
+                name: method,
+                url: api.urlFor(method, params)
+            });
+        }
+        params.password = "ap"
+        params.fullName = "Besucher"
+        let vistor = api.urlFor('join', params)
+        let room = new Room(username, parseInt(params.meetingID), urls[2].url, urls[1].url, vistor.toString())
+        sendRoomPost(JSON.stringify(room))
     }
-    console.log(urls)
-    let room = new Room(username,parseInt(params.meetingID),urls[2].url,urls[1].url)
-    sendRoomPost(JSON.stringify(room))
-    //
 }

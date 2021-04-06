@@ -2,22 +2,62 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Konferenzsystem</title>
     <script type="text/javascript" src="lib/bigbluebutton-api.js"></script>
     <script type="text/javascript" src="vendor/jsSHA.js"></script>
-    <script type="text/javascript" src="js/main.js"></script>
     <script type="text/javascript" src="js/communication.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
     <link rel="stylesheet" href="css/main.css">
 
 
 </head>
-<body onload="getAllRoomNames()" on>
-<div id="searchbar"> Konferenzsystem</div>
+<body onload="getAllRoomNames()" >
 
+<button id="login_btn" onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Login</button>
+<button id="logout_btn" onclick="userLogout()" style="width:auto;display:none">Logout</button>
+<div id="id01" class="modal">
+    <form class="modal-content animate">
+        <div class="imgcontainer">
+            <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
+        </div>
+
+        <div class="container">
+            <label for="uname"><b>Username</b></label>
+            <input id="uname" type="text" placeholder="Enter Username" name="uname" required>
+
+            <label for="psw"><b>Password</b></label>
+            <input id="psw" type="password" placeholder="Enter Password" name="psw" required>
+
+            <button type="button" onclick="getUserAuthentication()">Login</button>
+            <label>
+                <input type="checkbox" checked="checked" name="remember"> Remember me
+            </label>
+        </div>
+        <div class="container" style="background-color:#f1f1f1">
+            <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
+            <span class="psw">Forgot <a href="#">password?</a></span>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Get the modal
+    let modal = document.getElementById('id01');
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
+
+<div id="title"> Konferenzsystem </div>
 
 <div id="overview"></div>
 
-
+<button onclick="getAllMeetings()"> test</button>
 </body>
 <script>//addButton() </script>
 </html>
