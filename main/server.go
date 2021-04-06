@@ -1,6 +1,7 @@
 package main
 
 import (
+	"../structs"
 	"database/sql"
 	"fmt"
 	"log"
@@ -32,6 +33,21 @@ func serverInit() {
 		if err != nil {
 			log.Panic(err)
 		}
+		var admin structs.User
+		admin.Name = "admin"
+		admin.Password = "admin"
+		admin.HashAndSalt([]byte(admin.Password))
+		admin.Role = "Admin"
+		sqlStmt = fmt.Sprintf(`INSERT INTO user("name","password","role")VALUES(?,?,?)`)
+		statement, err := db.Prepare(sqlStmt)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		_, err = statement.Exec(admin.Name, admin.Password, admin.Role)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		statement.Close()
 	}
 }
 
@@ -47,6 +63,7 @@ func main() {
 	http.HandleFunc("/addUser", addUser)
 	http.HandleFunc("/getUserAuthentication", getUserAuthentication)
 	http.HandleFunc("/setMeeting", setMeeting)
+	http.HandleFunc("/getAllMeetings", getAllMeetings)
 	fmt.Printf("Starting server at port 8080\n")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)

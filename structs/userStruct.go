@@ -41,5 +41,5 @@ func (u User) ComparePasswords(plainPwd string) bool {
 }
 
 func (u User) Check() bool {
-	return u.Role != "" && u.Password != "" && u.Name != ""
+	return u.Role != "" || u.Password != "" || u.Name != ""
 }

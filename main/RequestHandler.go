@@ -11,6 +11,7 @@ import (
 	gomail "gopkg.in/mail.v2"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func GetVideoBridge() {
@@ -31,8 +32,9 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
+	log.Println(incMeeting)
 	//todo check if dates already in DB
-	if getRoomByID(incMeeting.Roomid).Verify() {
+	if !getRoomByID(incMeeting.Roomid).Verify() {
 		http.Error(w, "Room does not exists", http.StatusBadRequest)
 		return
 	}
@@ -57,6 +59,36 @@ func deleteMeeting(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllMeetings(w http.ResponseWriter, r *http.Request) {
+	var reservedDates []structs.Meeting
+	startTime, err := r.URL.Query()["starttime"]
+	s := strings.Split(startTime[0], "T")[0]
+	endTime, err := r.URL.Query()["endtime"]
+	e := strings.Split(endTime[0], "T")[0]
+	if !err || len(startTime[0]) < 1 || len(endTime[0]) < 1 {
+		log.Println("Url Param 'startime' or 'endtime' is missing")
+		return
+	}
+	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	queryStmt := fmt.Sprintf("Select * From meeting where meeting_date_start >= '%s' and meeting_date_end <= '%s'", s, e)
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	log.Println(s)
+	log.Println(e)
+	for rows.Next() {
+		var dates structs.Meeting
+		err := rows.Scan(&dates.Id, &dates.MeetingDateStart, &dates.MeetingDateEnd, &dates.Roomid, &dates.Mail, &dates.Reminder)
+		if err != nil {
+			log.Println(err)
+		}
+		reservedDates = append(reservedDates, dates)
+	}
+	jsonFile, _ := json.Marshal(reservedDates)
+	w.Write(jsonFile)
 
 }
 
@@ -79,12 +111,11 @@ func getUserAuthentication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if dbUser.ComparePasswords(incUser.Password) {
-		w.Write([]byte("ok"))
+		w.Write([]byte("zLY4hvAAQTrBpMVNhGCM84ZlQl03A14sGjVHJPKT " + dbUser.Role))
 	} else {
 		http.Error(w, "Username or password incorrect  ", http.StatusBadRequest)
 		return
 	}
-
 }
 
 func addUser(w http.ResponseWriter, r *http.Request) {
@@ -208,7 +239,7 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-	if croom.Verify() {
+	if !croom.Verify() {
 		http.Error(w, "faulty User", http.StatusBadRequest)
 		return
 	}

@@ -9,7 +9,7 @@ type Room struct {
 }
 
 func (r Room) Verify() bool {
-	check := (r.Name != "") || (r.Join != "") || (r.Create != "") || (r.Roomid != 0)
+	check := (r.Name != "") && ((r.Join != "") || (r.Create != ""))
 	return check
 }
 
