@@ -1,0 +1,50 @@
+table {
+    margin-left: auto;
+    margin-right: auto;
+    background-color: white;
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    position: center;
+    width: 50%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    padding: 8px;
+    text-align: center;
+    vertical-align: middle;
+
+}
+
+
+#nextWeek{
+    cursor: pointer;
+}
+
+#prevWeek{
+    cursor: pointer;
+}
+.leftOuterTable{
+    visibility: hidden;
+    border-color: white;
+    border-right-color:lightgray ;
+}
+.rightOuterTable{
+    visibility: hidden;
+    border-color: white;
+    border-left-color:lightgray ;
+}
+#week{
+    font-size: 20px;
+}
+
+.innerTable:hover{
+    background-color: gray;
+    cursor: pointer;
+}
+
+#formReservation{
+    z-index: 2;
+
+
+}

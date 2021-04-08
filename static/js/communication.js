@@ -119,7 +119,7 @@ function sendUserPost(data){
         }
     }
     request.open("POST","http://localhost:8080/addUser",true);
-    request.send(JSON.stringify(user));
+    request.send(JSON.stringify(data));
 }
 
 
@@ -158,20 +158,19 @@ function getRoom() {
     request.send();
 }
 
-function getAllMeetings() {
+ function getAllMeetings(starttime,endtime) {
     let example = new Date()
     console.log(example)
-    let starttime = new Date(2021,3,5,0,0)
-    starttime.setTime( starttime.getTime() - new Date().getTimezoneOffset()*60*1000 );
     starttime =starttime.toISOString()
-    let endtime = new Date(2021,3,6,23,59)
-    endtime.setTime( endtime.getTime() - new Date().getTimezoneOffset()*60*1000 );
     endtime= endtime.toISOString()
     const request = createAjaxRequest();
     request.onreadystatechange =function () {
         if(4 === this.readyState){
             if(200 === this.status){
-                console.log(this.responseText)
+                return new Promise(((resolve, reject) => {
+                    resolve(this.responseText)
+                }))
+
             }else{
                 console.log(this.status + ":" + this.responseText);
             }
@@ -206,3 +205,4 @@ function getAllRoomNames() {
     request.open("GET","http://localhost:8080/getAllRoomNames",true);
     request.send();
 }
+

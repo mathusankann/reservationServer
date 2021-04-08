@@ -60,20 +60,6 @@ function addButton() {
     
 }
 
-function addTermin(startTime, endTime){
-    let date = new Date();
-    date = date.toISOString()
-    let date2 = new Date();
-    date2 = date2.toISOString()
-    let me = new Meeting()
-    me.time_start = date
-    console.log(me.time_start)
-    me.time_end = date2
-    me.reminder=0
-    me.roomid=1
-    me.mail="mathusan13@live.de"
-    sendMeetingPost(JSON.stringify(me))
-}
 
 
 function createRoom() {
@@ -121,4 +107,9 @@ function createRoom() {
         let room = new Room(username, parseInt(params.meetingID), urls[2].url, urls[1].url, vistor.toString())
         sendRoomPost(JSON.stringify(room))
     }
+}
+
+function initTermin() {
+
+
 }

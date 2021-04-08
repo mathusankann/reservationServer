@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Konferenzsystem</title>
+    <script title="text/javascript" src="js/termin.js"></script>
     <script type="text/javascript" src="lib/bigbluebutton-api.js"></script>
     <script type="text/javascript" src="vendor/jsSHA.js"></script>
     <script type="text/javascript" src="js/communication.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
     <link rel="stylesheet" href="css/main.css">
-
+    <link rel="stylesheet" href="css/termin.css">
 
 </head>
 <body onload="getAllRoomNames()" >
-
 <button id="login_btn" onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Login</button>
 <button id="logout_btn" onclick="userLogout()" style="width:auto;display:none">Logout</button>
 <div id="id01" class="modal">
@@ -40,11 +40,9 @@
         </div>
     </form>
 </div>
-
 <script>
     // Get the modal
     let modal = document.getElementById('id01');
-
     // When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
         if (event.target == modal) {
@@ -54,10 +52,31 @@
 </script>
 
 <div id="title"> Konferenzsystem </div>
+<div id="termin">
+    <table id="terminTable">
+        <caption id="week"></caption>
+        <tr>
+            <th id="prevWeek" value=-1> ‹ </th>
+            <th class="days">Montag</th>
+            <th class="days">Dienstag</th>
+            <th class="days">Mittwoch</th>
+            <th class="days">Donnerstag</th>
+            <th class="days">Freitag</th>
+            <th class="days">Samstag</th>
+            <th class="days">Sonntag</th>
+            <th id="nextWeek" value=1>› </th>
+        </tr>
+    </table>
+    <div id="formReservation"></div>
+</div>
+<script>
+    initTerminTable()
+</script>
+<div id="overview">
 
-<div id="overview"></div>
+</div>
 
-<button onclick="getAllMeetings()"> test</button>
+<button onclick="initTerminTable()"> test</button>
 </body>
 <script>//addButton() </script>
 </html>
