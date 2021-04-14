@@ -1,4 +1,4 @@
-package structs
+package main
 
 type Room struct {
 	Name   string `json:"name"`

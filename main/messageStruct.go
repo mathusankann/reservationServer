@@ -1,4 +1,4 @@
-package structs
+package main
 
 type Message struct {
 	User string `json:"from"`

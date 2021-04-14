@@ -1,7 +1,6 @@
 package main
 
 import (
-	"../structs"
 	"crypto/tls"
 	"database/sql"
 	"encoding/json"
@@ -37,7 +36,7 @@ func initDbConnection() *sql.DB {
 }
 
 func setMeeting(w http.ResponseWriter, r *http.Request) {
-	var incMeeting structs.Meeting
+	var incMeeting Meeting
 	err := json.NewDecoder(r.Body).Decode(&incMeeting)
 	if err != nil {
 		log.Println(err)
@@ -94,7 +93,7 @@ func deleteMeeting(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllMeetings(w http.ResponseWriter, r *http.Request) {
-	var reservedDates []structs.Meeting
+	var reservedDates []Meeting
 	startTime, err := r.URL.Query()["starttime"]
 	s := strings.Split(startTime[0], "T")[0]
 	endTime, err := r.URL.Query()["endtime"]
@@ -115,7 +114,7 @@ func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 	log.Println(s)
 	log.Println(e)
 	for rows.Next() {
-		var dates structs.Meeting
+		var dates Meeting
 		err := rows.Scan(&dates.Id, &dates.MeetingDateStart, &dates.MeetingDateEnd, &dates.Roomid, &dates.Mail, &dates.Reminder)
 		if err != nil {
 			log.Println(err)
@@ -132,8 +131,8 @@ func getSharedSecret() {
 }
 
 func getUserAuthentication(w http.ResponseWriter, r *http.Request) {
-	var incUser structs.User
-	var dbUser structs.User
+	var incUser User
+	var dbUser User
 	err := json.NewDecoder(r.Body).Decode(&incUser)
 	if err != nil {
 		log.Println(err)
@@ -154,7 +153,7 @@ func getUserAuthentication(w http.ResponseWriter, r *http.Request) {
 }
 
 func addUser(w http.ResponseWriter, r *http.Request) {
-	var incUser structs.User
+	var incUser User
 	err := json.NewDecoder(r.Body).Decode(&incUser)
 	if err != nil {
 		log.Println(err)
@@ -179,7 +178,7 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ok"))
 }
 
-func sendInvitation(incMeeting structs.Meeting) {
+func sendInvitation(incMeeting Meeting) {
 	//incoming
 	//Timestamp of the meeting and Email
 	room := getRoomByID(incMeeting.Roomid)
@@ -265,7 +264,7 @@ func startConf(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateRoom(w http.ResponseWriter, r *http.Request) {
-	var croom structs.Room
+	var croom Room
 	err := json.NewDecoder(r.Body).Decode(&croom)
 	log.Println(croom)
 	if err != nil {
@@ -306,7 +305,7 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getRoom(key string) structs.Room {
+func getRoom(key string) Room {
 	/*db, dberr := sql.Open("sqlite3", "User.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
@@ -316,7 +315,7 @@ func getRoom(key string) structs.Room {
 	if dberr != nil {
 		log.Panic(dberr)
 	}
-	var room2 structs.Room
+	var room2 Room
 	rows.Next()
 	dberr = rows.Scan(&room2.Roomid, &room2.Name, &room2.Join, &room2.Create, &room2.Invite)
 	if dberr != nil {
@@ -326,7 +325,7 @@ func getRoom(key string) structs.Room {
 	return room2
 }
 
-func getUser(name string) structs.User {
+func getUser(name string) User {
 	/*db, dberr := sql.Open("sqlite3", "User.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
@@ -336,7 +335,7 @@ func getUser(name string) structs.User {
 	if dberr != nil {
 		log.Panic(dberr)
 	}
-	var user2 structs.User
+	var user2 User
 	rows.Next()
 	dberr = rows.Scan(&user2.ID, &user2.Name, &user2.Password, &user2.Role)
 	if dberr != nil {
@@ -346,7 +345,7 @@ func getUser(name string) structs.User {
 	return user2
 }
 
-func getRoomByID(id int) structs.Room {
+func getRoomByID(id int) Room {
 	/*db, dberr := sql.Open("sqlite3", "User.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
@@ -356,7 +355,7 @@ func getRoomByID(id int) structs.Room {
 	if dberr != nil {
 		log.Panic(dberr)
 	}
-	var room2 structs.Room
+	var room2 Room
 	rows.Next()
 	dberr = rows.Scan(&room2.Roomid, &room2.Name, &room2.Join, &room2.Create, &room2.Invite)
 	if dberr != nil {
@@ -377,7 +376,7 @@ func getMeetingByTimestamp(startTime string) int {
 	if dberr != nil {
 		log.Panic(dberr)
 	}
-	var meeting2 structs.Meeting
+	var meeting2 Meeting
 	rows.Next()
 	dberr = rows.Scan(&meeting2.Id)
 	if dberr != nil {
