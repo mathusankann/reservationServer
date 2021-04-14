@@ -59,13 +59,13 @@ func main() {
 	http.HandleFunc("/createRoom", CreateRoom)
 	http.HandleFunc("/startRoom", startConf)
 	http.HandleFunc("/getAllRoomNames", GetAllRoomNames)
-	http.HandleFunc("/sendInvitationLink", sendInvitation)
 	http.HandleFunc("/addUser", addUser)
 	http.HandleFunc("/getUserAuthentication", getUserAuthentication)
 	http.HandleFunc("/setMeeting", setMeeting)
 	http.HandleFunc("/getAllMeetings", getAllMeetings)
+	http.HandleFunc("/deleteMeeting", deleteMeeting)
 	fmt.Printf("Starting server at port 8080\n")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":80", nil); err != nil {
 		log.Fatal(err)
 	}
 

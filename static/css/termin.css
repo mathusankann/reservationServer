@@ -3,13 +3,14 @@ table {
     margin-right: auto;
     background-color: white;
     font-family: arial, sans-serif;
-    border-collapse: collapse;
+    font-size: 20px;
+
     position: center;
-    width: 50%;
+    width: 60%;
 }
 
 td, th {
-    border: 1px solid #dddddd;
+    border: 2px solid #000000;
     padding: 8px;
     text-align: center;
     vertical-align: middle;
@@ -28,14 +29,18 @@ td, th {
     visibility: hidden;
     border-color: white;
     border-right-color:lightgray ;
+    border-top-color:lightgray ;
+    background-color: #dddddd;
 }
 .rightOuterTable{
     visibility: hidden;
     border-color: white;
     border-left-color:lightgray ;
+    border-top-color:lightgray ;
+    background-color: #dddddd;
 }
 #week{
-    font-size: 20px;
+    font-size: 29px;
 }
 
 .innerTable:hover{
@@ -43,8 +48,22 @@ td, th {
     cursor: pointer;
 }
 
-#formReservation{
-    z-index: 2;
+.expired{
+    background-color: gray;
+}
 
+#termin{
+    clear: both;
 
+}
+#checkboxReminder{
+    width: 100%;
+    clear: both;
+}
+#reminder{
+    clear: both;
+}
+#wuser{
+    width: 100%;
+    padding: 12px 20px;
 }
