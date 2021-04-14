@@ -52,7 +52,7 @@ func serverInit() {
 
 func main() {
 	serverInit()
-	fileServer := http.FileServer(http.Dir("./static")) // New code
+	fileServer := http.FileServer(http.Dir("./main/static")) // New code
 	http.Handle("/", fileServer)
 	http.HandleFunc("/getRoom", GetRoom)
 	http.HandleFunc("/createRoom", CreateRoom)
