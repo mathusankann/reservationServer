@@ -14,6 +14,8 @@ import (
 	"strings"
 )
 
+var db = initDbConnection()
+
 func GetVideoBridge() {
 
 }
@@ -26,6 +28,14 @@ func editRoom() {
 
 }
 
+func initDbConnection() *sql.DB {
+	var db, err = sql.Open("sqlite3", "User.sqlite")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return db
+}
+
 func setMeeting(w http.ResponseWriter, r *http.Request) {
 	var incMeeting structs.Meeting
 	err := json.NewDecoder(r.Body).Decode(&incMeeting)
@@ -33,13 +43,12 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	log.Println(incMeeting)
-	//todo check if dates already in DB
 	if !getRoomByID(incMeeting.Roomid).Verify() {
 		http.Error(w, "Room does not exists", http.StatusBadRequest)
 		return
 	}
 	//transaction
-	db, err := sql.Open("sqlite3", "User.sqlite")
+	//db, err := sql.Open("sqlite3", "User.sqlite")
 	sqlStmt := fmt.Sprintf(`INSERT INTO meeting("meeting_date_start","meeting_date_end","roomid","mail","reminder")VALUES(?,?,?,?,?)`)
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
@@ -50,12 +59,38 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln(err.Error())
 	}
 	statement.Close()
+	timeString := incMeeting.MeetingDateStart.String()
+	timeArray := strings.Split(timeString, " ")
+	timeString = timeArray[0] + " " + timeArray[1] + "+00:00"
+	incMeeting.Id = getMeetingByTimestamp(timeString)
+	sendInvitation(incMeeting)
 	w.Write([]byte("ok"))
 
 }
 
 func deleteMeeting(w http.ResponseWriter, r *http.Request) {
+	deleteID, errs := r.URL.Query()["UserID"]
+	if !errs || len(deleteID[0]) < 1 {
+		log.Println("Url Param 'Name' is missing")
+		return
+	}
+	//db, dberr := sql.Open("sqlite3", "User.sqlite")
+	/*if dberr != nil {
+		log.Panic(dberr)
+	}*/
+	stmt, err := db.Prepare("delete from meeting where id=?")
+	if err != nil {
+		log.Panic(err)
+	}
+	res, err := stmt.Exec(deleteID[0])
+	if err != nil {
+		log.Panic(err)
+	}
+	affect, err := res.RowsAffected()
+	fmt.Println(affect)
+	stmt.Close()
 
+	w.Write([]byte("Ihr Meeting wurde erfolgreich stoniert"))
 }
 
 func getAllMeetings(w http.ResponseWriter, r *http.Request) {
@@ -68,10 +103,10 @@ func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 		log.Println("Url Param 'startime' or 'endtime' is missing")
 		return
 	}
-	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	/*db, dberr := sql.Open("sqlite3", "User.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
-	}
+	}*/
 	queryStmt := fmt.Sprintf("Select * From meeting where meeting_date_start >= '%s' and meeting_date_end <= '%s'", s, e)
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
@@ -130,7 +165,7 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 	}
 	incUser.HashAndSalt([]byte(incUser.Password))
 	//transaction
-	db, err := sql.Open("sqlite3", "User.sqlite")
+	//	db, err := sql.Open("sqlite3", "User.sqlite")
 	sqlStmt := fmt.Sprintf(`INSERT INTO user(name,"password","role")VALUES(?,?,?)`)
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
@@ -144,27 +179,24 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ok"))
 }
 
-func sendInvitation(w http.ResponseWriter, r *http.Request) {
+func sendInvitation(incMeeting structs.Meeting) {
 	//incoming
 	//Timestamp of the meeting and Email
-	var incMessage structs.Message
-	err := json.NewDecoder(r.Body).Decode(&incMessage)
-	if err != nil {
-		log.Println(err)
-	}
+	room := getRoomByID(incMeeting.Roomid)
 	//ro := getRoom(incMessage.User)
 	m := gomail.NewMessage()
 	// Set E-Mail sender
-	m.SetHeader("From", "mathusan13@live.de")
+	m.SetHeader("From", "TerminverwaltungMa2@outlook.de")
 	//Set E-Mail receivers
-	m.SetHeader("To", "mathusankannathasan@gmail.com")
+	m.SetHeader("To", incMeeting.Mail)
 	// Set E-Mail subject
 	m.SetHeader("Subject", "Konferenzlink")
 	// Set E-Mail body. You can set plain text or html with text/html
-	body := fmt.Sprintf("Ihr Konferenzlink: %s \n Die Konferenz findet am %s", "ro.Invite", "incMessage.Time") //todo stornierung
+	body := fmt.Sprintf("Ihr Konferenzlink: %s \n Die Konferenz findet am %s \n Sie haben "+
+		"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://localhost:8080/deleteMeeting?UserID=%d", room.Invite, incMeeting.MeetingDateStart, incMeeting.Id)
 	m.SetBody("text/plain", body)
 	// Settings for SMTP server
-	d := gomail.NewDialer("smtp.office365.com", 587, "mathusan13@live.de", "M@thus4n2017")
+	d := gomail.NewDialer("smtp.office365.com", 587, "TerminverwaltungMa2@outlook.de", "Spartan17")
 	// This is only needed when SSL/TLS certificate is not valid on server.
 	// In production this should be set to false.
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
@@ -197,10 +229,10 @@ func GetRoom(w http.ResponseWriter, r *http.Request) {
 
 func GetAllRoomNames(w http.ResponseWriter, r *http.Request) {
 	var listNames []string
-	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	/*db, dberr := sql.Open("sqlite3", "User.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
-	}
+	}*/
 	queryStmt := fmt.Sprintf("Select name From room")
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
@@ -243,10 +275,10 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "faulty User", http.StatusBadRequest)
 		return
 	}
-	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	/*db, dberr := sql.Open("sqlite3", "User.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
-	}
+	}*/
 	queryStmt := fmt.Sprintf("Select name From room Where name= '%s'", croom.Name)
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
@@ -275,10 +307,10 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 func getRoom(key string) structs.Room {
-	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	/*db, dberr := sql.Open("sqlite3", "User.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
-	}
+	}*/
 	queryStmt := fmt.Sprintf("Select * From room Where name= '%s'", key)
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
@@ -295,10 +327,10 @@ func getRoom(key string) structs.Room {
 }
 
 func getUser(name string) structs.User {
-	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	/*db, dberr := sql.Open("sqlite3", "User.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
-	}
+	}*/
 	queryStmt := fmt.Sprintf("Select * From user Where name= '%s'", name)
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
@@ -315,10 +347,10 @@ func getUser(name string) structs.User {
 }
 
 func getRoomByID(id int) structs.Room {
-	db, dberr := sql.Open("sqlite3", "User.sqlite")
+	/*db, dberr := sql.Open("sqlite3", "User.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
-	}
+	}*/
 	queryStmt := fmt.Sprintf("Select * From room Where id= %d", id)
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
@@ -332,4 +364,26 @@ func getRoomByID(id int) structs.Room {
 	}
 	rows.Close()
 	return room2
+}
+
+func getMeetingByTimestamp(startTime string) int {
+	/*db, dberr := sql.Open("sqlite3", "User.sqlite")
+	if dberr != nil {
+		log.Panic(dberr)
+	}*/
+	queryStmt := fmt.Sprintf("Select id From meeting Where meeting_date_start= '%s'", startTime)
+	log.Println(queryStmt)
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	var meeting2 structs.Meeting
+	rows.Next()
+	dberr = rows.Scan(&meeting2.Id)
+	if dberr != nil {
+		log.Println(dberr)
+	}
+	rows.Close()
+	return meeting2.Id
+
 }

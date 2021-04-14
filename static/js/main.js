@@ -51,6 +51,10 @@ function init(rooms){
     roomdiv.appendChild(a);
     overview.appendChild(roomdiv)
 
+
+
+
+
 }
 
 
@@ -60,20 +64,6 @@ function addButton() {
     
 }
 
-function addTermin(startTime, endTime){
-    let date = new Date();
-    date = date.toISOString()
-    let date2 = new Date();
-    date2 = date2.toISOString()
-    let me = new Meeting()
-    me.time_start = date
-    console.log(me.time_start)
-    me.time_end = date2
-    me.reminder=0
-    me.roomid=1
-    me.mail="mathusan13@live.de"
-    sendMeetingPost(JSON.stringify(me))
-}
 
 
 function createRoom() {
@@ -120,5 +110,26 @@ function createRoom() {
         let vistor = api.urlFor('join', params)
         let room = new Room(username, parseInt(params.meetingID), urls[2].url, urls[1].url, vistor.toString())
         sendRoomPost(JSON.stringify(room))
+    }
+}
+
+function initTermin() {
+
+
+}
+
+function filterFunction() {
+    var input, filter, ul, li, a, i;
+    input = document.getElementById("myInput");
+    filter = input.value.toUpperCase();
+    div = document.getElementById("wuser");
+    a = div.getElementsByTagName("a");
+    for (i = 0; i < a.length; i++) {
+        txtValue = a[i].textContent || a[i].innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            a[i].style.display = "";
+        } else {
+            a[i].style.display = "none";
+        }
     }
 }

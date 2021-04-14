@@ -1,4 +1,4 @@
-
+let rooms;
 
 class Room {
     constructor(name, roomid,join,create,invite) {
@@ -71,9 +71,9 @@ function sendMeetingPost(data){
 
 function userLogout() {
     localStorage.clear()
-    document.getElementById("id01").style.visibility = "block";
-    document.getElementById("login_btn").style.visibility="block";
-    document.getElementById("logout_btn").style.visibility="hidden";
+    document.getElementById("id01").style.display = "block";
+    document.getElementById("login_btn").style.display="block";
+    document.getElementById("logout_btn").style.display="none";
 
 }
 
@@ -89,8 +89,9 @@ function getUserAuthentication(){
                     localStorage.setItem('Role', inc[1].toString());
                     localStorage.setItem('sharedSecret', inc[0].toString());
                     document.getElementById("id01").style.visibility = "hidden";
-                    document.getElementById("login_btn").style.visibility="hidden";
-                    document.getElementById("logout_btn").style.visibility="block";
+                    document.getElementById("login_btn").style.display="none";
+                    document.getElementById("logout_btn").style.display="block";
+                    init(rooms)
 
                 } else {
                     console.log(this.status + ":" + this.responseText);
@@ -119,7 +120,7 @@ function sendUserPost(data){
         }
     }
     request.open("POST","http://localhost:8080/addUser",true);
-    request.send(JSON.stringify(user));
+    request.send(JSON.stringify(data));
 }
 
 
@@ -158,34 +159,11 @@ function getRoom() {
     request.send();
 }
 
-function getAllMeetings() {
-    let example = new Date()
-    console.log(example)
-    let starttime = new Date(2021,3,5,0,0)
-    starttime.setTime( starttime.getTime() - new Date().getTimezoneOffset()*60*1000 );
-    starttime =starttime.toISOString()
-    let endtime = new Date(2021,3,6,23,59)
-    endtime.setTime( endtime.getTime() - new Date().getTimezoneOffset()*60*1000 );
-    endtime= endtime.toISOString()
-    const request = createAjaxRequest();
-    request.onreadystatechange =function () {
-        if(4 === this.readyState){
-            if(200 === this.status){
-                console.log(this.responseText)
-            }else{
-                console.log(this.status + ":" + this.responseText);
-            }
-        }
-    }
-    request.open("GET","http://localhost:8080/getAllMeetings?starttime=" +starttime+"&endtime="+endtime,true);
-    request.send();
-}
-
 
 
 
 function getAllRoomNames() {
-    let rooms
+    //let rooms
     const request = createAjaxRequest();
     request.onreadystatechange =function () {
         if(4 === this.readyState){
@@ -193,7 +171,7 @@ function getAllRoomNames() {
                 console.log(this.responseText)
                 if(this.responseText!==""){
                     rooms = JSON.parse(this.responseText);
-                    init(rooms)
+                    //init(rooms)
                 }
             else {
                     init(null)
@@ -206,3 +184,4 @@ function getAllRoomNames() {
     request.open("GET","http://localhost:8080/getAllRoomNames",true);
     request.send();
 }
+
