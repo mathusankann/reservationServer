@@ -1,7 +1,6 @@
 package main
 
 import (
-	"../structs"
 	"database/sql"
 	"fmt"
 	"log"
@@ -33,7 +32,7 @@ func serverInit() {
 		if err != nil {
 			log.Panic(err)
 		}
-		var admin structs.User
+		var admin User
 		admin.Name = "admin"
 		admin.Password = "admin"
 		admin.HashAndSalt([]byte(admin.Password))
@@ -65,7 +64,7 @@ func main() {
 	http.HandleFunc("/getAllMeetings", getAllMeetings)
 	http.HandleFunc("/deleteMeeting", deleteMeeting)
 	fmt.Printf("Starting server at port 8080\n")
-	if err := http.ListenAndServe(":80", nil); err != nil {
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
 	}
 
