@@ -4,7 +4,7 @@
 .rooms {
     font-size: 20px;
     cursor: pointer;
-    width: 10%;
+    width:20%;
     border-style: groove;
     border-radius: 10px;
     float: left;
@@ -12,7 +12,7 @@
 
 .konfImg{
     width: 50%;
-    margin-left: 20%;
+    margin-left: 25%;
 }
 #name{
     width: 80%;
@@ -169,3 +169,46 @@ span.psw {
 
 
  }
+ #buttonHolder{
+     float: right;
+     width: 70%;
+ }
+
+#userButton{
+    float: right;
+    width: 70%;
+}
+
+#reservedDates{
+    float: left;
+}
+
+.sortBtn{
+    width: 3.846%;
+    background-color: #dddddd;
+    border-color: black;
+    color:black;
+}
+
+.sortBtn:focus{
+    background-color: white;
+}
+
+#reservedDates{
+    font-size: 0.8cm;
+    width: 28%;
+}
+
+.reserved{
+    font-size: 0.6cm;
+
+}
+
+.reserved:hover{
+    background-color: #dddddd;
+    cursor: pointer;
+}
+#innerReserver{
+    border-style: groove;
+    border-color: black;
+}

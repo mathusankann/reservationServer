@@ -10,6 +10,7 @@ import (
 	gomail "gopkg.in/mail.v2"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -106,7 +107,7 @@ func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 	if dberr != nil {
 		log.Panic(dberr)
 	}*/
-	queryStmt := fmt.Sprintf("Select * From meeting where meeting_date_start >= '%s' and meeting_date_end <= '%s'", s, e)
+	queryStmt := fmt.Sprintf("Select * From meeting where meeting_date_start >= '%s' and meeting_date_end <= '%s' ORDER BY meeting_date_start", s, e)
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
 		log.Panic(dberr)
@@ -185,7 +186,7 @@ func sendInvitation(incMeeting Meeting) {
 	//ro := getRoom(incMessage.User)
 	m := gomail.NewMessage()
 	// Set E-Mail sender
-	m.SetHeader("From", "TerminverwaltungMa2@outlook.de")
+	m.SetHeader("From", "TerminMa3@outlook.de")
 	//Set E-Mail receivers
 	m.SetHeader("To", incMeeting.Mail)
 	// Set E-Mail subject
@@ -195,14 +196,13 @@ func sendInvitation(incMeeting Meeting) {
 		"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://localhost:8080/deleteMeeting?UserID=%d", room.Invite, incMeeting.MeetingDateStart, incMeeting.Id)
 	m.SetBody("text/plain", body)
 	// Settings for SMTP server
-	d := gomail.NewDialer("smtp.office365.com", 587, "TerminverwaltungMa2@outlook.de", "Spartan17")
+	d := gomail.NewDialer("smtp.office365.com", 587, "Terminma3@outlook.de", "")
 	// This is only needed when SSL/TLS certificate is not valid on server.
 	// In production this should be set to false.
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	// Now send E-Mail
 	if err := d.DialAndSend(m); err != nil {
-		fmt.Println(err)
-		panic(err)
+		log.Fatalln(err)
 	}
 	return
 }
@@ -216,6 +216,25 @@ func GetRoom(w http.ResponseWriter, r *http.Request) {
 	room2 := getRoom(keys[0])
 
 	fmt.Println(room2)
+	if !room2.Verify() {
+		http.Error(w, "Username not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	jsonFile, _ := json.Marshal(room2)
+	w.Write(jsonFile)
+
+}
+
+func GetRoomByID(w http.ResponseWriter, r *http.Request) {
+	keys, err := r.URL.Query()["ID"]
+	if !err || len(keys[0]) < 1 {
+		log.Println("Url Param 'Name' is missing")
+		return
+	}
+	id, _ := strconv.ParseInt(keys[0], 10, 32)
+	room2 := getRoomByID(int(id))
+
 	if !room2.Verify() {
 		http.Error(w, "Username not found", http.StatusNotFound)
 		return
@@ -384,5 +403,9 @@ func getMeetingByTimestamp(startTime string) int {
 	}
 	rows.Close()
 	return meeting2.Id
+
+}
+
+func getMeetingRunning(w http.ResponseWriter, r *http.Request) {
 
 }

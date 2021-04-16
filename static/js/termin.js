@@ -68,7 +68,6 @@ async function prevWeeks() {
         currentSunday.setDate(currentSunday.getDate() - 7)
         document.getElementById("week").innerText = currentMonday.toDateString() + " - " + currentSunday.toDateString()
       //  deleteNodes()
-
         await getAllMeetings(currentMonday, currentSunday)
        // setDates()
     }
@@ -79,7 +78,6 @@ async function nextWeek() {
     currentSunday.setDate(currentSunday.getDate() + 7)
     document.getElementById("week").innerText = currentMonday.toDateString() + " - " + currentSunday.toDateString()
   //  deleteNodes()
-
     await getAllMeetings(currentMonday, currentSunday)
     //setDates()
 }
@@ -90,7 +88,6 @@ async function initTerminTable() {
     await setCaption()
     document.getElementById("prevWeek").addEventListener("click", prevWeeks)
     document.getElementById("nextWeek").addEventListener("click", nextWeek)
-
     await getAllMeetings(currentMonday, currentSunday)
 
 }
@@ -179,7 +176,6 @@ function startReservation() {
     startDate.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + diff)
     startDate.setHours(startTime, 0, 0, 0)
 
-    console.log(startDate)
     endDate.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + diff)
     endDate.setHours(endTime, 0, 0, 0)
     startTerminUser = startDate;
@@ -225,7 +221,7 @@ function getAllMeetings(starttime, endtime) {
                     reservedDates = JSON.parse(this.responseText)
                     console.log(reservedDates)
                     setTimeout(setDates, 100);
-                    resolve(true)
+                    resolve(reservedDates)
                 }))
             } else {
                 console.log(this.status + ":" + this.responseText);

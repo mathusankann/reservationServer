@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Konferenzsystem</title>
-    <script title="text/javascript" src="js/termin.js"></script>
-    <script type="text/javascript" src="lib/bigbluebutton-api.js"></script>
-    <script type="text/javascript" src="vendor/jsSHA.js"></script>
-    <script type="text/javascript" src="js/communication.js"></script>
-    <script type="text/javascript" src="js/main.js"></script>
+    <script  src="js/termin.js"></script>
+    <script  src="lib/bigbluebutton-api.js"></script>
+    <script src="vendor/jsSHA.js"></script>
+    <script  src="js/communication.js"></script>
+    <script  src="js/main.js"></script>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/termin.css">
 
@@ -34,23 +34,14 @@
             <input id="psw" type="password" placeholder="Enter Password" name="psw" required>
 
             <button type="button" onclick="getUserAuthentication()">Login</button>
-            <label>
-                <input type="checkbox" checked="checked" name="remember"> Remember me
-            </label>
-        </div>
-        <div class="container" style="background-color:#f1f1f1">
-            <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">
-                Cancel
-            </button>
-            <span class="psw">Forgot <a href="#">password?</a></span>
         </div>
     </form>
 </div>
 
 
 <div id="title"> Terminverwaltung</div>
-<div id="subTitle"> Auch in schweren Zeiten für Ihre Mitmenschen da sein...</div>
-<br><br><br>
+<div id="subTitle">  Auch in schweren Zeiten für Ihre Mitmenschen da sein...</div>
+<br>
 <div id="termin">
 
     <table id="terminTable">
@@ -96,9 +87,14 @@
 
 <br><br><br>
 <div id="overview">
+    <div id="reservedDates">
 
+    </div>
+    <div id="buttonHolder"></div>
+    <div id="userButton"></div>
 </div>
 
 </body>
-<script>//addButton() </script>
+
+
 </html>

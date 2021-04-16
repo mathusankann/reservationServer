@@ -1,3 +1,4 @@
+let Grooms
 
 
 function openRoom(room) {
@@ -5,31 +6,35 @@ function openRoom(room) {
 }
 
 
-function init(rooms){
-    const overview = document.getElementById("overview");
-    if(rooms!==null) {
-        for (let i = 0; i < rooms.length; i++) {
-            const roomdiv = document.createElement("div")
-            roomdiv.id = ("structs" + i);
-            roomdiv.appendChild(document.createElement("br"))
-            roomdiv.className = "rooms"
-            let rs = rooms[i].replace(" ","\n");
-            roomdiv.innerText = rooms[i];
-            const a = document.createElement("div")
-            a.className = "img"
-            const img = document.createElement("img")
-            img.src = "media/img/conference.png"
-            a.appendChild(document.createElement("br"))
-            a.appendChild(img)
-            img.className = "konfImg"
-            roomdiv.appendChild(a);
-            //roomdiv.appendChild(img);
-            overview.appendChild(roomdiv)
-            roomdiv.addEventListener("click", getRoom)
-            const activ = document.createElement("img")
-            activ.src = "media/img/redpoint.gif"
-            activ.className = "activind"
-            roomdiv.appendChild(activ)
+function init() {
+    document.getElementById("userButton").innerText = ""
+    const overview = document.getElementById("userButton");
+    if (Grooms !== null) {
+        for (let i = 0; i < Grooms.length; i++) {
+            let rs = Grooms[i].split(" ");
+            if (rs[1][0] === this.innerText) {
+                const roomdiv = document.createElement("div")
+                roomdiv.id = ("structs" + i);
+                roomdiv.appendChild(document.createElement("br"))
+                roomdiv.className = "rooms"
+
+                roomdiv.innerText = Grooms[i];
+                const a = document.createElement("div")
+                a.className = "img"
+                const img = document.createElement("img")
+                img.src = "media/img/conference.png"
+                a.appendChild(document.createElement("br"))
+                a.appendChild(img)
+                img.className = "konfImg"
+                roomdiv.appendChild(a);
+                //roomdiv.appendChild(img);
+                overview.appendChild(roomdiv)
+                roomdiv.addEventListener("click", getRoom)
+                const activ = document.createElement("img")
+                activ.src = "media/img/redpoint.gif"
+                activ.className = "activind"
+                roomdiv.appendChild(activ)
+            }
         }
     }
     const roomdiv = document.createElement("div")
@@ -40,39 +45,65 @@ function init(rooms){
     roomdiv.appendChild(input)
     const a = document.createElement("div")
     roomdiv.appendChild(document.createElement("br"))
-    a.className="img"
+    a.className = "img"
     const img = document.createElement("img")
-    img.src ="media/img/add.svg"
+    img.src = "media/img/add.svg"
     img.className = "konfImg"
-    img.addEventListener("click",createRoom)
-
+    img.addEventListener("click", createRoom)
     a.appendChild(document.createElement("br"))
     a.appendChild(img)
     roomdiv.appendChild(a);
     overview.appendChild(roomdiv)
+}
 
-
-
-
-
+async function initReservedDatesOverview(reservedDate,counter) {
+    const roverview = document.getElementById("reservedDates")
+    roverview.innerText = "Anstehende Termine"
+    const innerReserver = document.createElement("div")
+    innerReserver.id = "innerReserver"
+    console.log(counter)
+    let len
+    if (counter+7>reservedDate.length){
+        len = reservedDate.length
+    }else {
+        len = counter+7
+    }
+    for (let i = counter; i <len; i++) {
+        let child = document.createElement("div")
+        child.className = "reserved"
+        await getRoomByID(reservedDate[i].roomid, child, innerReserver, reservedDate[i].time_start, reservedDate[i].time_end)
+        child.addEventListener("click",getRoomForOverview)
+    }
+    roverview.appendChild(innerReserver)
 }
 
 
-
-function addButton() {
-
-    
+function addButtons(rooms) {
+    Grooms = rooms
+    const overview = document.getElementById("buttonHolder")
+    for (let i = 0; i < 26; i++) {
+        let button = document.createElement("button")
+        button.className = "sortBtn"
+        button.innerText = String.fromCharCode(65 + i)
+        overview.appendChild(button)
+        button.addEventListener("click", init)
+        if (i === 0) {
+            button.click()
+            button.focus()
+        }
+    }
+    let currentWeeksMonday = new Date()
+    currentWeeksMonday.setDate(currentWeeksMonday.getDate() - (currentWeeksMonday.getDay() - 1))
+    let currentSunday = new Date()
+    currentSunday.setDate(currentWeeksMonday.getDate() + 6)
+    getAllMeetingsDate(currentWeeksMonday, currentSunday)
 }
-
 
 
 function createRoom() {
-    console.log(localStorage.getItem('sharedSecret')!==null)
-    console.log(localStorage.getItem('sharedSecret')!=="")
-    if(localStorage.getItem('sharedSecret')!==null) {
-        console.log(localStorage.getItem('sharedSecret'))
+    if (document.cookie !== "") {
         let api, i, len, method, params, ref, urls;
-        api = new BigBlueButtonApi("https://kon.jitsi-mathu.de/bigbluebutton/api", localStorage.getItem('sharedSecret'));
+        api = new BigBlueButtonApi("https://kon.jitsi-mathu.de/bigbluebutton/api", document.cookie.split('=')[1]);
         //todo shared secret request
 
         const username = document.getElementById("name").value
@@ -133,3 +164,25 @@ function filterFunction() {
         }
     }
 }
+
+function setCookie(c_name, value, exdays) {
+    let exdate = new Date();
+    exdate.setDate(exdate.getDate() + exdays);
+    let c_value = escape(value) + ((exdays == null) ? "" : "; expires=" + exdate.toUTCString());
+    document.cookie = c_name + "=" + c_value;
+}
+
+
+function userLogout() {
+    document.cookie = "Admin=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    console.log(document.cookie)
+    document.getElementById("id01").style.display = "none";
+    document.getElementById("login_btn").style.display = "block";
+    document.getElementById("logout_btn").style.display = "none";
+    document.getElementById("reservedDates").innerText ="";
+    document.getElementById("buttonHolder").innerText= "";
+    document.getElementById("userButton").innerText= "";
+
+
+}
+
