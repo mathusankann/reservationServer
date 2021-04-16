@@ -228,7 +228,7 @@ function getAllMeetings(starttime, endtime) {
             }
         }
     }
-    request.open("GET", "http://"+path+"/getAllMeetings?starttime=" + starttime + "&endtime=" + endtime, true);
+    request.open("GET", "/getAllMeetings?starttime=" + starttime + "&endtime=" + endtime, true);
     request.send();
 }
 

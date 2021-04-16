@@ -1,4 +1,4 @@
-const path= "35.241.245.32/"
+const path= "127.0.0.1"
 const pathl= "localhost/"
 let rooms;
 
@@ -52,7 +52,7 @@ function sendRoomPost(data) {
             }
         }
     }
-    request.open("POST", "http://"+path+":8080/createRoom", true);
+    request.open("POST", "/createRoom", true);
     request.send(data);
 }
 
@@ -67,7 +67,7 @@ function sendMeetingPost(data) {
             }
         }
     }
-    request.open("POST", "http://"+path+":8080/setMeeting", true);
+    request.open("POST", "/setMeeting", true);
     request.send(data);
 }
 
@@ -92,7 +92,7 @@ async function getUserAuthentication() {
                 }
             }
         }
-        request.open("POST", "http://"+path+"/getUserAuthentication", true);
+        request.open("POST", "/getUserAuthentication", true);
         request.send(JSON.stringify(user));
     } else {
         console.log(true)
@@ -114,7 +114,7 @@ function sendUserPost(data) {
             }
         }
     }
-    request.open("POST", "http://"+path+":8080/addUser", true);
+    request.open("POST", "/addUser", true);
     request.send(JSON.stringify(data));
 }
 
@@ -132,7 +132,7 @@ function startRoomPost(createRoom) {
             }
         }
     }
-    request.open("POST", "http://"+path+":8080/startRoom", true);
+    request.open("POST", "/startRoom", true);
     request.send(JSON.stringify(createRoom.create));
 }
 
@@ -150,7 +150,7 @@ function getRoom() {
             }
         }
     }
-    request.open("GET", "http://"+path+":8080/getRoom?name=" + room, true);
+    request.open("GET", "/getRoom?name=" + room, true);
     request.send();
 }
 
@@ -169,7 +169,7 @@ function getRoomForOverview() {
             }
         }
     }
-    request.open("GET", "http://"+path+":8080/getRoom?name=" + room, true);
+    request.open("GET", "/getRoom?name=" + room, true);
     request.send();
 }
 
@@ -192,7 +192,7 @@ function getAllRoomNames() {
             }
         }
     }
-    request.open("GET", "http://"+path+":8080/getAllRoomNames", true);
+    request.open("GET", "/getAllRoomNames", true);
     request.send();
 }
 
@@ -220,7 +220,7 @@ function getRoomByID(Id, child, roverview, timestart, timeend) {
             }
         }
     }
-    request.open("GET", "http://"+path+":8080/getRoomByID?ID=" + Id, true);
+    request.open("GET", "/getRoomByID?ID=" + Id, true);
     request.send();
 }
 
@@ -239,7 +239,7 @@ function getAllRoom() {
         }))
     }
 
-    request.open("GET", "http://"+path+":8080/getAllRoomNames", true);
+    request.open("GET", "/getAllRoomNames", true);
     request.send();
 }
 
@@ -269,6 +269,6 @@ function getAllMeetingsDate(starttime, endtime) {
             }
         }
     }
-    request.open("GET", "http://"+path+":8080/getAllMeetings?starttime=" + starttime + "&endtime=" + endtime, true);
+    request.open("GET", "/getAllMeetings?starttime=" + starttime + "&endtime=" + endtime, true);
     request.send();
 }
