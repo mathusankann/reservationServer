@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
+	_ "time"
 )
 
 func serverInit() {
@@ -49,7 +49,7 @@ func serverInit() {
 		}
 		statement.Close()
 	}
-	db.Close()
+
 }
 
 func reminder() {
