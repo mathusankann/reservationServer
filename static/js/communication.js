@@ -182,6 +182,7 @@ function getAllRoomNames() {
             if (200 === this.status) {
                 if (this.responseText !== "") {
                     rooms = JSON.parse(this.responseText);
+
                     getUserAuthentication();
                     //init(rooms)
                 } else {

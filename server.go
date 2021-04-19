@@ -62,8 +62,9 @@ func main() {
 	http.HandleFunc("/getUserAuthentication", getUserAuthentication)
 	http.HandleFunc("/setMeeting", setMeeting)
 	http.HandleFunc("/getAllMeetings", getAllMeetings)
-	http.HandleFunc("/deleteMeeting", deleteMeeting)
 	http.HandleFunc("/getRoomByID", GetRoomByID)
+	http.HandleFunc("/deleteMeeting", deleteMeeting)
+
 	fmt.Printf("Starting server at port 8080\n")
 	if err := http.ListenAndServe(":80", nil); err != nil {
 		log.Fatal(err)

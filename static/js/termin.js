@@ -6,7 +6,7 @@ let currentWeeksMonday;
 
 let startTerminUser;
 let endTerminUser;
-
+const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
 
 function initCurrentWeeksMonday() {
     return new Promise(((resolve, reject) => {
@@ -26,6 +26,7 @@ function getMonday() {
 }
 
 function setCaption() {
+
     return new Promise(((resolve, reject) => {
         let monday = getMonday()
         monday.then((monday) => {
@@ -33,16 +34,16 @@ function setCaption() {
             let sunday = new Date()
             sunday.setDate(monday.getDate() + 6)
             currentSunday = sunday
-            let captions = monday.toDateString() + " - " + sunday.toDateString()
+            let captions = monday.toLocaleDateString('de-DE', options) + " - " + sunday.toLocaleDateString('de-DE', options)
             console.log(captions)
             document.getElementById("week").innerText = captions
             const table = document.getElementById("terminTable")
-            for(let i = 0;i<13;i++){
+            for (let i = 0; i < 13; i++) {
                 let entry = document.createElement("tr")
                 entry.id = i.toString()
-                for(let j = 0;j<9;j++){
+                for (let j = 0; j < 9; j++) {
                     let entities = document.createElement("th")
-                    entities.id=i.toString()+"_"+j.toString()
+                    entities.id = i.toString() + "_" + j.toString()
                     entry.appendChild(entities)
                     if (j === 0) {
                         entities.className = "leftOuterTable"
@@ -66,18 +67,18 @@ async function prevWeeks() {
     if (dates.compare(temp, currentWeeksMonday) > 0) {
         currentMonday.setDate(currentMonday.getDate() - 7)
         currentSunday.setDate(currentSunday.getDate() - 7)
-        document.getElementById("week").innerText = currentMonday.toDateString() + " - " + currentSunday.toDateString()
-      //  deleteNodes()
+        document.getElementById("week").innerText = currentMonday.toLocaleDateString('de-DE', options) + " - " + currentSunday.toLocaleDateString('de-DE', options)
+        //  deleteNodes()
         await getAllMeetings(currentMonday, currentSunday)
-       // setDates()
+        // setDates()
     }
 }
 
 async function nextWeek() {
     currentMonday.setDate(currentMonday.getDate() + 7)
     currentSunday.setDate(currentSunday.getDate() + 7)
-    document.getElementById("week").innerText = currentMonday.toDateString() + " - " + currentSunday.toDateString()
-  //  deleteNodes()
+    document.getElementById("week").innerText = currentMonday.toLocaleDateString('de-DE', options) + " - " + currentSunday.toLocaleDateString('de-DE', options)
+    //  deleteNodes()
     await getAllMeetings(currentMonday, currentSunday)
     //setDates()
 }
@@ -101,27 +102,27 @@ async function setDates() {
     for (let i = 0; i < 13; i++) {
         //let entry = document.createElement("tr")
         for (let j = 0; j < 9; j++) {
-           // let entities = document.createElement("th")
+            // let entities = document.createElement("th")
             //entry.appendChild(entities)
-            let entities = document.getElementById(i.toString()+"_"+j.toString())
+            let entities = document.getElementById(i.toString() + "_" + j.toString())
             if (j === 0) {
                 entities.className = "leftOuterTable"
             } else if (j === 8) {
                 entities.className = "rightOuterTable"
             } else {
                 let temp = new Date()
-                temp.setFullYear(currentMonday.getFullYear(),currentMonday.getMonth(),currentMonday.getDate()+j-1)
+                temp.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + j - 1)
                 temp.setMinutes(0, 0, 0)
                 //if (j > currenDate.getDay()) {
                 if (dates.compare(temp, currenDate) > 0) {
                     // console.log(temp)
                     temp.setHours(startTime)
                     let bol = await compareWithReservedDates(temp)
-                    if(bol){
+                    if (bol) {
                         entities.className = "expired"
                         entities.innerText = "Reserviert"
                         //entities.addEventListener("click", startReservation)
-                    }else {
+                    } else {
                         entities.className = "innerTable"
                         entities.innerText = generateCell(startTime, endTime)
                         entities.addEventListener("click", startReservation)
@@ -130,16 +131,15 @@ async function setDates() {
                     if (startTime > currenDate.getHours()) {
                         temp.setHours(startTime)
                         let bol = await compareWithReservedDates(temp)
-                        if(bol){
+                        if (bol) {
                             entities.className = "expired"
                             entities.innerText = "Reserviert"
-                        }else{
+                        } else {
                             entities.className = "innerTable"
                             entities.innerText = generateCell(startTime, endTime)
                             entities.addEventListener("click", startReservation)
                         }
-                    }
-                    else {
+                    } else {
                         entities.innerText = "Abgelaufen"
                         entities.className = "expired"
                     }
@@ -149,15 +149,16 @@ async function setDates() {
                 }
             }
         }
-       // table.appendChild(entry)
+        // table.appendChild(entry)
         startTime++
         endTime++
     }
     const dropdown = document.getElementById("wuser")
-    for(let i =0;i<rooms.length; i++){
-        let option= document.createElement("option")
-        option.value=i+1
-        option.innerText=rooms[i]
+    dropdown.innerText = ""
+    for (let i = 0; i < rooms.length; i++) {
+        let option = document.createElement("option")
+        option.value = i + 1
+        option.innerText = rooms[i]
         dropdown.appendChild(option)
     }
 
@@ -165,7 +166,7 @@ async function setDates() {
 
 
 function startReservation() {
-    document.getElementById('formReservation').style.display='block'
+    document.getElementById('formReservation').style.display = 'block'
     let text = this.innerText.split("-")
     let startTime = parseInt(text[0].split(":")[0])
     let endTime = parseInt(text[1].split(":")[0])
@@ -179,8 +180,8 @@ function startReservation() {
     endDate.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + diff)
     endDate.setHours(endTime, 0, 0, 0)
     startTerminUser = startDate;
-    endTerminUser =endDate;
-   // addTermin(startDate, endDate)
+    endTerminUser = endDate;
+    // addTermin(startDate, endDate)
 }
 
 function addTermin() {
@@ -194,9 +195,9 @@ function addTermin() {
     me.time_start = startTerminUser
     console.log(me.time_start)
     me.time_end = endTerminUser
-    if(checked){
+    if (checked) {
         me.reminder = 1
-    }else{
+    } else {
         me.reminder = 0
     }
 
@@ -208,11 +209,20 @@ function addTermin() {
 
 
 function getAllMeetings(starttime, endtime) {
-    starttime.setHours(0,0,0)
-    console.log(starttime)
-    starttime = starttime.toISOString()
-    endtime.setDate(endtime.getDate()+1)
-    endtime = endtime.toISOString()
+    let tempStart = new Date();
+    console.log(starttime.getTimezoneOffset())
+    tempStart.setFullYear(starttime.getFullYear(), starttime.getMonth(), starttime.getDate() -1)
+    tempStart.setHours(tempStart.getHours()+2)
+   // console.log(formatDate(tempStart))
+   // tempStart = tempStart.toLocaleDateString()
+
+    let tempEnd = new Date();
+    tempEnd.setFullYear(endtime.getFullYear(), endtime.getMonth(), endtime.getDate() )
+    tempEnd.setHours(tempEnd.getHours()+2)
+    tempEnd.setHours(25,59,0,0)
+    //tempEnd = tempEnd.toLocaleDateString()
+    console.log(tempEnd)
+
     const request = createAjaxRequest();
     request.onreadystatechange = function () {
         if (4 === this.readyState) {
@@ -228,9 +238,32 @@ function getAllMeetings(starttime, endtime) {
             }
         }
     }
-    request.open("GET", "/getAllMeetings?starttime=" + starttime + "&endtime=" + endtime, true);
+    request.open("GET", "/getAllMeetings?starttime=" + formatDate(tempStart) + "&endtime=" + formatDate(tempEnd), true);
     request.send();
 }
+
+function getAllMeetingsTest() {
+    console.log("test")
+    let tempStart = new Date();
+    let tempEnd = new Date();
+    let tempMeeting = new Meeting(tempStart, tempEnd, 0, 0, "")
+    console.log(JSON.stringify(tempMeeting))
+    const request = createAjaxRequest();
+    request.onreadystatechange = function () {
+        if (4 === this.readyState) {
+            if (200 === this.status) {
+
+            } else {
+                console.log(this.status + ":" + this.responseText);
+            }
+        }
+        request.open("POST", "/postGetAllMeetings", true);
+        request.send(JSON.stringify(tempMeeting));
+    }
+
+
+}
+
 
 function generateCell(startTime, endTime) {
     let text;
@@ -312,19 +345,18 @@ let dates = {
 
 function compareWithReservedDates(b) {
     return new Promise(((resolve, reject) => {
-        if (reservedDates!=null){
+        if (reservedDates != null) {
             for (let i = 0; i < reservedDates.length; i++) {
                 let reserved = new Date(Date.parse(reservedDates[i].time_start))
 
-              //  reserved.setHours(reserved.getHours())
+                //  reserved.setHours(reserved.getHours())
 
                 if (dates.compare(reserved, b) === 0) {
                     resolve(true)
                 }
             }
             resolve(false)
-        }
-        else {
+        } else {
             resolve(false)
         }
     }))
@@ -332,11 +364,25 @@ function compareWithReservedDates(b) {
 }
 
 function testReservered() {
-    if (reservedDates!=null){
-        for(let i =0;i<reservedDates.length;i++){
+    if (reservedDates != null) {
+        for (let i = 0; i < reservedDates.length; i++) {
             console.log(new Date(Date.parse(reservedDates[i].time_start)))
         }
 
     }
 
+}
+
+function formatDate(date) {
+    var d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2)
+        month = '0' + month;
+    if (day.length < 2)
+        day = '0' + day;
+
+    return [year, month, day].join('-');
 }

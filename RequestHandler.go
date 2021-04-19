@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	_ "time"
 )
 
 var db = initDbConnection()
@@ -63,7 +64,7 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 	timeArray := strings.Split(timeString, " ")
 	timeString = timeArray[0] + " " + timeArray[1] + "+00:00"
 	incMeeting.Id = getMeetingByTimestamp(timeString)
-	sendInvitation(incMeeting)
+	//sendInvitation(incMeeting)
 	w.Write([]byte("ok"))
 
 }
@@ -96,9 +97,9 @@ func deleteMeeting(w http.ResponseWriter, r *http.Request) {
 func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 	var reservedDates []Meeting
 	startTime, err := r.URL.Query()["starttime"]
-	s := strings.Split(startTime[0], "T")[0]
+	//	s := strings.Split(startTime[0], "T")[0]
 	endTime, err := r.URL.Query()["endtime"]
-	e := strings.Split(endTime[0], "T")[0]
+	//	e := strings.Split(endTime[0], "T")[0]
 	if !err || len(startTime[0]) < 1 || len(endTime[0]) < 1 {
 		log.Println("Url Param 'startime' or 'endtime' is missing")
 		return
@@ -107,13 +108,11 @@ func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 	if dberr != nil {
 		log.Panic(dberr)
 	}*/
-	queryStmt := fmt.Sprintf("Select * From meeting where meeting_date_start >= '%s' and meeting_date_end <= '%s' ORDER BY meeting_date_start", s, e)
+	queryStmt := fmt.Sprintf("Select * From meeting where meeting_date_start >= '%s' and meeting_date_end <= '%s' ORDER BY meeting_date_start", startTime[0], endTime[0])
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
 		log.Panic(dberr)
 	}
-	log.Println(s)
-	log.Println(e)
 	for rows.Next() {
 		var dates Meeting
 		err := rows.Scan(&dates.Id, &dates.MeetingDateStart, &dates.MeetingDateEnd, &dates.Roomid, &dates.Mail, &dates.Reminder)
