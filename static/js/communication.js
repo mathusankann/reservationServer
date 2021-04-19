@@ -85,6 +85,7 @@ async function getUserAuthentication() {
                     document.getElementById("id01").style.display = "none";
                     document.getElementById("login_btn").style.display = "none";
                     document.getElementById("logout_btn").style.display = "block";
+                    document.getElementById("termin").style.display ="none"
                     addButtons(rooms)
 
                 } else {
@@ -99,6 +100,7 @@ async function getUserAuthentication() {
         document.getElementById("id01").style.visibility = "hidden";
         document.getElementById("login_btn").style.display = "none";
         document.getElementById("logout_btn").style.display = "block";
+        document.getElementById("termin").style.display ="none"
         addButtons(rooms)
     }
 }
@@ -157,7 +159,7 @@ function getRoom() {
 function getRoomForOverview() {
 
     let innerText = this.innerText.split(" ")
-    const room = innerText[0] + " " + innerText[1].split("2")[0]
+    const room = innerText[0] + " " + innerText[1].split("-")[0]
     const request = createAjaxRequest();
     request.onreadystatechange = function () {
         if (4 === this.readyState) {
@@ -216,7 +218,7 @@ function getRoomByID(Id, child, roverview, timestart, timeend) {
                         let date = new Date(timestart).toLocaleDateString('de-DE', options)
                         let starter = new Date(timestart).toLocaleTimeString()
                         let ender = new Date(timeend).toLocaleTimeString()
-                        child.innerText = r.name + "\n" + date + " " + starter + " - " + ender
+                        child.innerText = r.name+"-" + "\n" + date + " " + starter + " - " + ender
                         roverview.appendChild(child)
                     }
                     resolve(1)

@@ -185,7 +185,8 @@ function userLogout() {
     document.getElementById("reservedDates").innerText ="";
     document.getElementById("buttonHolder").innerText= "";
     document.getElementById("userButton").innerText= "";
-
+    document.getElementById("termin").style.display ="block"
+    location.reload();
 
 }
 

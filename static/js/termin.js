@@ -26,7 +26,6 @@ function getMonday() {
 }
 
 function setCaption() {
-
     return new Promise(((resolve, reject) => {
         let monday = getMonday()
         monday.then((monday) => {
@@ -35,7 +34,6 @@ function setCaption() {
             sunday.setDate(monday.getDate() + 6)
             currentSunday = sunday
             let captions = monday.toLocaleDateString('de-DE', options) + " - " + sunday.toLocaleDateString('de-DE', options)
-            console.log(captions)
             document.getElementById("week").innerText = captions
             const table = document.getElementById("terminTable")
             for (let i = 0; i < 13; i++) {
@@ -60,6 +58,9 @@ function setCaption() {
 
 //await = wert  // aufrufende Methode muss asnyc
 //promise = callback
+
+
+
 
 async function prevWeeks() {
     let temp = new Date()

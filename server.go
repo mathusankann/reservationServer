@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func serverInit() {
@@ -48,9 +49,52 @@ func serverInit() {
 		}
 		statement.Close()
 	}
+	db.Close()
+}
+
+func reminder() {
+	queryStmt := fmt.Sprintf("Select * From meeting where meeting_date_start >= date('now','+1 day') and meeting_date_start  <date('now','+2 day') and reminder =1")
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	for rows.Next() {
+		var dates Meeting
+		err := rows.Scan(&dates.Id, &dates.MeetingDateStart, &dates.MeetingDateEnd, &dates.Roomid, &dates.Mail, &dates.Reminder)
+		if err != nil {
+			log.Println(err)
+		}
+		//go sendInvitation(dates)
+		sqlStmt := fmt.Sprintf("Update meeting set reminder = 0 where id = %d", dates.Id)
+		statement, err := db.Prepare(sqlStmt)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		_, err = statement.Exec()
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		statement.Close()
+	}
+	//db.Close()
 }
 
 func main() {
+	/*ticker := time.NewTicker(6 * time.Second)
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			case  <-ticker.C:
+				reminder()
+				log.Println("check starting")
+			}
+		}
+	}()
+	done <-true*/
+
 	serverInit()
 	fileServer := http.FileServer(http.Dir("./static")) // New code
 	http.Handle("/", fileServer)
