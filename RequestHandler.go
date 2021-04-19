@@ -64,7 +64,7 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 	timeArray := strings.Split(timeString, " ")
 	timeString = timeArray[0] + " " + timeArray[1] + "+00:00"
 	incMeeting.Id = getMeetingByTimestamp(timeString)
-	//sendInvitation(incMeeting)
+	sendInvitation(incMeeting)
 	w.Write([]byte("ok"))
 
 }
@@ -195,7 +195,7 @@ func sendInvitation(incMeeting Meeting) {
 		"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://localhost:8080/deleteMeeting?UserID=%d", room.Invite, incMeeting.MeetingDateStart, incMeeting.Id)
 	m.SetBody("text/plain", body)
 	// Settings for SMTP server
-	d := gomail.NewDialer("smtp.office365.com", 587, "Terminma3@outlook.de", "")
+	d := gomail.NewDialer("smtp.office365.com", 587, "Terminma3@outlook.de", "Spartan17")
 	// This is only needed when SSL/TLS certificate is not valid on server.
 	// In production this should be set to false.
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}

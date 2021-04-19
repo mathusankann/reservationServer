@@ -68,6 +68,9 @@ async function initReservedDatesOverview(reservedDate,counter) {
     }else {
         len = counter+7
     }
+    if(counter===-1){
+        counter=0
+    }
     for (let i = counter; i <len; i++) {
         let child = document.createElement("div")
         child.className = "reserved"

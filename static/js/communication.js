@@ -206,12 +206,17 @@ function getRoomByID(Id, child, roverview, timestart, timeend) {
                     let r = JSON.parse(this.responseText)
                     let temp = new Date()
                     temp.setHours(temp.getHours() - 1)
-                    if (dates.compare(timestart, temp) >= 0) {
+                    if (dates.compare(new Date(timestart), temp) >= 0) {
+                       /* let test = new Date(timestart)
+                        console.log(test)
                         let start = timestart.split("T")
                         let startm = start[1].split("Z")
                         let end = timeend.split("T")
-                        let endM = end[1].split("Z")
-                        child.innerText = r.name + "\n" + start[0] + " " + startm[0] + " - " + endM[0]
+                        let endM = end[1].split("Z")*/
+                        let date = new Date(timestart).toLocaleDateString('de-DE', options)
+                        let starter = new Date(timestart).toLocaleTimeString()
+                        let ender = new Date(timeend).toLocaleTimeString()
+                        child.innerText = r.name + "\n" + date + " " + starter + " - " + ender
                         roverview.appendChild(child)
                     }
                     resolve(1)
@@ -235,7 +240,7 @@ function getAllRoom() {
                     resolve(true)
                 }
             } else {
-                reject(this.responseText)
+                reject("this.responseText")
             }
         }))
     }
@@ -256,14 +261,15 @@ function getAllMeetingsDate(starttime, endtime) {
                 reservedDates = JSON.parse(this.responseText)
                 let temp = new Date()
                 temp.setHours(temp.getHours() - 1)
-                let counter = 0;
+                let counter = -1;
                 for (let i = 0; i < reservedDates.length; i++) {
                     if (dates.compare(reservedDates[i].time_start, temp) >= 0) {
-                        if (counter === 0) {
+                        if (counter ===-1) {
                             counter = i
                         }
                     }
                 }
+
                 initReservedDatesOverview(reservedDates, counter)
             } else {
                 console.log(this.status + ":" + this.responseText);
