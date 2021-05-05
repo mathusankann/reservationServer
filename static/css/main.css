@@ -1,5 +1,7 @@
 #title{
     font-size: 2cm;
+    cursor:default ;
+    float: left;
 }
 .rooms {
     font-size: 20px;
@@ -107,6 +109,13 @@ span.psw {
     width: 30%; /* Could be more or less, depending on screen size */
 }
 
+@media (max-width: 991px) {
+    .modal-content{
+        width: 60%;
+    }
+}
+
+
 /* The Close Button (x) */
 .close {
     position: absolute;
@@ -152,9 +161,6 @@ span.psw {
 #logout_btn{
     display:none;
 }
-#title{
-    float: left;
-}
 #logout_btn{
     clear: both;
     float: right;
@@ -166,7 +172,7 @@ span.psw {
  #subTitle{
      clear: both;
      font-size: 0.5cm   ;
-
+     cursor:default ;
 
  }
  #buttonHolder{
@@ -211,4 +217,41 @@ span.psw {
 #innerReserver{
     border-style: groove;
     border-color: black;
+}
+
+#v_blocker{
+    top: 0;
+    left: 0;
+    position: fixed;
+    background-color: #cccccc;
+    opacity: 0.3;
+    width:4000px;
+    height:4000px;
+}
+#visitor{
+    width: 90%;
+    padding: 12px 20px;
+}
+
+#addVisitor{
+    width: 10%;
+    color: black;
+    background-color: white;
+    font-size: 25px;
+    font-weight: bold;
+    margin: 0 0;
+    padding: 0 0;
+}
+
+#vContainer{
+    width: 100%;
+}
+
+.labels{
+    font-weight: bold;
+}
+
+#station{
+    width: 90%;
+    padding: 12px 20px;
 }

@@ -13,18 +13,11 @@
     <link rel="stylesheet" href="css/termin.css">
 
 </head>
-
-<body onload="getAllRoomNames()">
-<button id="login_btn" onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Login
-</button>
+<body onload="getUserAuthentication()">
+<div id="v_blocker"></div>
 <button id="logout_btn" onclick="userLogout()">Logout</button>
 <div id="id01" class="modal">
-
     <form class="modal-content animate">
-        <div class="imgcontainer">
-            <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
-        </div>
-
         <div class="container">
             <label for="uname"><b>Benutzername</b></label>
             <input id="uname" type="text" placeholder="Username eingeben" name="uname" required>
@@ -57,14 +50,15 @@
             <th id="nextWeek" value=1>›</th>
         </tr>
     </table>
+
     <div id="formReservation" class="modal">
-        <form class="modal-content animate">
+        <form  class="modal-content animate">
             <div class="imgcontainer">
                 <span onclick="document.getElementById('formReservation').style.display='none'" class="close"
                       title="Close Modal">&times;</span>
             </div>
-            <div class="container">
-                <label for="umail"><b>Ihre E-Mail-Adresse</b></label>
+            <div id="test" class="container">
+             <!--  <label for="umail"><b>Ihre E-Mail-Adresse</b></label>
                 <input id="umail" type="text" placeholder="Mail-Adresse eingeben" name="umail" required>
 
                 <label for="wuser"><b>Bewohner</b></label>
@@ -74,7 +68,8 @@
                     <button type="button" onclick="addTermin()">Abschicken</button>
                     <input type="checkbox" id="reminder" name="Erinnerung">
                     <label for="reminder" title="Sie bekommen eine Benachrichtigung 15 Minuten vor dem Meeting">Reminder</label>
-                </div>
+                </div>-->
+
             </div>
         </form>
     </div>

@@ -3,17 +3,27 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
+	_ "os"
+	"path/filepath"
 	_ "time"
 )
 
-func serverInit() {
-	if _, err := os.Stat("./User.sqlite"); err == nil {
+const charset = "abcdefghijklmnopqrstuvwxyz" +
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+var db = initDbConnection()
+var userMap map[string]string
+
+/*func serverInit() {
+	if _, err := os.Stat("./Account.sqlite"); err == nil {
 
 	} else if os.IsNotExist(err) {
-		db, err := sql.Open("sqlite3", "User.sqlite")
+
+		db, err := sql.Open("sqlite3", "Account.sqlite")
 		if err != nil {
 			log.Panic(err)
 		}
@@ -33,7 +43,7 @@ func serverInit() {
 		if err != nil {
 			log.Panic(err)
 		}
-		var admin User
+		var admin Account
 		admin.Name = "admin"
 		admin.Password = "admin"
 		admin.HashAndSalt([]byte(admin.Password))
@@ -50,8 +60,8 @@ func serverInit() {
 		statement.Close()
 	}
 
-}
-
+}*/
+/*
 func reminder() {
 	queryStmt := fmt.Sprintf("Select * From meeting where meeting_date_start >= date('now','+1 day') and meeting_date_start  <date('now','+2 day') and reminder =1")
 	rows, dberr := db.Query(queryStmt)
@@ -78,36 +88,98 @@ func reminder() {
 	}
 	//db.Close()
 }
+*/
+
+func serverInit() {
+	path := filepath.Join("./createReservationDB.sql")
+
+	c, ioErr := ioutil.ReadFile(path)
+	if ioErr != nil {
+		// handle error.
+	}
+	sqlString := string(c)
+	_, err := db.Exec(sqlString)
+	if err != nil {
+		// handle error.
+	}
+
+}
+
+func insertAdminAccount() {
+	var admin Account
+	admin.Username = "admin"
+	admin.Password = "admin"
+	admin.RoleId = 1
+	admin.HashAndSalt([]byte(admin.Password))
+	sqlStmt := fmt.Sprintf(`INSERT INTO account(username,password,role_id)VALUES(?,?,?)`)
+	statement, err := db.Prepare(sqlStmt)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = statement.Exec(admin.Username, admin.Password, admin.RoleId)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	statement.Close()
+}
+
+func initDbConnection() *sql.DB {
+	//var db, err = sql.Open("sqlite3", "Account.sqlite")
+	var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationdb?parseTime=true")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return db
+}
 
 func main() {
-	/*ticker := time.NewTicker(6 * time.Second)
-	done := make(chan bool)
-	go func() {
-		for {
-			select {
-			case <-done:
-				return
-			case  <-ticker.C:
-				reminder()
-				log.Println("check starting")
-			}
-		}
-	}()
-	done <-true*/
 
-	serverInit()
+	//serverInit()
+
+	insertAdminAccount()
+	userMap = make(map[string]string)
 	fileServer := http.FileServer(http.Dir("./static")) // New code
 	http.Handle("/", fileServer)
+	//ResidentHandler
 	http.HandleFunc("/getRoom", GetRoom)
 	http.HandleFunc("/createRoom", CreateRoom)
 	http.HandleFunc("/startRoom", startConf)
 	http.HandleFunc("/getAllRoomNames", GetAllRoomNames)
+	http.HandleFunc("/getRoomByID", GetRoomByID)
+	http.HandleFunc("/getAllRoomByStationID", getAllRoomByStationID)
+	http.HandleFunc("/getRoomIDByName", getRoomIDByName)
+
+	//StationHandler
+	http.HandleFunc("/getAllStation", getAllStation)
+	http.HandleFunc("/getAllStationByName", getAllStationByName)
+	http.HandleFunc("/getAllTablets", getAllTablets)
+
+	//AccountHandler
 	http.HandleFunc("/addUser", addUser)
 	http.HandleFunc("/getUserAuthentication", getUserAuthentication)
+	http.HandleFunc("/getUserAuthenticationCookie", getUserAuthenticationCookie)
+	http.HandleFunc("/createNewStation", createNewStation)
+	http.HandleFunc("/getAccountByName", getAccountByName)
+
+	//MeetingHandler
 	http.HandleFunc("/setMeeting", setMeeting)
 	http.HandleFunc("/getAllMeetings", getAllMeetings)
-	http.HandleFunc("/getRoomByID", GetRoomByID)
 	http.HandleFunc("/deleteMeeting", deleteMeeting)
+	//VisitorHandler
+	http.HandleFunc("/getVisitorByID", getVisitorByID)
+	http.HandleFunc("/getAllResidentNamesByVisitorID", getAllResidentNamesByVisitorID)
+	http.HandleFunc("/getVisitorbyname", getVisitorbyname)
+	http.HandleFunc("/getAllVistorNamesByResidentID", getAllVistorNamesByResidentID)
+	http.HandleFunc("/addNewVisitor", addNewVisitor)
+	//http.HandleFunc("/addVisitorToResident", addVisitorToResident)
+
+	//BetreuerHandler
+	http.HandleFunc("/getAllRoomNamesByStation", getAllRoomNamesByStation)
+	http.HandleFunc("/addNewMinder", addNewMinder)
+	//RoleHandler
+	http.HandleFunc("/getAllRole", getAllRoles)
+	http.HandleFunc("/getRoleByName", getRoleByName)
+	http.HandleFunc("/getRoleByID", getRoleByID)
 
 	fmt.Printf("Starting server at port 8080\n")
 	if err := http.ListenAndServe(":80", nil); err != nil {

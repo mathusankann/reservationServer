@@ -5,14 +5,14 @@ import (
 	"log"
 )
 
-type User struct {
+type Account struct {
 	ID       int    `json:"id"`
-	Name     string `json:"name"`
+	Username string `json:"username"`
 	Password string `json:"password"`
-	Role     string `json:"role"`
+	RoleId   int    `json:"role_id"`
 }
 
-func (u *User) HashAndSalt(pwd []byte) string {
+func (u *Account) HashAndSalt(pwd []byte) string {
 
 	// Use GenerateFromPassword to hash & salt pwd
 	// MinCost is just an integer constant provided by the bcrypt
@@ -28,18 +28,28 @@ func (u *User) HashAndSalt(pwd []byte) string {
 	u.Password = string(hash)
 	return string(hash)
 }
-func (u User) ComparePasswords(plainPwd string) bool {
+func (u Account) ComparePasswords(plainPwd string) bool {
 	// Since we'll be getting the hashed password from the DB it
 	// will be a string so we'll need to convert it to a byte slice
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(plainPwd))
+	log.Println(u.Password + " : " + plainPwd)
 	if err != nil {
 		log.Println(err)
 		return false
 	}
-	log.Println(u.Password + " : " + plainPwd)
+
 	return true
 }
 
-func (u User) Check() bool {
-	return u.Role != "" || u.Password != "" || u.Name != ""
+func (u Account) Check() bool {
+	return u.RoleId != 0 || u.Password != "" || u.Username != ""
+}
+
+type Role struct {
+	ID                 int    `json:"id"`
+	Name               string `json:"name"`
+	ViewTermin         bool   `json:"viewTermin"`
+	ViewAllUser        bool   `json:"viewAllUser"`
+	ViewAllStationUser bool   `json:"viewAllStationUser"`
+	EditUser           bool   `json:"editUser"`
 }

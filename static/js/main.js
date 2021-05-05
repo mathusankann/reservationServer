@@ -1,81 +1,68 @@
 let Grooms
-
+let flagAddStation;
 
 function openRoom(room) {
     startRoomPost(room);
 }
 
 
-function init() {
+function init(rooms) {
+    Grooms = rooms
+    getAllMeetingsDate(currentWeeksMonday, currentSunday)
     document.getElementById("userButton").innerText = ""
     const overview = document.getElementById("userButton");
+
     if (Grooms !== null) {
         for (let i = 0; i < Grooms.length; i++) {
             let rs = Grooms[i].split(" ");
-            if (rs[1][0] === this.innerText) {
-                const roomdiv = document.createElement("div")
-                roomdiv.id = ("structs" + i);
-                roomdiv.appendChild(document.createElement("br"))
-                roomdiv.className = "rooms"
 
-                roomdiv.innerText = Grooms[i];
-                const a = document.createElement("div")
-                a.className = "img"
-                const img = document.createElement("img")
-                img.src = "media/img/conference.png"
-                a.appendChild(document.createElement("br"))
-                a.appendChild(img)
-                img.className = "konfImg"
-                roomdiv.appendChild(a);
-                //roomdiv.appendChild(img);
-                overview.appendChild(roomdiv)
-                roomdiv.addEventListener("click", getRoom)
-                const activ = document.createElement("img")
-                activ.src = "media/img/redpoint.gif"
-                activ.className = "activind"
-                roomdiv.appendChild(activ)
-            }
+            const roomdiv = document.createElement("div")
+            roomdiv.id = ("structs" + i);
+            roomdiv.appendChild(document.createElement("br"))
+            roomdiv.className = "rooms"
+
+            roomdiv.innerText = Grooms[i];
+            const a = document.createElement("div")
+            a.className = "img"
+            const img = document.createElement("img")
+            img.src = "media/img/conference.png"
+            a.appendChild(document.createElement("br"))
+            a.appendChild(img)
+            img.className = "konfImg"
+            roomdiv.appendChild(a);
+            //roomdiv.appendChild(img);
+            overview.appendChild(roomdiv)
+            roomdiv.addEventListener("click", getRoom)
+            const activ = document.createElement("img")
+            activ.src = "media/img/redpoint.gif"
+            activ.className = "activind"
+            roomdiv.appendChild(activ)
+
         }
     }
-    const roomdiv = document.createElement("div")
-    roomdiv.id = ("addRoom");
-    roomdiv.className = "rooms"
-    const input = document.createElement("input")
-    input.id = "name"
-    roomdiv.appendChild(input)
-    const a = document.createElement("div")
-    roomdiv.appendChild(document.createElement("br"))
-    a.className = "img"
-    const img = document.createElement("img")
-    img.src = "media/img/add.svg"
-    img.className = "konfImg"
-    img.addEventListener("click", createRoom)
-    a.appendChild(document.createElement("br"))
-    a.appendChild(img)
-    roomdiv.appendChild(a);
-    overview.appendChild(roomdiv)
+
 }
 
-async function initReservedDatesOverview(reservedDate,counter) {
+async function initReservedDatesOverview(reservedDate, counter) {
     const roverview = document.getElementById("reservedDates")
+    roverview.innerText=""
     roverview.innerText = "Anstehende Termine"
     const innerReserver = document.createElement("div")
     innerReserver.id = "innerReserver"
-    console.log(counter)
     let len
-    if (counter+7>reservedDate.length){
+    if (counter + 7 > reservedDate.length) {
         len = reservedDate.length
-    }else {
-        len = counter+7
+    } else {
+        len = counter + 7
     }
-    if(counter===-1){
-        counter=0
+    if (counter === -1) {
+        counter = 0
     }
-    for (let i = counter; i <len; i++) {
+    for (let i = counter; i < len; i++) {
         let child = document.createElement("div")
         child.className = "reserved"
-        await getRoomByID(reservedDate[i].roomid, child, innerReserver, reservedDate[i].time_start, reservedDate[i].time_end)
-        child.addEventListener("click",getRoomForOverview)
+        await getRoomByID(reservedDate[i].bewohner_id, child, innerReserver, reservedDate[i].time_start, reservedDate[i].time_end)
+        child.addEventListener("click", getRoomForOverview)
     }
     roverview.appendChild(innerReserver)
 }
@@ -99,52 +86,57 @@ function addButtons(rooms) {
     currentWeeksMonday.setDate(currentWeeksMonday.getDate() - (currentWeeksMonday.getDay() - 1))
     let currentSunday = new Date()
     currentSunday.setDate(currentWeeksMonday.getDate() + 6)
+    const roverview = document.getElementById("reservedDates")
+    roverview.innerText = "Anstehende Termine"
     getAllMeetingsDate(currentWeeksMonday, currentSunday)
 }
 
 
-function createRoom() {
-    if (document.cookie !== "") {
-        let api, i, len, method, params, ref, urls;
-        api = new BigBlueButtonApi("https://kon.jitsi-mathu.de/bigbluebutton/api", document.cookie.split('=')[1]);
-        //todo shared secret request
+async function createRoom(name, stationName) {
+    console.log("hier")
+    //if (document.cookie !== "") {
+    let api, i, len, method, params, ref, urls;
+    api = new BigBlueButtonApi("https://kon.jitsi-mathu.de/bigbluebutton/api", "zLY4hvAAQTrBpMVNhGCM84ZlQl03A14sGjVHJPKT");
+    //todo shared secret request
 
-        const username = document.getElementById("name").value
-        // A hash of parameters.
-        // The parameter names are the same names BigBlueButton expects to receive in the API calls.
-        // The lib will make sure that, for each API call, only the parameters supported will be used.
-        params = {
-            name: username,
-            meetingID: "2", //todo request MeetingID
-            moderatorPW: "mp",
-            attendeePW: "ap",
-            password: "ap", // usually equals "moderatorPW"
-            welcome: "<br>Welcome to <b>%%CONFNAME%%</b>!",
-            fullName: username,
-            publish: false,
-            // random: "416074726",
-            record: false,
-            // recordID: "random-9998650",
-            //voiceBridge: "75858", //todo request videoBridgeID
-            meta_anything: "My Meta Parameter",
-            custom_customParameter: "Will be passed as 'customParameter' to all calls"
-        };
-        urls = [];
-        ref = api.availableApiCalls();
-        console.log(ref)
-        for (i = 0, len = ref.length; i < len; i++) {
-            method = ref[i];
-            urls.push({
-                name: method,
-                url: api.urlFor(method, params)
-            });
-        }
-        params.password = "ap"
-        params.fullName = "Besucher"
-        let vistor = api.urlFor('join', params)
-        let room = new Room(username, parseInt(params.meetingID), urls[2].url, urls[1].url, vistor.toString())
-        sendRoomPost(JSON.stringify(room))
+    //const username = document.getElementById("name").value
+    // A hash of parameters.
+    // The parameter names are the same names BigBlueButton expects to receive in the API calls.
+    // The lib will make sure that, for each API call, only the parameters supported will be used.
+    params = {
+        name: name,
+        meetingID: "2", //todo request MeetingID
+        moderatorPW: "mp",
+        attendeePW: "ap",
+        password: "ap", // usually equals "moderatorPW"
+        welcome: "<br>Welcome to <b>%%CONFNAME%%</b>!",
+        fullName: name,
+        publish: false,
+        // random: "416074726",
+        record: false,
+        // recordID: "random-9998650",
+        //voiceBridge: "75858", //todo request videoBridgeID
+        meta_anything: "My Meta Parameter",
+        custom_customParameter: "Will be passed as 'customParameter' to all calls"
+    };
+    urls = [];
+    ref = api.availableApiCalls();
+    console.log(ref)
+    for (i = 0, len = ref.length; i < len; i++) {
+        method = ref[i];
+        urls.push({
+            name: method,
+            url: api.urlFor(method, params)
+        });
     }
+    params.password = "ap"
+    params.fullName = "Besucher"
+    let vistor = api.urlFor('join', params)
+    let room = new Room(name, 1, urls[2].url, urls[1].url, vistor.toString());
+    room.station_id = await getStationByName(stationName)
+
+    sendRoomPost(JSON.stringify(room))
+    //}
 }
 
 function initTermin() {
@@ -168,25 +160,184 @@ function filterFunction() {
     }
 }
 
-function setCookie(c_name, value, exdays) {
-    let exdate = new Date();
-    exdate.setDate(exdate.getDate() + exdays);
-    let c_value = escape(value) + ((exdays == null) ? "" : "; expires=" + exdate.toUTCString());
-    document.cookie = c_name + "=" + c_value;
+function something() {
+
 }
 
-
 function userLogout() {
-    document.cookie = "Admin=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-    console.log(document.cookie)
-    document.getElementById("id01").style.display = "none";
-    document.getElementById("login_btn").style.display = "block";
-    document.getElementById("logout_btn").style.display = "none";
-    document.getElementById("reservedDates").innerText ="";
-    document.getElementById("buttonHolder").innerText= "";
-    document.getElementById("userButton").innerText= "";
-    document.getElementById("termin").style.display ="block"
+
+    let cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+        let cookie = cookies[i];
+        let eqPos = cookie.indexOf("=");
+        let name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    }
     location.reload();
 
 }
 
+async function generateInputInterfaceAddRoom() {
+    flagAddStation = false
+    const form = document.getElementById("test")
+    form.innerText = ""
+    let dropdownLabel = document.createElement("label")
+    dropdownLabel.htmlFor = "station"
+    dropdownLabel.innerText = "Station"
+    dropdownLabel.className = "labels"
+    let dropdown = document.createElement("select")
+    dropdown.name = "Station"
+    dropdown.id = "station"
+    let stations = await getAllStation()
+    if (stations != null) {
+        for (let i = 0; i < stations.length; i++) {
+            let option = document.createElement("option")
+            option.value = stations[i]
+            option.innerText = stations[i]
+            dropdown.appendChild(option)
+        }
+    }
+
+    let addNewStationButton = document.createElement("button")
+    addNewStationButton.innerText = "+"
+    addNewStationButton.id = "addVisitor"
+    addNewStationButton.type = "button"
+    addNewStationButton.onclick = setNewStation
+    let vContainer = document.createElement("div")
+    vContainer.id = "vContainer"
+    vContainer.appendChild(dropdown)
+    vContainer.appendChild(addNewStationButton)
+    form.appendChild(dropdownLabel)
+    form.appendChild(vContainer)
+    dropdownLabel = document.createElement("label")
+    dropdownLabel.htmlFor = "name"
+    dropdownLabel.innerText = "Bewohner"
+    dropdownLabel.className = "labels"
+    let nameInput = document.createElement("input")
+    nameInput.type = "text"
+    nameInput.placeholder = "Name"
+    nameInput.id = "nameVisitor"
+    form.appendChild(dropdownLabel)
+    form.appendChild(nameInput)
+    let sendButton = document.createElement("button")
+    sendButton.type = "button"
+    sendButton.innerText = "Erstellen"
+    sendButton.id = "createButton"
+    sendButton.onclick = setResident
+    form.appendChild(sendButton)
+    document.getElementById('formReservation').style.display = 'block'
+
+}
+
+function setNewStation() {
+    flagAddStation = true
+    const form = document.getElementById("test")
+    form.innerText = ""
+    let dropdownLabel = document.createElement("label")
+    dropdownLabel.htmlFor = "station"
+    dropdownLabel.innerText = "Station"
+    dropdownLabel.className = "labels"
+    form.appendChild(dropdownLabel)
+    let nameInput = document.createElement("input")
+    nameInput.type = "text"
+    nameInput.placeholder = "Stationsname"
+    nameInput.id = "stationsnameInput"
+    form.appendChild(nameInput)
+    nameInput = document.createElement("input")
+    nameInput.type = "text"
+    nameInput.placeholder = "Benutzername"
+    nameInput.id = "userInput"
+    form.appendChild(nameInput)
+    nameInput = document.createElement("input")
+    nameInput.type = "password"
+    nameInput.placeholder = "Passwort"
+    nameInput.id = "passwordInput"
+    form.appendChild(nameInput)
+    dropdownLabel = document.createElement("label")
+    dropdownLabel.htmlFor = "name"
+    dropdownLabel.innerText = "Bewohner"
+    dropdownLabel.className = "labels"
+    nameInput = document.createElement("input")
+    nameInput.type = "text"
+    nameInput.placeholder = "Name"
+    nameInput.id = "nameVisitor"
+    form.appendChild(dropdownLabel)
+    form.appendChild(nameInput)
+    let sendButton = document.createElement("button")
+    sendButton.type = "button"
+    sendButton.innerText = "Erstellen"
+    sendButton.id = "createButton"
+    sendButton.onclick = setResident
+    form.appendChild(sendButton)
+    document.getElementById("formReservation").style.display = "block"
+}
+
+async function setResident() {
+    if (flagAddStation) {
+        let stationName = document.getElementById("stationsnameInput").value
+        let userName = document.getElementById("userInput").value
+        let password = document.getElementById("passwordInput").value
+        let residentName = document.getElementById("nameVisitor").value
+        let stationID;
+        /* createStation(stationName).then(() => {
+                 getStationByName(stationName).then((res) => {
+                     stationID = res
+                     createRoom(residentName, stationName)
+                     createUser(0, userName, password, 2).then(() => {
+                         getAccountIDByName(userName).then((id) => {
+                             createMinder(0, stationID, userName, id).then(()=>{
+                                 console.log("done")
+                             })
+                         })
+                     })
+                 })
+
+             }
+         )*/
+        await createStation(stationName)
+        stationID = await getStationByName(stationName)
+        console.log(stationID)
+        createRoom(residentName, stationName)
+        await createUser(0, userName, password, 2)
+        getAccountIDByName(userName).then((userID) => {
+            createMinder(0, stationID, userName, userID).then(() => {
+                console.log("created")
+                location.reload();
+            })
+        })
+
+
+    } else {
+        let stationName = document.getElementById("station").value
+        let residentName = document.getElementById("nameVisitor").value
+        await createRoom(residentName, stationName)
+        location.reload();
+    }
+
+}
+
+function tester() {
+    // createMinder(0,3,"Auto Fahrere",3)
+
+}
+
+function showEditorPanel() {
+    const overview = document.getElementById("userButton");
+    const roomdiv = document.createElement("div")
+    roomdiv.id = ("addRoom");
+    roomdiv.className = "rooms"
+    //const input = document.createElement("input")
+    //input.id = "name"
+    //roomdiv.appendChild(input)
+    const a = document.createElement("div")
+    roomdiv.appendChild(document.createElement("br"))
+    a.className = "img"
+    const img = document.createElement("img")
+    img.src = "media/img/add.svg"
+    img.className = "konfImg"
+    img.addEventListener("click", generateInputInterfaceAddRoom)
+    a.appendChild(document.createElement("br"))
+    a.appendChild(img)
+    roomdiv.appendChild(a);
+    overview.appendChild(roomdiv)
+}

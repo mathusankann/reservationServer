@@ -3,10 +3,21 @@ let reservedDates;
 let currentMonday;
 let currentSunday;
 let currentWeeksMonday;
+let flagAddVisitor
 
 let startTerminUser;
 let endTerminUser;
 const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
+
+
+let weekday=new Array(7);
+weekday[0]="Montag";
+weekday[1]="Dienstag";
+weekday[2]="Mittwoch";
+weekday[3]="Donnerstag";
+weekday[4]="Freitag";
+weekday[5]="Samstag";
+weekday[6]="Sonntag";
 
 function initCurrentWeeksMonday() {
     return new Promise(((resolve, reject) => {
@@ -33,8 +44,13 @@ function setCaption() {
             let sunday = new Date()
             sunday.setDate(monday.getDate() + 6)
             currentSunday = sunday
-            let captions = monday.toLocaleDateString('de-DE', options) + " - " + sunday.toLocaleDateString('de-DE', options)
-            document.getElementById("week").innerText = captions
+            document.getElementById("week").innerText = monday.toLocaleDateString('de-DE', options) + " - " + sunday.toLocaleDateString('de-DE', options)
+            let button = document.createElement("img")
+            button.id = "timeTableSettings"
+            button.src="media/img/settings.png"
+            button.onclick = setTimeTableSettingInterface
+
+            document.getElementById("week").appendChild(button)
             const table = document.getElementById("terminTable")
             for (let i = 0; i < 13; i++) {
                 let entry = document.createElement("tr")
@@ -60,8 +76,6 @@ function setCaption() {
 //promise = callback
 
 
-
-
 async function prevWeeks() {
     let temp = new Date()
     temp.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() - 7)
@@ -69,6 +83,13 @@ async function prevWeeks() {
         currentMonday.setDate(currentMonday.getDate() - 7)
         currentSunday.setDate(currentSunday.getDate() - 7)
         document.getElementById("week").innerText = currentMonday.toLocaleDateString('de-DE', options) + " - " + currentSunday.toLocaleDateString('de-DE', options)
+        let button = document.createElement("img")
+        button.id = "timeTableSettings"
+        button.src="media/img/settings.png"
+        button.onclick = setTimeTableSettingInterface
+
+        document.getElementById("week").appendChild(button)
+
         //  deleteNodes()
         await getAllMeetings(currentMonday, currentSunday)
         // setDates()
@@ -79,12 +100,20 @@ async function nextWeek() {
     currentMonday.setDate(currentMonday.getDate() + 7)
     currentSunday.setDate(currentSunday.getDate() + 7)
     document.getElementById("week").innerText = currentMonday.toLocaleDateString('de-DE', options) + " - " + currentSunday.toLocaleDateString('de-DE', options)
+    let button = document.createElement("img")
+    button.id = "timeTableSettings"
+    button.src="media/img/settings.png"
+    button.onclick = setTimeTableSettingInterface
+
+    document.getElementById("week").appendChild(button)
+
     //  deleteNodes()
     await getAllMeetings(currentMonday, currentSunday)
     //setDates()
 }
 
 async function initTerminTable() {
+    document.getElementById('id01').style.display = 'block'
     console.log("running")
     await initCurrentWeeksMonday()
     await setCaption()
@@ -100,6 +129,7 @@ async function setDates() {
     let startTime = 8
     let endTime = 9
     const table = document.getElementById("terminTable")
+    deleteAllEventListener()
     for (let i = 0; i < 13; i++) {
         //let entry = document.createElement("tr")
         for (let j = 0; j < 9; j++) {
@@ -126,7 +156,7 @@ async function setDates() {
                     } else {
                         entities.className = "innerTable"
                         entities.innerText = generateCell(startTime, endTime)
-                        entities.addEventListener("click", startReservation)
+                        entities.addEventListener("click", generateInputInterfaceAddTermin)
                     }
                 } else if (j === currenDate.getDay()) {
                     if (startTime > currenDate.getHours()) {
@@ -138,7 +168,7 @@ async function setDates() {
                         } else {
                             entities.className = "innerTable"
                             entities.innerText = generateCell(startTime, endTime)
-                            entities.addEventListener("click", startReservation)
+                            entities.addEventListener("click", generateInputInterfaceAddTermin)
                         }
                     } else {
                         entities.innerText = "Abgelaufen"
@@ -154,14 +184,7 @@ async function setDates() {
         startTime++
         endTime++
     }
-    const dropdown = document.getElementById("wuser")
-    dropdown.innerText = ""
-    for (let i = 0; i < rooms.length; i++) {
-        let option = document.createElement("option")
-        option.value = i + 1
-        option.innerText = rooms[i]
-        dropdown.appendChild(option)
-    }
+
 
 }
 
@@ -185,42 +208,54 @@ function startReservation() {
     // addTermin(startDate, endDate)
 }
 
-function addTermin() {
-    let mail = document.getElementById("umail").value
-    let userId = document.getElementById("wuser").value
-    let checked = document.getElementById("reminder").checked
-    console.log(userId + mail)
-    startTerminUser = startTerminUser.toISOString()
-    endTerminUser = endTerminUser.toISOString()
-    let me = new Meeting()
-    me.time_start = startTerminUser
-    console.log(me.time_start)
-    me.time_end = endTerminUser
-    if (checked) {
-        me.reminder = 1
-    } else {
-        me.reminder = 0
+async function addTermin() {
+    if (document.getElementById("wuser").value !== '0') {
+        let userId = document.getElementById("wuser").value
+        startTerminUser = startTerminUser.toISOString()
+        endTerminUser = endTerminUser.toISOString()
+        let me = new Meeting()
+        me.time_start = startTerminUser
+        me.time_end = endTerminUser
+        me.bewohner_id = await getRoomIDBYName(userId)
+        if (flagAddVisitor) {
+            console.log(userId)
+            let name = document.getElementById("nameVisitor").value
+            let mail = document.getElementById("mailVisitor").value
+            if (mail !== "" && name !== "") {
+                addNewVisitor(name, mail, me.bewohner_id).then((res) => {
+                    me.besucher_id = res.id
+                    // addVisitorToResident(me.besucher_id, me.bewohner_id)
+                    sendMeetingPost(JSON.stringify(me))
+                })
+            }
+        } else {
+            let visitor = document.getElementById("visitor").value
+            if (visitor !== "") {
+                getVisitorByName(visitor).then((res) => {
+                    console.log(res)
+                    me.besucher_id = res.id
+                    sendMeetingPost(JSON.stringify(me))
+                })
+            }
+
+        }
     }
 
-    me.roomid = parseInt(userId)
-    me.mail = mail
-    console.log(me.reminder)
-    sendMeetingPost(JSON.stringify(me))
 }
 
 
 function getAllMeetings(starttime, endtime) {
     let tempStart = new Date();
     console.log(starttime.getTimezoneOffset())
-    tempStart.setFullYear(starttime.getFullYear(), starttime.getMonth(), starttime.getDate() -1)
-    tempStart.setHours(tempStart.getHours()+2)
-   // console.log(formatDate(tempStart))
-   // tempStart = tempStart.toLocaleDateString()
+    tempStart.setFullYear(starttime.getFullYear(), starttime.getMonth(), starttime.getDate() - 1)
+    tempStart.setHours(tempStart.getHours() + 2)
+    // console.log(formatDate(tempStart))
+    // tempStart = tempStart.toLocaleDateString()
 
     let tempEnd = new Date();
-    tempEnd.setFullYear(endtime.getFullYear(), endtime.getMonth(), endtime.getDate() )
-    tempEnd.setHours(tempEnd.getHours()+2)
-    tempEnd.setHours(25,59,0,0)
+    tempEnd.setFullYear(endtime.getFullYear(), endtime.getMonth(), endtime.getDate())
+    tempEnd.setHours(tempEnd.getHours() + 2)
+    tempEnd.setHours(25, 59, 0, 0)
     //tempEnd = tempEnd.toLocaleDateString()
     console.log(tempEnd)
 
@@ -267,11 +302,13 @@ function getAllMeetingsTest() {
 
 
 function generateCell(startTime, endTime) {
+
     let text;
     if (startTime < 10) {
         text = "0" + startTime + ":00 - "
     }
     if (endTime < 10) {
+
         text = text + "0" + endTime + ":00"
     }
     if (startTime >= 10) {
@@ -288,6 +325,20 @@ function deleteNodes() {
     document.querySelectorAll('.leftOuterTable').forEach(e => e.remove());
     document.querySelectorAll('.rightOuterTable').forEach(e => e.remove());
     document.querySelectorAll('.expired').forEach(e => e.remove());
+}
+
+function deleteAllEventListener() {
+    for (let i = 0; i < 13; i++) {
+        //let entry = document.createElement("tr")
+        for (let j = 0; j < 9; j++) {
+            // let entities = document.createElement("th")
+            //entry.appendChild(entities)
+            let entities = document.getElementById(i.toString() + "_" + j.toString())
+            entities.removeEventListener("click", generateInputInterfaceAddTermin)
+        }
+    }
+
+
 }
 
 let dates = {
@@ -364,15 +415,6 @@ function compareWithReservedDates(b) {
 
 }
 
-function testReservered() {
-    if (reservedDates != null) {
-        for (let i = 0; i < reservedDates.length; i++) {
-            console.log(new Date(Date.parse(reservedDates[i].time_start)))
-        }
-
-    }
-
-}
 
 function formatDate(date) {
     var d = new Date(date),
@@ -386,4 +428,194 @@ function formatDate(date) {
         day = '0' + day;
 
     return [year, month, day].join('-');
+}
+
+
+function generateInputInterfaceAddTermin() {
+    flagAddVisitor = false
+    let text = this.innerText.split("-")
+    let startTime = parseInt(text[0].split(":")[0])
+    let endTime = parseInt(text[1].split(":")[0])
+
+    let diff = this.cellIndex - 1;
+    let startDate = new Date()
+    let endDate = new Date()
+    startDate.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + diff)
+    startDate.setHours(startTime, 0, 0, 0)
+
+    endDate.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + diff)
+    endDate.setHours(endTime, 0, 0, 0)
+    startTerminUser = startDate;
+    endTerminUser = endDate;
+    const form = document.getElementById("test")
+    form.innerText = ""
+    let dropdownLabel = document.createElement("label")
+    dropdownLabel.htmlFor = "wuser"
+    dropdownLabel.innerText = "Bewohner"
+    dropdownLabel.className = "labels"
+    let dropdown = document.createElement("select")
+    dropdown.name = "Bewohner"
+    dropdown.id = "wuser"
+    if (rooms != null) {
+        let option = document.createElement("option")
+        option.value = 0
+        dropdown.appendChild(option)
+        for (let i = 0; i < rooms.length; i++) {
+            let option = document.createElement("option")
+            option.value = rooms[i]
+            option.innerText = rooms[i]
+            option.addEventListener("click", getVisitors)
+            dropdown.appendChild(option)
+        }
+    }
+    form.appendChild(dropdownLabel)
+    form.appendChild(dropdown)
+    dropdown = document.createElement("select")
+    dropdown.id = "visitor"
+    dropdown.name = "Besucher"
+    dropdownLabel = document.createElement("label")
+    dropdownLabel.className = "labels"
+    dropdownLabel.htmlFor = "visitor"
+    dropdownLabel.innerText = "Besucher"
+    let addNewVisitorButton = document.createElement("button")
+    let vContainer = document.createElement("div")
+    addNewVisitorButton.innerText = "+"
+    addNewVisitorButton.id = "addVisitor"
+    addNewVisitorButton.type = "button"
+    addNewVisitorButton.onclick = setVisitor
+    vContainer.id = "vContainer"
+    vContainer.appendChild(dropdown)
+    vContainer.appendChild(addNewVisitorButton)
+    form.appendChild(dropdownLabel)
+    form.appendChild(vContainer)
+
+    let sendButton = document.createElement("button")
+    sendButton.type = "button"
+    sendButton.innerText = "Abschicken"
+    sendButton.id = "sendButton"
+    sendButton.addEventListener("click", addTermin)
+    form.appendChild(sendButton)
+    document.getElementById('formReservation').style.display = 'block'
+}
+
+async function getVisitors() {
+    console.log(this.value)
+    let id = await getRoomIDBYName(this.value)
+    await getAllVistorNamesByResidentID(id)
+}
+
+function setVisitor() {
+    flagAddVisitor = true
+    const form = document.getElementById("test")
+    document.getElementById("formReservation").style.display = "none"
+    const labels = document.getElementsByClassName("labels")
+    document.getElementById("visitor").style.display = 'none'
+    document.getElementById("addVisitor").style.display = 'none'
+    document.getElementById("sendButton").remove()
+    console.log(document.getElementById("wuser"))
+
+    let nameInput = document.createElement("input")
+    nameInput.type = "text"
+    nameInput.placeholder = "Name"
+    nameInput.id = "nameVisitor"
+    let mailInput = document.createElement("input")
+    mailInput.type = "text"
+    mailInput.placeholder = "Mail"
+    mailInput.id = "mailVisitor"
+    form.appendChild(nameInput)
+    form.appendChild(mailInput)
+
+    let sendButton = document.createElement("button")
+    sendButton.type = "button"
+    sendButton.innerText = "Abschicken"
+    sendButton.id = "sendButton"
+    sendButton.addEventListener("click", addTermin)
+    form.appendChild(sendButton)
+    document.getElementById("formReservation").style.display = "block"
+    //labels[0].innerHTML="test"
+
+}
+
+async function setTimeTableSettingInterface() {
+    //Daysettings
+    const form = document.getElementById("test")
+    form.innerText = ""
+    let label = document.createElement("label")
+    label.innerText = "Tage"
+    label.className = "labels"
+    form.appendChild(label)
+    let tContainer = document.createElement("div")
+    tContainer.id = "tContainer"
+    for (let i = 0; i < 7; i++) {
+        let button = document.createElement("button")
+        button.type = "button"
+        button.innerText = weekday[i]
+        tContainer.appendChild(button)
+        button.className = "timeTableSettingButtons"
+    }
+    form.appendChild(tContainer)
+    form.appendChild(document.createElement("br"))
+    //Timesettings
+    let zContainer = document.createElement("div")
+    zContainer.id = "zContainer"
+    label = document.createElement("label")
+    label.innerText = "Zeit"
+    label.className = "labels"
+
+    form.appendChild(label)
+    let dropdown = document.createElement("select")
+    dropdown.className = "time"
+    let startTime = 8
+    let endTime = 9
+    dropdown.appendChild(document.createElement("option"))
+    for (let i = 0; i < 13; i++) {
+        let option = document.createElement("option")
+        option.innerText = generateCell(startTime, endTime).split("-")[0]
+        option.value = generateCell(startTime, endTime).split("-")[0]
+        dropdown.appendChild(option)
+        startTime++
+    }
+    zContainer.appendChild(dropdown)
+    let something = document.createElement("div")
+    something.innerText = "_"
+    something.id = "something"
+    zContainer.appendChild(something)
+    dropdown = document.createElement("select")
+    dropdown.appendChild(document.createElement("option"))
+    startTime=8
+    for (let i = 0; i < 13; i++) {
+        let option = document.createElement("option")
+        option.innerText = generateCell(startTime, endTime).split("-")[1]
+        option.value = generateCell(startTime, endTime).split("-")[1]
+        dropdown.appendChild(option)
+        endTime++
+    }
+    dropdown.className = "time"
+    zContainer.appendChild(dropdown)
+    /*let button = document.createElement("button")
+    button.id = "deactivate"
+    button.type = "button"
+    button.innerText = "deaktivieren"
+    button.className = "timeTableSettingButtons"
+    zContainer.appendChild(button)*/
+
+    form.appendChild(zContainer)
+    form.appendChild(document.createElement("br"))
+    //Tabletsettings
+    label = document.createElement("label")
+    label.innerText = "Tabletts"
+    label.className = "labels"
+    label.style.clear="both"
+    form.appendChild(label)
+   /* let tablets = await getAllTablets()
+    if(tablets!=null){
+        for(let i=0;i<tablets.length;i++){
+
+        }
+    }*/
+
+
+
+    document.getElementById("formReservation").style.display = "block"
+
 }

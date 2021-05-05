@@ -18,52 +18,107 @@ td, th {
 }
 
 
-#nextWeek{
+#nextWeek {
     cursor: pointer;
 }
 
-#prevWeek{
+#prevWeek {
     cursor: pointer;
 }
-.leftOuterTable{
-    visibility: hidden;
-    border-color: white;
-    border-right-color:lightgray ;
-    border-top-color:lightgray ;
+
+#prevWeek:hover {
     background-color: #dddddd;
 }
-.rightOuterTable{
-    visibility: hidden;
-    border-color: white;
-    border-left-color:lightgray ;
-    border-top-color:lightgray ;
+
+#nextWeek:hover {
     background-color: #dddddd;
 }
-#week{
+
+.leftOuterTable {
+    visibility: hidden;
+    border-color: white;
+    border-right-color: lightgray;
+    border-top-color: lightgray;
+    background-color: #dddddd;
+}
+
+.rightOuterTable {
+    visibility: hidden;
+    border-color: white;
+    border-left-color: lightgray;
+    border-top-color: lightgray;
+    background-color: #dddddd;
+}
+
+#week {
     font-size: 29px;
 }
 
-.innerTable:hover{
+.innerTable:hover {
     background-color: gray;
     cursor: pointer;
 }
 
-.expired{
+.expired {
     background-color: gray;
+    cursor: default;
 }
 
-#termin{
+#termin {
     clear: both;
 
 }
-#checkboxReminder{
+
+#checkboxReminder {
     width: 100%;
     clear: both;
 }
-#reminder{
+
+#reminder {
     clear: both;
 }
-#wuser{
+
+#wuser {
     width: 100%;
     padding: 12px 20px;
+}
+
+.days {
+    cursor: default;
+    background-color: #dddddd;
+}
+
+#termin {
+    cursor: default;
+}
+
+.timeTableSettingButtons {
+    padding: 12px 12px;
+
+}
+
+#timeTableSettings {
+    width: 2.5%;
+    cursor: pointer;
+
+}
+
+.time {
+    width: 30%;
+
+    padding: 12px 12px;
+}
+
+#something {
+    width: 10%;
+    text-align: center;
+}
+
+#zContainer {
+    width: 100%;
+    font-size: 15px;
+}
+
+#deactivate {
+    margin: 0 0;
 }
