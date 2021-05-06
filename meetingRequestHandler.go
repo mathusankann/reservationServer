@@ -137,7 +137,7 @@ func sendInvitation(incMeeting Meeting) {
 		"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://reserv.jitsi-mathu.de/deleteMeeting?meetingID=%d", room.Invite, wholeString, incMeeting.Id)
 	m.SetBody("text/plain", body)
 	// Settings for SMTP server
-	d := gomail.NewDialer("smtp.office365.com", 587, "Terminma3@outlook.de", "Spartan17")
+	d := gomail.NewDialer("smtp.office365.com", 587, "Terminma3@outlook.de", "")
 	// This is only needed when SSL/TLS certificate is not valid on server.
 	// In production this should be set to false.
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
