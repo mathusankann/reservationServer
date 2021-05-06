@@ -115,6 +115,9 @@ function sendMeetingPost(data) {
 
 async function getUserAuthentication() {
     if (document.cookie === "") {
+        document.getElementById("uname").innerText=""
+        document.getElementById("psw").innerText=""
+
         await getAllRoom()
         let user = new User(0, document.getElementById("uname").value, document.getElementById("psw").value, 0)
         const request = createAjaxRequest();
@@ -147,7 +150,8 @@ function getUserAuthenticationCookie() {
     request.onreadystatechange = async function () {
         if (4 === this.readyState) {
             if (200 === this.status) {
-                //getAllRoomNames() //todo await
+                document.getElementById("uname").innerText=""
+                document.getElementById("psw").innerText=""
                 document.getElementById("id01").style.display = "none";
                 // document.getElementById("login_btn").style.display = "none";
                 document.getElementById("logout_btn").style.display = "block";
@@ -226,6 +230,8 @@ function startRoomPost(createRoom) {
     request.open("POST", "/startRoom", true);
     request.send(JSON.stringify(createRoom.create));
 }
+
+
 
 function getRoom() {
     console.log(this)
@@ -402,7 +408,7 @@ function getAllMeetingsDate(starttime, endtime) {
     request.send();
 }
 
-function getAllVistorNamesByResidentID(Id) {
+function getAllVistorNamesByResidentID(Id,addEvent) {
     return new Promise(((resolve, reject) => {
         const request = createAjaxRequest();
         request.onreadystatechange = function () {
@@ -423,6 +429,11 @@ function getAllVistorNamesByResidentID(Id) {
                             option.innerText = listVisitor[i]
                             dropdown.appendChild(option)
                             resolve(true)
+                            if (addEvent){
+                                option.onclick = ()=>{
+                                    console.log("test")
+                                }
+                            }
                         }
                     }
                 }
@@ -476,8 +487,6 @@ function addNewVisitor(name, mail,id) {
 
 function addVisitorToResident(visitor, resident) {
     return new Promise(((resolve, reject) => {
-        console.log(visitor)
-        console.log(resident)
         let rhv = new ResidentHasVisitor(0,visitor,resident)
         let path = "/addVisitorToResident"
 
@@ -632,6 +641,49 @@ function getAllTablets() {
             }
         }
         request.open("GET", "/getAllTablets", true);
+        request.send();
+    }))
+
+}
+
+/*
+function getAllTimeouts(){
+    return new Promise(((resolve, reject) => {
+        const request = createAjaxRequest();
+        request.onreadystatechange = function () {
+            if (4 === this.readyState) {
+                if (200 === this.status) {
+                    let val = JSON.parse(this.responseText)
+                    //console.log(this.responseText)
+                    resolve(val)
+                }else{
+                    console.log(this.responseText)
+                    resolve(null)
+                }
+            }
+        }
+        request.open("GET", "/getTimeOut", true);
+        request.send();
+    }))
+}
+*/
+
+function getAll(path) {
+    return new Promise(((resolve, reject) => {
+        const request = createAjaxRequest();
+        request.onreadystatechange = function () {
+            if (4 === this.readyState) {
+                if (200 === this.status) {
+                    let val = JSON.parse(this.responseText)
+                    //console.log(this.responseText)
+                    resolve(val)
+                }else{
+                    console.log(this.responseText)
+                    resolve(null)
+                }
+            }
+        }
+        request.open("GET", path, true);
         request.send();
     }))
 

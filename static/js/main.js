@@ -1,5 +1,6 @@
 let Grooms
 let flagAddStation;
+let userId;
 
 function openRoom(room) {
     startRoomPost(room);
@@ -32,7 +33,7 @@ function init(rooms) {
             roomdiv.appendChild(a);
             //roomdiv.appendChild(img);
             overview.appendChild(roomdiv)
-            roomdiv.addEventListener("click", getRoom)
+            roomdiv.addEventListener("click", generateInterfaceRoom)
             const activ = document.createElement("img")
             activ.src = "media/img/redpoint.gif"
             activ.className = "activind"
@@ -340,4 +341,78 @@ function showEditorPanel() {
     a.appendChild(img)
     roomdiv.appendChild(a);
     overview.appendChild(roomdiv)
+}
+
+
+
+function generateInterfaceRoom() {
+    const form = document.getElementById("test")
+    form.innerText = ""
+    let dropdownLabel = document.createElement("label")
+    dropdownLabel.htmlFor = "besucher"
+    dropdownLabel.innerText = "Besucher"
+    dropdownLabel.className = "labels"
+    form.appendChild(dropdownLabel)
+    let nameInput = document.createElement("input")
+    nameInput.type = "text"
+    nameInput.placeholder = "Name"
+    nameInput.id = "nameVisitor"
+    let mailInput = document.createElement("input")
+    mailInput.type = "text"
+    mailInput.placeholder = "Mail"
+    mailInput.id = "mailVisitor"
+    form.appendChild(nameInput)
+    form.appendChild(mailInput)
+    let div = document.createElement("div")
+    div.style.width="100%"
+    let button = document.createElement("button")
+    button.innerText="Hinzufügen"
+    button.type="button"
+    button.onclick=addVisitorRoomInterface
+    div.appendChild(button)
+    form.appendChild(div)
+    dropdownLabel = document.createElement("label")
+    dropdownLabel.htmlFor = "room"
+    dropdownLabel.innerText = "Raum öffnen mit ..."
+    dropdownLabel.className = "labels"
+    let dropdown = document.createElement("select")
+    dropdown.id="visitor"
+    form.appendChild(dropdownLabel)
+    form.appendChild(dropdown)
+    //console.log(this.innerText)
+    getVisitorsRoomInterface(this.innerText)
+
+    dropdownLabel = document.createElement("label")
+    dropdownLabel.htmlFor = "room"
+    dropdownLabel.innerText = "Löschen"
+    dropdownLabel.className = "labels"
+    form.appendChild(dropdownLabel)
+    button = document.createElement("button")
+    button.innerText = "Löschen"
+    button.type="type"
+    button.style.background="red"
+
+    div = document.createElement("div")
+    div.style.width="100%"
+    div.appendChild(button)
+    form.appendChild(div)
+
+
+    document.getElementById("formReservation").style.display = "block"
+
+}
+
+async function getVisitorsRoomInterface(name) {
+   // console.log(this.value)
+    userId = await getRoomIDBYName(name)
+    await getAllVistorNamesByResidentID(userId,true)
+}
+
+function addVisitorRoomInterface() {
+    let name = document.getElementById("nameVisitor").value
+    let mail = document.getElementById("mailVisitor").value
+    console.log(userId)
+    addNewVisitor(name,mail,userId)
+    document.getElementById("formReservation").style.display = "none"
+
 }

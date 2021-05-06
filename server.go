@@ -153,6 +153,11 @@ func main() {
 	http.HandleFunc("/getAllStation", getAllStation)
 	http.HandleFunc("/getAllStationByName", getAllStationByName)
 	http.HandleFunc("/getAllTablets", getAllTablets)
+	http.HandleFunc("/getTimeOut", getTimeOut)
+	http.HandleFunc("/setTimeOuts", setTimeOuts)
+	http.HandleFunc("/disableTablet", disableTablet)
+	http.HandleFunc("/addTablet", addTablet)
+	http.HandleFunc("/getDayOuts", getDayOuts)
 
 	//AccountHandler
 	http.HandleFunc("/addUser", addUser)

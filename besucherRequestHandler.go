@@ -33,7 +33,7 @@ func getVisitor(id int) Visitor {
 	}
 	var visitor Visitor
 	rows.Next()
-	dberr = rows.Scan(&visitor.ID, &visitor.Name, &visitor.Mail)
+	dberr = rows.Scan(&visitor.ID, &visitor.Name, &visitor.Mail, &visitor.AccountID)
 	if dberr != nil {
 		log.Println(dberr)
 	}

@@ -97,6 +97,11 @@ td, th {
 
 }
 
+.timeTableSetButton{
+    padding: 12px 12px;
+    color: #f44336;
+}
+
 #timeTableSettings {
     width: 2.5%;
     cursor: pointer;
@@ -104,7 +109,7 @@ td, th {
 }
 
 .time {
-    width: 30%;
+    width: 40%;
 
     padding: 12px 12px;
 }
@@ -122,3 +127,11 @@ td, th {
 #deactivate {
     margin: 0 0;
 }
+#tabletAddDiv{
+    width: 100%;
+}
+
+#tabletInput{
+    width: 80%;
+}
+

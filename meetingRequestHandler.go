@@ -7,6 +7,7 @@ import (
 	gomail "gopkg.in/mail.v2"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -24,14 +25,15 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 	//transaction
 	//db, err := sql.Open("sqlite3", "Account.sqlite")
 	//sqlStmt := fmt.Sprintf(`INSERT INTO meeting(start_date,end_date,bewohner_id,tablets_id)VALUES(?,?,?,?,?)`)
-	sqlStmt := fmt.Sprintf(`INSERT INTO meeting(start_date,end_date,bewohner_id)VALUES(?,?,?)`)
+	sqlStmt := fmt.Sprintf(`INSERT INTO meeting(start_date,end_date,bewohner_id,besucher_id)VALUES(?,?,?,?)`)
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 	//_, err = statement.Exec(incMeeting.MeetingDateStart, incMeeting.MeetingDateEnd, incMeeting.BewohnerId, incMeeting.BesucherId, incMeeting.TabletId)
-	_, err = statement.Exec(incMeeting.MeetingDateStart, incMeeting.MeetingDateEnd, incMeeting.BewohnerId)
+	_, err = statement.Exec(incMeeting.MeetingDateStart, incMeeting.MeetingDateEnd, incMeeting.BewohnerId, incMeeting.BesucherId)
 	if err != nil {
+		println("Hier Fehler: 3")
 		log.Fatalln(err.Error())
 	}
 	statement.Close()
@@ -39,15 +41,15 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 	timeArray := strings.Split(timeString, " ")
 	timeString = timeArray[0] + " " + timeArray[1] + "+00:00"
 	incMeeting.Id = getMeetingByTimestamp(timeString)
-	//sendInvitation(incMeeting)
+	go sendInvitation(incMeeting)
 	w.Write([]byte("ok"))
 
 }
 
 func deleteMeeting(w http.ResponseWriter, r *http.Request) {
-	deleteID, errs := r.URL.Query()["UserID"]
+	deleteID, errs := r.URL.Query()["meetingID"]
 	if !errs || len(deleteID[0]) < 1 {
-		log.Println("Url Param 'Name' is missing")
+		log.Println("Url Param 'meetingID' is missing")
 		return
 	}
 	//db, dberr := sql.Open("sqlite3", "Account.sqlite")
@@ -119,30 +121,43 @@ func sendInvitation(incMeeting Meeting) {
 	// Set E-Mail subject
 	m.SetHeader("Subject", "Konferenzlink")
 	// Set E-Mail body. You can set plain text or html with text/html
+	dateString := incMeeting.MeetingDateStart.String()
+	dateString = strings.Split(dateString, "+")[0]
+	dateArray := strings.Split(dateString, " ")
+	timeArray := strings.Split(dateArray[1], ":")
+
+	hour, err := strconv.Atoi(timeArray[0])
+	if err != nil {
+		log.Println(err)
+	}
+	hour = hour + 2
+	wholeString := dateArray[0] + " um " + strconv.Itoa(hour) + ":" + timeArray[1] + "statt"
+
 	body := fmt.Sprintf("Ihr Konferenzlink: %s \n Die Konferenz findet am %s \n Sie haben "+
-		"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://localhost:8080/deleteMeeting?UserID=%d", room.Invite, incMeeting.MeetingDateStart, incMeeting.Id)
+		"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://reserv.jitsi-mathu.de/deleteMeeting?meetingID=%d", room.Invite, wholeString, incMeeting.Id)
 	m.SetBody("text/plain", body)
 	// Settings for SMTP server
-	d := gomail.NewDialer("smtp.office365.com", 587, "Terminma3@outlook.de", "")
+	d := gomail.NewDialer("smtp.office365.com", 587, "Terminma3@outlook.de", "Spartan17")
 	// This is only needed when SSL/TLS certificate is not valid on server.
 	// In production this should be set to false.
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	// Now send E-Mail
 	if err := d.DialAndSend(m); err != nil {
-		log.Fatalln(err)
+		log.Println("mail is bugged")
 	}
 	return
 }
 
 func getMeetingByTimestamp(startTime string) int {
+
 	/*db, dberr := sql.Open("sqlite3", "Account.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
 	}*/
 	queryStmt := fmt.Sprintf("Select id From meeting Where start_date= '%s'", startTime)
-	log.Println(queryStmt)
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
+		println("Hier Fehler: 2")
 		log.Panic(dberr)
 	}
 	var meeting2 Meeting

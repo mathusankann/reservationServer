@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 type Station struct {
@@ -22,6 +24,10 @@ type Tablet struct {
 	Name        string `json:"name"`
 	Maintenance bool   `json:"maintenance"`
 	StationID   int    `json:"station_id"`
+}
+
+func (t Tablet) Verify() bool {
+	return t.Name != ""
 }
 
 func getAllStation(w http.ResponseWriter, r *http.Request) {
@@ -70,6 +76,22 @@ func getStation(name string) Station {
 	}
 	rows.Close()
 	return station
+}
+
+func getTablet(name string) Tablet {
+	queryStmt := fmt.Sprintf("Select * From tablets Where name= '%s'", name)
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	var tablet Tablet
+	rows.Next()
+	dberr = rows.Scan(&tablet.Id, &tablet.Name, &tablet.Maintenance, &tablet.StationID)
+	if dberr != nil {
+		log.Println(dberr)
+	}
+	rows.Close()
+	return tablet
 }
 
 func createNewStation(w http.ResponseWriter, r *http.Request) {
@@ -128,18 +150,93 @@ func getAllTablets(w http.ResponseWriter, r *http.Request) {
 }
 
 func addTablet(w http.ResponseWriter, r *http.Request) {
+	var incTablet Tablet
+	err := json.NewDecoder(r.Body).Decode(&incTablet)
+	if err != nil {
+		log.Println(err)
+	}
+	if !incTablet.Verify() {
+		http.Error(w, "Name required", http.StatusBadRequest)
+		return
+	}
+
+	if getTablet(incTablet.Name).Verify() {
+		http.Error(w, "Tablet already exists", http.StatusBadRequest)
+		return
+	}
+	//transaction
+	sqlStmt := fmt.Sprintf(`INSERT INTO tablet(name,maintenance)VALUES(?,?)`)
+	statement, err := db.Prepare(sqlStmt)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = statement.Exec(incTablet.Name, incTablet.Maintenance)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	statement.Close()
+	w.Write([]byte("ok"))
 
 }
 
 func disableTablet(w http.ResponseWriter, r *http.Request) {
+	keys, incErr := r.URL.Query()["ID"]
+	if !incErr || len(keys[0]) < 1 {
+		log.Println("Url Param 'ID' is missing")
+		return
+	}
+	sqlStmt := fmt.Sprintf("UPDATE Tablets SET maintenance = ? WHERE Id = ?")
+	statement, err := db.Prepare(sqlStmt)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = statement.Exec(true, keys[0])
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	statement.Close()
+	w.Write([]byte("ok"))
 
 }
 
+type Times struct {
+	Start int `json:"start"`
+	End   int `json:"end"`
+}
+
 func setTimeOuts(w http.ResponseWriter, r *http.Request) {
+	var timeOuts []Times
+	var timeOut Times
+	err := json.NewDecoder(r.Body).Decode(&timeOut)
+	if err != nil {
+		log.Println(err)
+	}
+	jsonFile, err := os.Open("./timeOuts.json")
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &timeOuts)
+	if timeOut.Start > 0 && timeOut.End > 0 {
+		timeOuts = append(timeOuts, timeOut)
+
+		file, _ := json.MarshalIndent(timeOuts, "", " ")
+
+		_ = ioutil.WriteFile("timeOuts.json", file, 0644)
+	} else {
+		http.Error(w, "timestart or timeend missing", http.StatusBadRequest)
+		return
+	}
 
 }
 
 func getTimeOut(w http.ResponseWriter, r *http.Request) {
+	jsonFile, err := os.Open("./timeOuts.json")
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "no timeouts set", http.StatusNotFound)
+		return
+	}
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(byteValue)
 
 }
 
@@ -147,5 +244,14 @@ func setDayOuts(w http.ResponseWriter, r *http.Request) {
 
 }
 func getDayOuts(w http.ResponseWriter, r *http.Request) {
+	jsonFile, err := os.Open("./week.json")
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "week.json does not exist", http.StatusNotFound)
+		return
+	}
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(byteValue)
 
 }

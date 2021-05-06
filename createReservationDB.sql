@@ -43,10 +43,10 @@ CREATE TABLE betreuer
 
 CREATE TABLE tablets
 (
-    Id         int          NOT NULL AUTO_INCREMENT,
-    name       varchar(255) NOT NULL,
+    Id          int          NOT NULL AUTO_INCREMENT,
+    name        varchar(255) NOT NULL,
     maintenance boolean      NOT NULL,
-    station_id int          ,
+    station_id  int,
     PRIMARY KEY (Id),
     FOREIGN KEY (station_id) REFERENCES station (id)
 );
@@ -100,6 +100,10 @@ CREATE TABLE bewohner_hat_besucher
     Foreign Key (bewohner_id) REFERENCES bewohner (Id),
     Foreign Key (besucher_id) REFERENCES besucher (Id)
 );
+
+
+
+
 
 INSERT INTO rolle #Admin
 VALUES (1, 'Admin', true, true, true, true);

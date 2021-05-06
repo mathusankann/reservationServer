@@ -8,7 +8,7 @@ let flagAddVisitor
 let startTerminUser;
 let endTerminUser;
 const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
-
+let week;
 
 let weekday=new Array(7);
 weekday[0]="Montag";
@@ -457,15 +457,13 @@ function generateInputInterfaceAddTermin() {
     dropdown.name = "Bewohner"
     dropdown.id = "wuser"
     if (rooms != null) {
-        let option = document.createElement("option")
-        option.value = 0
-        dropdown.appendChild(option)
         for (let i = 0; i < rooms.length; i++) {
             let option = document.createElement("option")
             option.value = rooms[i]
             option.innerText = rooms[i]
             option.addEventListener("click", getVisitors)
             dropdown.appendChild(option)
+            option.click()
         }
     }
     form.appendChild(dropdownLabel)
@@ -501,7 +499,7 @@ function generateInputInterfaceAddTermin() {
 async function getVisitors() {
     console.log(this.value)
     let id = await getRoomIDBYName(this.value)
-    await getAllVistorNamesByResidentID(id)
+    await getAllVistorNamesByResidentID(id,false)
 }
 
 function setVisitor() {
@@ -546,13 +544,25 @@ async function setTimeTableSettingInterface() {
     form.appendChild(label)
     let tContainer = document.createElement("div")
     tContainer.id = "tContainer"
+    week =await getAll("/getDayOuts")
+    console.log(week)
     for (let i = 0; i < 7; i++) {
         let button = document.createElement("button")
         button.type = "button"
         button.innerText = weekday[i]
+        if(week[i].value){
+            button.value="1"
+            button.className = "timeTableSetButton"
+
+        }else{
+            button.value="0"
+            button.className = "timeTableSettingButtons"
+        }
         tContainer.appendChild(button)
-        button.className = "timeTableSettingButtons"
     }
+
+
+
     form.appendChild(tContainer)
     form.appendChild(document.createElement("br"))
     //Timesettings
@@ -561,9 +571,14 @@ async function setTimeTableSettingInterface() {
     label = document.createElement("label")
     label.innerText = "Zeit"
     label.className = "labels"
-
     form.appendChild(label)
+    let timeouts = await getAll("/getTimeOut")
+    if(timeouts!=null){
+
+    }
+
     let dropdown = document.createElement("select")
+    dropdown.id="startTime"
     dropdown.className = "time"
     let startTime = 8
     let endTime = 9
@@ -571,33 +586,34 @@ async function setTimeTableSettingInterface() {
     for (let i = 0; i < 13; i++) {
         let option = document.createElement("option")
         option.innerText = generateCell(startTime, endTime).split("-")[0]
-        option.value = generateCell(startTime, endTime).split("-")[0]
+        option.value = startTime.toString()
         dropdown.appendChild(option)
         startTime++
     }
     zContainer.appendChild(dropdown)
-    let something = document.createElement("div")
-    something.innerText = "_"
+    let something = document.createElement("label")
+    something.innerText = "   -   "
     something.id = "something"
     zContainer.appendChild(something)
     dropdown = document.createElement("select")
+    dropdown.id ="endTime"
     dropdown.appendChild(document.createElement("option"))
     startTime=8
     for (let i = 0; i < 13; i++) {
         let option = document.createElement("option")
         option.innerText = generateCell(startTime, endTime).split("-")[1]
-        option.value = generateCell(startTime, endTime).split("-")[1]
+        option.value = endTime.toString()
         dropdown.appendChild(option)
         endTime++
     }
     dropdown.className = "time"
     zContainer.appendChild(dropdown)
-    /*let button = document.createElement("button")
+    let button = document.createElement("button")
     button.id = "deactivate"
     button.type = "button"
-    button.innerText = "deaktivieren"
+    button.innerText = "Hinzufügen"
     button.className = "timeTableSettingButtons"
-    zContainer.appendChild(button)*/
+    zContainer.appendChild(button)
 
     form.appendChild(zContainer)
     form.appendChild(document.createElement("br"))
@@ -607,15 +623,53 @@ async function setTimeTableSettingInterface() {
     label.className = "labels"
     label.style.clear="both"
     form.appendChild(label)
-   /* let tablets = await getAllTablets()
+    let taContainer = document.createElement("div")
+    taContainer.id ="taContainer"
+    let tablets = await getAll("/getAllTablets")
     if(tablets!=null){
         for(let i=0;i<tablets.length;i++){
-
+            let div = document.createElement("div")
+            let tabletLabel= document.createElement("label")
+            tabletLabel.innerText = tablets[i].name
+            let button = document.createElement("button")
+            button.innerText= "✓"
+            button.value = tablets[i].id
+            let buttonX = document.createElement("button")
+            buttonX.innerText ="X"
+            buttonX.value = tablets[i].id
+            div.appendChild(tabletLabel)
+            div.appendChild(button)
+            div.appendChild(buttonX)
+            form.appendChild(div)
         }
-    }*/
+    }
+    let tabletAddDiv = document.createElement("div")
+    tabletAddDiv.id = "tabletAddDiv"
+    let tabletInput = document.createElement("input")
+    tabletInput.type = "text"
+    tabletInput.placeholder = "Tabletname"
+    tabletInput.id = "tabletInput"
+    tabletAddDiv.appendChild(tabletInput)
+    button = document.createElement("button")
+    button.innerText ="Hinzufügen"
+    button.id = "addNewTablet"
+    button.className="timeTableSettingButtons"
+    button.type="button"
 
+    tabletAddDiv.appendChild(button)
+    form.appendChild(tabletAddDiv)
 
 
     document.getElementById("formReservation").style.display = "block"
+
+}
+
+function setTimeOut() {
+    let start = document.getElementById("startTime").value
+    let end = document.getElementById("endTime").value
+    start = parseInt(start)
+    end = parseInt(end)
+
+
 
 }
