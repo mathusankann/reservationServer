@@ -229,9 +229,11 @@ span.psw {
     height:4000px;
 }
 #visitor{
-    width: 90%;
+    width: 100%;
     padding: 12px 20px;
 }
+
+
 
 #addVisitor{
     width: 10%;

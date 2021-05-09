@@ -5,19 +5,24 @@ let currentSunday;
 let currentWeeksMonday;
 let flagAddVisitor
 
+let disableDays
+let disableTimes = []
+let MAX_TABLETS
+
 let startTerminUser;
 let endTerminUser;
 const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
 let week;
-
-let weekday=new Array(7);
-weekday[0]="Montag";
-weekday[1]="Dienstag";
-weekday[2]="Mittwoch";
-weekday[3]="Donnerstag";
-weekday[4]="Freitag";
-weekday[5]="Samstag";
-weekday[6]="Sonntag";
+let timeOut = []
+let tablets;
+let weekday = new Array(7);
+weekday[0] = "Montag";
+weekday[1] = "Dienstag";
+weekday[2] = "Mittwoch";
+weekday[3] = "Donnerstag";
+weekday[4] = "Freitag";
+weekday[5] = "Samstag";
+weekday[6] = "Sonntag";
 
 function initCurrentWeeksMonday() {
     return new Promise(((resolve, reject) => {
@@ -47,9 +52,8 @@ function setCaption() {
             document.getElementById("week").innerText = monday.toLocaleDateString('de-DE', options) + " - " + sunday.toLocaleDateString('de-DE', options)
             let button = document.createElement("img")
             button.id = "timeTableSettings"
-            button.src="media/img/settings.png"
+            button.src = "media/img/settings.png"
             button.onclick = setTimeTableSettingInterface
-
             document.getElementById("week").appendChild(button)
             const table = document.getElementById("terminTable")
             for (let i = 0; i < 13; i++) {
@@ -85,7 +89,7 @@ async function prevWeeks() {
         document.getElementById("week").innerText = currentMonday.toLocaleDateString('de-DE', options) + " - " + currentSunday.toLocaleDateString('de-DE', options)
         let button = document.createElement("img")
         button.id = "timeTableSettings"
-        button.src="media/img/settings.png"
+        button.src = "media/img/settings.png"
         button.onclick = setTimeTableSettingInterface
 
         document.getElementById("week").appendChild(button)
@@ -102,111 +106,117 @@ async function nextWeek() {
     document.getElementById("week").innerText = currentMonday.toLocaleDateString('de-DE', options) + " - " + currentSunday.toLocaleDateString('de-DE', options)
     let button = document.createElement("img")
     button.id = "timeTableSettings"
-    button.src="media/img/settings.png"
+    button.src = "media/img/settings.png"
     button.onclick = setTimeTableSettingInterface
 
     document.getElementById("week").appendChild(button)
 
     //  deleteNodes()
     await getAllMeetings(currentMonday, currentSunday)
+
+
     //setDates()
 }
 
 async function initTerminTable() {
     document.getElementById('id01').style.display = 'block'
-    console.log("running")
-    await initCurrentWeeksMonday()
-    await setCaption()
     document.getElementById("prevWeek").addEventListener("click", prevWeeks)
     document.getElementById("nextWeek").addEventListener("click", nextWeek)
+    await initCurrentWeeksMonday()
+    await setCaption()
+    MAX_TABLETS = await getter("getAllTabletsByMaintenance")
+    disableDays = await getter("/getDayOuts")
+    disableTimes = await getter("/getTimeOut")
     await getAllMeetings(currentMonday, currentSunday)
 
 }
 
-async function setDates() {
+function setDates() {
     let currenDate = new Date()
     currenDate.setSeconds(0, 0)
     let startTime = 8
     let endTime = 9
     const table = document.getElementById("terminTable")
+    // table.style.visibility="hidden"
     deleteAllEventListener()
     for (let i = 0; i < 13; i++) {
-        //let entry = document.createElement("tr")
         for (let j = 0; j < 9; j++) {
-            // let entities = document.createElement("th")
-            //entry.appendChild(entities)
             let entities = document.getElementById(i.toString() + "_" + j.toString())
             if (j === 0) {
                 entities.className = "leftOuterTable"
             } else if (j === 8) {
                 entities.className = "rightOuterTable"
             } else {
-                let temp = new Date()
-                temp.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + j - 1)
-                temp.setMinutes(0, 0, 0)
-                //if (j > currenDate.getDay()) {
-                if (dates.compare(temp, currenDate) > 0) {
-                    // console.log(temp)
-                    temp.setHours(startTime)
-                    let bol = await compareWithReservedDates(temp)
-                    if (bol) {
-                        entities.className = "expired"
-                        entities.innerText = "Reserviert"
-                        //entities.addEventListener("click", startReservation)
-                    } else {
-                        entities.className = "innerTable"
-                        entities.innerText = generateCell(startTime, endTime)
-                        entities.addEventListener("click", generateInputInterfaceAddTermin)
-                    }
-                } else if (j === currenDate.getDay()) {
-                    if (startTime > currenDate.getHours()) {
+                if (disableDays[j - 1].value) {
+                    entities.className = "expired"
+                    entities.innerText = "Reserviert"
+                } else {
+                    let temp = new Date()
+                    temp.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + j - 1)
+                    temp.setMinutes(0, 0, 0)
+                    //if (j > currenDate.getDay()) {
+                    if (dates.compare(temp, currenDate) > 0) {
                         temp.setHours(startTime)
-                        let bol = await compareWithReservedDates(temp)
-                        if (bol) {
-                            entities.className = "expired"
-                            entities.innerText = "Reserviert"
-                        } else {
-                            entities.className = "innerTable"
-                            entities.innerText = generateCell(startTime, endTime)
-                            entities.addEventListener("click", generateInputInterfaceAddTermin)
-                        }
+                        compareWithReservedDates(temp, startTime, endTime).then((bol) => {
+                            if (bol[0]) {
+                                //if () {
+                                entities.className = "expired"
+                                // entities.innerText = bol[3]
+                                entities.innerText = "Reserviert"
+                                //entities.addEventListener("click", startReservation)
+                            } else {
+
+                                entities.className = "innerTable"
+                               // entities.innerText = generateCell(bol[1], bol[2])
+                                entities.innerText = generateCell(bol[1], bol[2])
+                                entities.addEventListener("click", generateInputInterfaceAddTermin)
+                            }
+                        })
+                    } else if (j === currenDate.getDay()) {
+                        compareWithReservedDates(temp, startTime, endTime).then((bol) => {
+                            if (bol[1] > currenDate.getHours()) {
+                                temp.setHours(bol[1])
+                                if (bol[0]) {
+                                    entities.className = "expired"
+                                    entities.innerText = "Reserviert"
+                                    //  entities.innerText = bol[3]
+                                } else {
+                                    entities.className = "innerTable"
+                                    entities.innerText = generateCell(bol[1], bol[2])
+                                 //   entities.innerText = "Frei"
+                                    entities.addEventListener("click", generateInputInterfaceAddTermin)
+                                }
+                            } else {
+                                entities.innerText = "Abgelaufen"
+                                entities.className = "expired"
+                            }
+
+                        })
+
                     } else {
                         entities.innerText = "Abgelaufen"
                         entities.className = "expired"
                     }
-                } else {
-                    entities.innerText = "Abgelaufen"
-                    entities.className = "expired"
                 }
             }
         }
-        // table.appendChild(entry)
         startTime++
         endTime++
     }
 
-
 }
 
 
-function startReservation() {
-    document.getElementById('formReservation').style.display = 'block'
-    let text = this.innerText.split("-")
-    let startTime = parseInt(text[0].split(":")[0])
-    let endTime = parseInt(text[1].split(":")[0])
+function containsTime(start, end, disableTimes) {
+    for (let i = 0; i < disableTimes.length; i++) {
+        if (start >= disableTimes[i].start && end <= disableTimes[i].end) {
+            return true
+        }
+    }
+    return false
 
-    let diff = this.cellIndex - 1;
-    let startDate = new Date()
-    let endDate = new Date()
-    startDate.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + diff)
-    startDate.setHours(startTime, 0, 0, 0)
-
-    endDate.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + diff)
-    endDate.setHours(endTime, 0, 0, 0)
-    startTerminUser = startDate;
-    endTerminUser = endDate;
-    // addTermin(startDate, endDate)
 }
+
 
 async function addTermin() {
     if (document.getElementById("wuser").value !== '0') {
@@ -245,28 +255,28 @@ async function addTermin() {
 
 
 function getAllMeetings(starttime, endtime) {
+
     let tempStart = new Date();
-    console.log(starttime.getTimezoneOffset())
+
     tempStart.setFullYear(starttime.getFullYear(), starttime.getMonth(), starttime.getDate() - 1)
     tempStart.setHours(tempStart.getHours() + 2)
+    console.log("hier")
     // console.log(formatDate(tempStart))
     // tempStart = tempStart.toLocaleDateString()
-
     let tempEnd = new Date();
     tempEnd.setFullYear(endtime.getFullYear(), endtime.getMonth(), endtime.getDate())
     tempEnd.setHours(tempEnd.getHours() + 2)
     tempEnd.setHours(25, 59, 0, 0)
-    //tempEnd = tempEnd.toLocaleDateString()
-    console.log(tempEnd)
 
+    //tempEnd = tempEnd.toLocaleDateString()
     const request = createAjaxRequest();
     request.onreadystatechange = function () {
         if (4 === this.readyState) {
             if (200 === this.status) {
                 return new Promise(((resolve, reject) => {
                     reservedDates = JSON.parse(this.responseText)
-                    console.log(reservedDates)
-                    setTimeout(setDates, 100);
+
+                    setDates()
                     resolve(reservedDates)
                 }))
             } else {
@@ -276,28 +286,6 @@ function getAllMeetings(starttime, endtime) {
     }
     request.open("GET", "/getAllMeetings?starttime=" + formatDate(tempStart) + "&endtime=" + formatDate(tempEnd), true);
     request.send();
-}
-
-function getAllMeetingsTest() {
-    console.log("test")
-    let tempStart = new Date();
-    let tempEnd = new Date();
-    let tempMeeting = new Meeting(tempStart, tempEnd, 0, 0, "")
-    console.log(JSON.stringify(tempMeeting))
-    const request = createAjaxRequest();
-    request.onreadystatechange = function () {
-        if (4 === this.readyState) {
-            if (200 === this.status) {
-
-            } else {
-                console.log(this.status + ":" + this.responseText);
-            }
-        }
-        request.open("POST", "/postGetAllMeetings", true);
-        request.send(JSON.stringify(tempMeeting));
-    }
-
-
 }
 
 
@@ -318,13 +306,6 @@ function generateCell(startTime, endTime) {
         text = text + endTime + ":00"
     }
     return text
-}
-
-function deleteNodes() {
-    document.querySelectorAll('.innerTable').forEach(e => e.remove());
-    document.querySelectorAll('.leftOuterTable').forEach(e => e.remove());
-    document.querySelectorAll('.rightOuterTable').forEach(e => e.remove());
-    document.querySelectorAll('.expired').forEach(e => e.remove());
 }
 
 function deleteAllEventListener() {
@@ -395,21 +376,29 @@ let dates = {
 }
 
 
-function compareWithReservedDates(b) {
+function compareWithReservedDates(b, tempStart, tempEnd) {
+    let counter = 0;
     return new Promise(((resolve, reject) => {
+        if (containsTime(tempStart, tempEnd, disableTimes)) {
+            resolve([true, tempStart, tempEnd, ""])
+        }
         if (reservedDates != null) {
             for (let i = 0; i < reservedDates.length; i++) {
+
                 let reserved = new Date(Date.parse(reservedDates[i].time_start))
-
                 //  reserved.setHours(reserved.getHours())
-
                 if (dates.compare(reserved, b) === 0) {
-                    resolve(true)
+                    counter++
+                    if (counter >= MAX_TABLETS.length) {
+                        let path = "/getRoomByID?ID=" + reservedDates[i].bewohner_id
+                        resolve([true, tempStart, tempEnd])
+
+                    }
                 }
             }
-            resolve(false)
+            resolve([false, tempStart, tempEnd])
         } else {
-            resolve(false)
+            resolve([false, tempStart, tempEnd])
         }
     }))
 
@@ -463,7 +452,10 @@ function generateInputInterfaceAddTermin() {
             option.innerText = rooms[i]
             option.addEventListener("click", getVisitors)
             dropdown.appendChild(option)
-            option.click()
+            if (i == 0) {
+                option.click()
+            }
+
         }
     }
     form.appendChild(dropdownLabel)
@@ -497,9 +489,8 @@ function generateInputInterfaceAddTermin() {
 }
 
 async function getVisitors() {
-    console.log(this.value)
     let id = await getRoomIDBYName(this.value)
-    await getAllVistorNamesByResidentID(id,false)
+    await getAllVistorNamesByResidentID(id, false)
 }
 
 function setVisitor() {
@@ -544,24 +535,26 @@ async function setTimeTableSettingInterface() {
     form.appendChild(label)
     let tContainer = document.createElement("div")
     tContainer.id = "tContainer"
-    week =await getAll("/getDayOuts")
-    console.log(week)
+    week = await getter("/getDayOuts")
+
     for (let i = 0; i < 7; i++) {
-        let button = document.createElement("button")
-        button.type = "button"
-        button.innerText = weekday[i]
-        if(week[i].value){
-            button.value="1"
-            button.className = "timeTableSetButton"
-
-        }else{
-            button.value="0"
-            button.className = "timeTableSettingButtons"
+        let label = document.createElement("label")
+        label.innerText = weekday[i]
+        label.className = "weekInput"
+        label.htmlFor = weekday[i]
+        let button = document.createElement("input")
+        button.type = "checkbox"
+        button.id = weekday[i]
+        button.value = weekday[i]
+        button.style.display = "none"
+        if (week[i].value) {
+            button.checked = true
         }
+
         tContainer.appendChild(button)
+        tContainer.appendChild(label)
+
     }
-
-
 
     form.appendChild(tContainer)
     form.appendChild(document.createElement("br"))
@@ -572,13 +565,27 @@ async function setTimeTableSettingInterface() {
     label.innerText = "Zeit"
     label.className = "labels"
     form.appendChild(label)
-    let timeouts = await getAll("/getTimeOut")
-    if(timeouts!=null){
-
+    timeOut = await getter("/getTimeOut")
+    if (timeOut != null) {
+        let div = document.createElement("div")
+        for (let i = 0; i < timeOut.length; i++) {
+            let tabletLabel = document.createElement("label")
+            tabletLabel.innerText = generateCell(timeOut[i].start, timeOut[i].end)
+            tabletLabel.htmlFor = generateCell(timeOut[i].start, timeOut[i].end)
+            let button = document.createElement("input")
+            button.type = "checkbox"
+            button.id = generateCell(timeOut[i].start, timeOut[i].end)
+            button.style.display = "none"
+            tabletLabel.className = "weekInput"
+            div.appendChild(button)
+            div.appendChild(tabletLabel)
+        }
+        form.appendChild(div)
+        form.appendChild(document.createElement("br"))
     }
 
     let dropdown = document.createElement("select")
-    dropdown.id="startTime"
+    dropdown.id = "startTime"
     dropdown.className = "time"
     let startTime = 8
     let endTime = 9
@@ -596,9 +603,9 @@ async function setTimeTableSettingInterface() {
     something.id = "something"
     zContainer.appendChild(something)
     dropdown = document.createElement("select")
-    dropdown.id ="endTime"
+    dropdown.id = "endTime"
     dropdown.appendChild(document.createElement("option"))
-    startTime=8
+    startTime = 8
     for (let i = 0; i < 13; i++) {
         let option = document.createElement("option")
         option.innerText = generateCell(startTime, endTime).split("-")[1]
@@ -612,6 +619,7 @@ async function setTimeTableSettingInterface() {
     button.id = "deactivate"
     button.type = "button"
     button.innerText = "Hinzufügen"
+    button.onclick = addTimeOut
     button.className = "timeTableSettingButtons"
     zContainer.appendChild(button)
 
@@ -621,27 +629,29 @@ async function setTimeTableSettingInterface() {
     label = document.createElement("label")
     label.innerText = "Tabletts"
     label.className = "labels"
-    label.style.clear="both"
+    label.style.clear = "both"
     form.appendChild(label)
     let taContainer = document.createElement("div")
-    taContainer.id ="taContainer"
-    let tablets = await getAll("/getAllTablets")
-    if(tablets!=null){
-        for(let i=0;i<tablets.length;i++){
-            let div = document.createElement("div")
-            let tabletLabel= document.createElement("label")
+    taContainer.id = "taContainer"
+    tablets = await getter("/getAllTablets")
+    if (tablets != null) {
+        let div = document.createElement("div")
+        for (let i = 0; i < tablets.length; i++) {
+            let tabletLabel = document.createElement("label")
             tabletLabel.innerText = tablets[i].name
-            let button = document.createElement("button")
-            button.innerText= "✓"
-            button.value = tablets[i].id
-            let buttonX = document.createElement("button")
-            buttonX.innerText ="X"
-            buttonX.value = tablets[i].id
-            div.appendChild(tabletLabel)
+            tabletLabel.htmlFor = tablets[i].name + "_" + tablets[i].id
+            let button = document.createElement("input")
+            button.type = "checkbox"
+            button.id = tablets[i].name + "_" + tablets[i].id
+            button.style.display = "none"
+            tabletLabel.className = "weekInput"
+            if (tablets[i].maintenance) {
+                button.checked = true
+            }
             div.appendChild(button)
-            div.appendChild(buttonX)
-            form.appendChild(div)
+            div.appendChild(tabletLabel)
         }
+        form.appendChild(div)
     }
     let tabletAddDiv = document.createElement("div")
     tabletAddDiv.id = "tabletAddDiv"
@@ -651,25 +661,79 @@ async function setTimeTableSettingInterface() {
     tabletInput.id = "tabletInput"
     tabletAddDiv.appendChild(tabletInput)
     button = document.createElement("button")
-    button.innerText ="Hinzufügen"
+    button.innerText = "Hinzufügen"
     button.id = "addNewTablet"
-    button.className="timeTableSettingButtons"
-    button.type="button"
+    button.className = "timeTableSettingButtons"
+    button.type = "button"
+    button.onclick = addTablet
 
     tabletAddDiv.appendChild(button)
     form.appendChild(tabletAddDiv)
 
+    button = document.createElement("button")
+    button.innerText = "Speichern"
+    button.type = "button"
+    button.onclick = setWeekdays
+    form.appendChild(button)
 
     document.getElementById("formReservation").style.display = "block"
 
 }
 
-function setTimeOut() {
-    let start = document.getElementById("startTime").value
-    let end = document.getElementById("endTime").value
-    start = parseInt(start)
-    end = parseInt(end)
 
+function setWeekdays() {
+    for (let i = 0; i < 7; i++) {
+        week[i].value = document.getElementById(weekday[i]).checked
+    }
+    let tempTimeOut = []
+    for (let i = 0; i < timeOut.length; i++) {
+        if (!document.getElementById(generateCell(timeOut[i].start, timeOut[i].end)).checked) {
+            tempTimeOut.push(timeOut[i])
+        }
+    }
+    let tabletPromises = []
+    for (let i = 0; i < tablets.length; i++) {
+        let tabletBool = document.getElementById(tablets[i].name + "_" + tablets[i].id).checked
+        let tempTab = new Tablet(tablets[i].id, tablets[i].name, tabletBool, tablets[i].station_id)
+        console.log(tempTab)
+        tabletPromises.push(setOuts("/disableTablet", tempTab))
+    }
+    console.log(tablets.length)
+    timeOut = tempTimeOut
+    let weekPromise = setOuts("/setDayOuts", week)
+    let timeOutPromise = setOuts("/setTimeOuts", timeOut)
+    Promise.all([weekPromise, timeOutPromise]).then(() => {
+        location.reload()
+    })
 
+}
+
+function addTimeOut() {
+    let start = document.getElementById("startTime").value.split(":")[0]
+    let end = document.getElementById("endTime").value.split(":")[0]
+    if (start !== "" && end !== "") {
+        start = parseInt(start)
+        end = parseInt(end)
+        if (start < end) {
+            timeOut.push(new TimeOut(start, end))
+            let timePromise = setOuts("/setTimeOuts", timeOut)
+            timePromise.then(() => {
+                location.reload()
+            })
+        } else {
+            console.log("Startpunkt darf nicht größer als Endpunkt sein")
+        }
+    }
+}
+
+function addTablet() {
+    let tabletName = document.getElementById("tabletInput").value
+    let tablet = new Tablet(0, tabletName, false)
+    if (tabletName !== "") {
+        let tabletPromise = setOuts("/addTablet", tablet)
+        tabletPromise.then(() => {
+            location.reload()
+        })
+    }
 
 }

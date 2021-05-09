@@ -1,5 +1,3 @@
-const path = "127.0.0.1"
-const pathl = "localhost/"
 let rooms;
 
 
@@ -55,8 +53,25 @@ class Visitor {
     }
 }
 
+class dayOut {
+    constructor(day,value) {
+        this.day=day;
+        this.value = value
+    }
 
-class ResidentHasVisitor{
+}
+
+class TimeOut {
+    constructor(start,end) {
+        this.start=start;
+        this.end = end;
+    }
+
+}
+
+
+
+class ResidentHasVisitor {
     constructor(id = 0, visitorID, residentID) {
         this.id = id;
         this.visitorID = visitorID;
@@ -65,10 +80,19 @@ class ResidentHasVisitor{
     }
 }
 
-class Station{
-    constructor(id,name) {
+class Station {
+    constructor(id, name) {
         this.id = id;
         this.name = name;
+    }
+}
+
+class Tablet {
+    constructor(id, name,maintenance,stationID) {
+        this.id = id;
+        this.name = name;
+        this.maintenance=maintenance
+        this.station_id = stationID
     }
 }
 
@@ -83,18 +107,22 @@ function createAjaxRequest() {
 }
 
 function sendRoomPost(data) {
-    const request = createAjaxRequest();
-    request.onreadystatechange = function () {
-        if (4 === this.readyState) {
-            if (200 === this.status) {
-                //location.reload();
-            } else {
-                console.log(this.status + ":" + this.responseText);
+    return new Promise(((resolve, reject) => {
+        const request = createAjaxRequest();
+        request.onreadystatechange = function () {
+            if (4 === this.readyState) {
+                if (200 === this.status) {
+                    //location.reload();
+                    resolve(true)
+                } else {
+                    console.log(this.status + ":" + this.responseText);
+                    resolve(false)
+                }
             }
         }
-    }
-    request.open("POST", "/createRoom", true);
-    request.send(data);
+        request.open("POST", "/createRoom", true);
+        request.send(data);
+    }))
 }
 
 function sendMeetingPost(data) {
@@ -115,8 +143,8 @@ function sendMeetingPost(data) {
 
 async function getUserAuthentication() {
     if (document.cookie === "") {
-        document.getElementById("uname").innerText=""
-        document.getElementById("psw").innerText=""
+        document.getElementById("uname").innerText = ""
+        document.getElementById("psw").innerText = ""
 
         await getAllRoom()
         let user = new User(0, document.getElementById("uname").value, document.getElementById("psw").value, 0)
@@ -150,8 +178,8 @@ function getUserAuthenticationCookie() {
     request.onreadystatechange = async function () {
         if (4 === this.readyState) {
             if (200 === this.status) {
-                document.getElementById("uname").innerText=""
-                document.getElementById("psw").innerText=""
+                document.getElementById("uname").innerText = ""
+                document.getElementById("psw").innerText = ""
                 document.getElementById("id01").style.display = "none";
                 // document.getElementById("login_btn").style.display = "none";
                 document.getElementById("logout_btn").style.display = "block";
@@ -178,15 +206,15 @@ function getRoleByID(id) {
                 let role = JSON.parse(this.responseText)
                 console.log(role)
                 if (role.viewTermin) {
-                   // addButtons(rooms)
+                    // addButtons(rooms)
                     init(rooms)
                 }
                 if (role.viewAllStationUser) {
-                   // document.getElementById("timeTableSettings").style.display="block"
+                    // document.getElementById("timeTableSettings").style.display="block"
                 }
-                if(role.viewAllUser){
+                if (role.viewAllUser) {
                     showEditorPanel()
-                   //
+                    //
                 }
 
             }
@@ -232,10 +260,8 @@ function startRoomPost(createRoom) {
 }
 
 
-
-function getRoom() {
-    console.log(this)
-    const room = this.innerText.toString();
+function getRoom(name) {
+    const room = name
     const request = createAjaxRequest();
     request.onreadystatechange = function () {
         if (4 === this.readyState) {
@@ -397,7 +423,6 @@ function getAllMeetingsDate(starttime, endtime) {
                         }
                     }
                 }
-                console.log("hier")
                 initReservedDatesOverview(reservedDates, counter)
             } else {
                 console.log(this.status + ":" + this.responseText);
@@ -408,7 +433,7 @@ function getAllMeetingsDate(starttime, endtime) {
     request.send();
 }
 
-function getAllVistorNamesByResidentID(Id,addEvent) {
+function getAllVistorNamesByResidentID(Id, addEvent) {
     return new Promise(((resolve, reject) => {
         const request = createAjaxRequest();
         request.onreadystatechange = function () {
@@ -423,16 +448,13 @@ function getAllVistorNamesByResidentID(Id,addEvent) {
                     dropdown.innerText = ""
                     if (listVisitor !== null) {
                         for (let i = 0; i < listVisitor.length; i++) {
-                            console.log(listVisitor[i])
                             let option = document.createElement("option")
                             option.value = listVisitor[i]
                             option.innerText = listVisitor[i]
                             dropdown.appendChild(option)
                             resolve(true)
-                            if (addEvent){
-                                option.onclick = ()=>{
-                                    console.log("test")
-                                }
+                            if (addEvent) {
+                                option.onclick = startConfWithVisitor
                             }
                         }
                     }
@@ -455,7 +477,6 @@ function getVisitorByName(name) {
             if (4 === this.readyState) {
                 if (200 === this.status) {
                     let val = JSON.parse(this.responseText)
-                    //console.log(this.responseText)
                     resolve(val)
                 }
             }
@@ -466,7 +487,7 @@ function getVisitorByName(name) {
 
 }
 
-function addNewVisitor(name, mail,id) {
+function addNewVisitor(name, mail, id) {
     return new Promise(((resolve, reject) => {
         let visitor = new Visitor(0, name, mail, 0)
         const request = createAjaxRequest();
@@ -479,7 +500,7 @@ function addNewVisitor(name, mail,id) {
                 }
             }
         }
-        request.open("POST", "/addNewVisitor?ID="+id, true);
+        request.open("POST", "/addNewVisitor?ID=" + id, true);
         request.send(JSON.stringify(visitor));
     }))
 }
@@ -487,7 +508,7 @@ function addNewVisitor(name, mail,id) {
 
 function addVisitorToResident(visitor, resident) {
     return new Promise(((resolve, reject) => {
-        let rhv = new ResidentHasVisitor(0,visitor,resident)
+        let rhv = new ResidentHasVisitor(0, visitor, resident)
         let path = "/addVisitorToResident"
 
         const request = createAjaxRequest();
@@ -497,7 +518,7 @@ function addVisitorToResident(visitor, resident) {
                     resolve(this.responseText)
                 }
             }
-            request.open("POST",path , true);
+            request.open("POST", path, true);
             request.send(JSON.stringify(rhv));
         }
     }))
@@ -532,19 +553,19 @@ function getStationByName(name) {
                 }
             }
         }
-        request.open("GET", "/getAllStationByName?name="+name, true);
+        request.open("GET", "/getAllStationByName?name=" + name, true);
         request.send();
     }))
 }
 
 function createStation(name) {
     return new Promise(((resolve, reject) => {
-        let station = new Station(0,name)
+        let station = new Station(0, name)
         const request = createAjaxRequest();
         request.onreadystatechange = function () {
             if (4 === this.readyState) {
                 if (200 === this.status) {
-                   // let val = JSON.parse(this.responseText)
+                    // let val = JSON.parse(this.responseText)
                     //console.log(this.responseText)
                     resolve("done")
                 }
@@ -555,14 +576,14 @@ function createStation(name) {
     }))
 }
 
-function createUser(id,name,password,roleID) {
-    let user = new User(id,name,password,roleID)
+function createUser(id, name, password, roleID) {
+    let user = new User(id, name, password, roleID)
     return new Promise(((resolve, reject) => {
         const request = createAjaxRequest();
         request.onreadystatechange = function () {
             if (4 === this.readyState) {
                 if (200 === this.status) {
-                   // let val = JSON.parse(this.responseText)
+                    // let val = JSON.parse(this.responseText)
                     //console.log(this.responseText)
                     resolve("done")
                 }
@@ -573,14 +594,14 @@ function createUser(id,name,password,roleID) {
     }))
 }
 
-function createMinder(id,station,name,accountID) {
-    let minder = new Betreuer(id,station,name,accountID)
+function createMinder(id, station, name, accountID) {
+    let minder = new Betreuer(id, station, name, accountID)
     return new Promise(((resolve, reject) => {
         const request = createAjaxRequest();
         request.onreadystatechange = function () {
             if (4 === this.readyState) {
                 if (200 === this.status) {
-                   // let val = JSON.parse(this.responseText)
+                    // let val = JSON.parse(this.responseText)
                     //console.log(this.responseText)
                     console.log("created")
                     resolve("done")
@@ -604,7 +625,7 @@ function getAccountIDByName(name) {
                 }
             }
         }
-        request.open("GET", "/getAccountByName?name="+name, true);
+        request.open("GET", "/getAccountByName?name=" + name, true);
         request.send();
     }))
 
@@ -622,7 +643,7 @@ function getRoomIDBYName(name) {
                 }
             }
         }
-        request.open("GET", "/getRoomIDByName?Name="+name, true);
+        request.open("GET", "/getRoomIDByName?Name=" + name, true);
         request.send();
     }))
 
@@ -668,7 +689,7 @@ function getAllTimeouts(){
 }
 */
 
-function getAll(path) {
+function getter(path) {
     return new Promise(((resolve, reject) => {
         const request = createAjaxRequest();
         request.onreadystatechange = function () {
@@ -677,7 +698,7 @@ function getAll(path) {
                     let val = JSON.parse(this.responseText)
                     //console.log(this.responseText)
                     resolve(val)
-                }else{
+                } else {
                     console.log(this.responseText)
                     resolve(null)
                 }
@@ -686,5 +707,64 @@ function getAll(path) {
         request.open("GET", path, true);
         request.send();
     }))
+}
+
+function sendInviteMail(meeting) {
+    return new Promise(((resolve, reject) => {
+        const request = createAjaxRequest();
+        request.onreadystatechange = function () {
+            if (4 === this.readyState) {
+                if (200 === this.status) {
+                    //console.log(this.responseText)
+                    resolve(true)
+                } else {
+                    console.log(this.responseText)
+                    resolve(null)
+                }
+            }
+        }
+        request.open("POST", "/sendInvitationMail", true);
+        request.send(JSON.stringify(meeting));
+    }))
+}
+
+function deleteResident(id) {
+    return new Promise(((resolve, reject) => {
+        const request = createAjaxRequest();
+        request.onreadystatechange = function () {
+            if (4 === this.readyState) {
+                if (200 === this.status) {
+                    console.log(this.responseText)
+                    resolve(true)
+                }
+                else{
+                    console.log(this.responseText)
+                    resolve(false)
+                }
+            }
+        }
+        request.open("GET", "/deleteResident?residentID=" + id, true);
+        request.send();
+    }))
 
 }
+
+function setOuts(path,parameter) {
+    return new Promise(((resolve, reject) => {
+        const request = createAjaxRequest();
+        request.onreadystatechange = function () {
+            if (4 === this.readyState) {
+                if (200 === this.status) {
+                    console.log(this.responseText)
+                    resolve(true)
+                } else {
+                    console.log(this.responseText)
+                    resolve(null)
+                }
+            }
+        }
+        request.open("POST", path, true);
+        request.send(JSON.stringify(parameter));
+    }))
+}
+

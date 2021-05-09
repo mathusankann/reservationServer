@@ -15,13 +15,16 @@ td, th {
     text-align: center;
     vertical-align: middle;
 
+
 }
 
 #nextWeek {
+    background-color: white;
     cursor: pointer;
 }
 
 #prevWeek {
+    background-color: white;
     cursor: pointer;
 }
 
@@ -58,8 +61,12 @@ td, th {
     cursor: pointer;
 }
 
+.innerTable{
+    background: #7ff581;
+}
 .expired {
-    background-color: gray;
+    background-color: #e8746d;
+    <!--background-color: gray;-->
     cursor: default;
 }
 
@@ -84,7 +91,7 @@ td, th {
 
 .days {
     cursor: default;
-    background-color: #dddddd;
+    background-color:white;
 }
 
 #termin {
@@ -134,3 +141,18 @@ td, th {
     width: 80%;
 }
 
+input[type="checkbox"] + label {
+    color: white;
+
+    padding: 14px 20px;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+
+    background-color: #4CAF50;
+
+}
+input[type="checkbox"]:checked + label {
+    background-color: #f3827c;
+}

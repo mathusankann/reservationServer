@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -26,8 +27,13 @@ type Tablet struct {
 	StationID   int    `json:"station_id"`
 }
 
-func (t Tablet) Verify() bool {
-	return t.Name != ""
+type Day struct {
+	Day   string `json:"day"`
+	Value bool   `json:"value"`
+}
+
+func (tablets Tablet) Verify() bool {
+	return tablets.Name != ""
 }
 
 func getAllStation(w http.ResponseWriter, r *http.Request) {
@@ -84,13 +90,15 @@ func getTablet(name string) Tablet {
 	if dberr != nil {
 		log.Panic(dberr)
 	}
+	var cache sql.NullInt32
 	var tablet Tablet
 	rows.Next()
-	dberr = rows.Scan(&tablet.Id, &tablet.Name, &tablet.Maintenance, &tablet.StationID)
+	dberr = rows.Scan(&tablet.Id, &tablet.Name, &tablet.Maintenance, &cache)
 	if dberr != nil {
 		log.Println(dberr)
 	}
 	rows.Close()
+	tablet.StationID = int(cache.Int32)
 	return tablet
 }
 
@@ -137,16 +145,46 @@ func getAllTablets(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	var cache sql.NullInt32
+	var tablet Tablet
 	for rows.Next() {
-		var tablet Tablet
-		err := rows.Scan(&tablet.Id, &tablet.Name, &tablet.Maintenance, &tablet.StationID)
+		err := rows.Scan(&tablet.Id, &tablet.Name, &tablet.Maintenance, &cache)
 		if err != nil {
 			log.Println(err)
 		}
+		tablet.StationID = int(cache.Int32)
 		listTablets = append(listTablets, tablet)
 	}
 	jsonFile, _ := json.Marshal(listTablets)
 	w.Write(jsonFile)
+}
+
+func getAllTabletsByMaintenance(w http.ResponseWriter, r *http.Request) {
+	var listTablets []Tablet
+	/*db, dberr := sql.Open("sqlite3", "Account.sqlite")
+	if dberr != nil {
+		log.Panic(dberr)
+	}*/
+	queryStmt := fmt.Sprintf("Select * From tablets where maintenance=0 ")
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	var cache sql.NullInt32
+	var tablet Tablet
+	for rows.Next() {
+		err := rows.Scan(&tablet.Id, &tablet.Name, &tablet.Maintenance, &cache)
+		if err != nil {
+			log.Println(err)
+		}
+		tablet.StationID = int(cache.Int32)
+		listTablets = append(listTablets, tablet)
+	}
+	jsonFile, _ := json.Marshal(listTablets)
+	w.Write(jsonFile)
+
 }
 
 func addTablet(w http.ResponseWriter, r *http.Request) {
@@ -165,7 +203,7 @@ func addTablet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//transaction
-	sqlStmt := fmt.Sprintf(`INSERT INTO tablet(name,maintenance)VALUES(?,?)`)
+	sqlStmt := fmt.Sprintf(`INSERT INTO tablets(name,maintenance)VALUES(?,?)`)
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -180,17 +218,17 @@ func addTablet(w http.ResponseWriter, r *http.Request) {
 }
 
 func disableTablet(w http.ResponseWriter, r *http.Request) {
-	keys, incErr := r.URL.Query()["ID"]
-	if !incErr || len(keys[0]) < 1 {
-		log.Println("Url Param 'ID' is missing")
-		return
+	var incTablet Tablet
+	err := json.NewDecoder(r.Body).Decode(&incTablet)
+	if err != nil {
+		log.Println(err)
 	}
-	sqlStmt := fmt.Sprintf("UPDATE Tablets SET maintenance = ? WHERE Id = ?")
+	sqlStmt := fmt.Sprintf("UPDATE tablets SET maintenance = ? WHERE Id = ?")
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	_, err = statement.Exec(true, keys[0])
+	_, err = statement.Exec(incTablet.Maintenance, incTablet.Id)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -206,25 +244,13 @@ type Times struct {
 
 func setTimeOuts(w http.ResponseWriter, r *http.Request) {
 	var timeOuts []Times
-	var timeOut Times
-	err := json.NewDecoder(r.Body).Decode(&timeOut)
+	err := json.NewDecoder(r.Body).Decode(&timeOuts)
 	if err != nil {
 		log.Println(err)
 	}
-	jsonFile, err := os.Open("./timeOuts.json")
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &timeOuts)
-	if timeOut.Start > 0 && timeOut.End > 0 {
-		timeOuts = append(timeOuts, timeOut)
-
-		file, _ := json.MarshalIndent(timeOuts, "", " ")
-
-		_ = ioutil.WriteFile("timeOuts.json", file, 0644)
-	} else {
-		http.Error(w, "timestart or timeend missing", http.StatusBadRequest)
-		return
-	}
-
+	file, _ := json.MarshalIndent(timeOuts, "", " ")
+	_ = ioutil.WriteFile("timeOuts.json", file, 0644)
+	w.Write([]byte("done"))
 }
 
 func getTimeOut(w http.ResponseWriter, r *http.Request) {
@@ -241,6 +267,15 @@ func getTimeOut(w http.ResponseWriter, r *http.Request) {
 }
 
 func setDayOuts(w http.ResponseWriter, r *http.Request) {
+	var days []Day
+	err := json.NewDecoder(r.Body).Decode(&days)
+	if err != nil {
+		log.Println(err)
+	}
+
+	file, _ := json.MarshalIndent(days, "", " ")
+	_ = ioutil.WriteFile("week.json", file, 0644)
+	w.Write([]byte("done"))
 
 }
 func getDayOuts(w http.ResponseWriter, r *http.Request) {
@@ -253,5 +288,4 @@ func getDayOuts(w http.ResponseWriter, r *http.Request) {
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(byteValue)
-
 }

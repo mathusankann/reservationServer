@@ -17,7 +17,6 @@ func GetRoom(w http.ResponseWriter, r *http.Request) {
 	}
 	room2 := getRoom(keys[0])
 
-	fmt.Println(room2)
 	if !room2.Verify() {
 		http.Error(w, "Username not found", http.StatusNotFound)
 		return
@@ -52,7 +51,7 @@ func getStationIDByAccountID(id int) int {
 func GetRoomByID(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["ID"]
 	if !err || len(keys[0]) < 1 {
-		log.Println("Url Param 'Name' is missing")
+		log.Println("Url Param 'ID' is missing")
 		return
 	}
 	id, _ := strconv.ParseInt(keys[0], 10, 32)
@@ -106,10 +105,8 @@ func startConf(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateRoom(w http.ResponseWriter, r *http.Request) {
-	log.Println("starting")
 	var croom Resident
 	err := json.NewDecoder(r.Body).Decode(&croom)
-	log.Println(croom)
 	if err != nil {
 		log.Println(err)
 	}
@@ -160,12 +157,14 @@ func getRoom(key string) Resident {
 	if dberr != nil {
 		log.Panic(dberr)
 	}
+	var cache sql.NullInt32
 	var room2 Resident
 	rows.Next()
-	dberr = rows.Scan(&room2.Id, &room2.Name, &room2.StationId, &room2.Join, &room2.Create, &room2.Invite, &room2.AccountId)
+	dberr = rows.Scan(&room2.Id, &room2.Name, &room2.StationId, &room2.Join, &room2.Create, &room2.Invite, &cache)
 	if dberr != nil {
 		log.Println(dberr)
 	}
+	room2.AccountId = int(cache.Int32)
 	rows.Close()
 	return room2
 }
@@ -200,7 +199,6 @@ func getAllVistorNamesByResidentID(w http.ResponseWriter, r *http.Request) {
 	//id, _ := strconv.ParseInt(keys[0], 10, 32)
 	queryStmt := fmt.Sprintf("Select besucher_id From bewohner_hat_besucher Where bewohner_id=%s", keys[0])
 	rows, dberr := db.Query(queryStmt)
-	print(queryStmt)
 	if dberr != nil {
 		log.Panic(dberr)
 	}
@@ -267,4 +265,49 @@ func getRoomIDByName(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonFile, _ := json.Marshal(getRoom(keys[0]).Id)
 	w.Write(jsonFile)
+}
+
+func deleteResident(w http.ResponseWriter, r *http.Request) {
+	deleteID, errs := r.URL.Query()["residentID"]
+	if !errs || len(deleteID[0]) < 1 {
+		log.Println("Url Param 'residentID' is missing")
+		return
+	}
+	stmt, err := db.Prepare("delete from bewohner_hat_besucher where bewohner_id=?")
+	if err != nil {
+		log.Panic(err)
+	}
+	res, err := stmt.Exec(deleteID[0])
+	if err != nil {
+		log.Panic(err)
+	}
+	affect, err := res.RowsAffected()
+	fmt.Println(affect)
+	stmt.Close()
+
+	stmt, err = db.Prepare("delete from meeting where bewohner_id=?")
+	if err != nil {
+		log.Panic(err)
+	}
+	res, err = stmt.Exec(deleteID[0])
+	if err != nil {
+		log.Panic(err)
+	}
+	affect, err = res.RowsAffected()
+	fmt.Println(affect)
+	stmt.Close()
+
+	stmt, err = db.Prepare("delete from bewohner where id=?")
+	if err != nil {
+		log.Panic(err)
+	}
+	res, err = stmt.Exec(deleteID[0])
+	if err != nil {
+		log.Panic(err)
+	}
+	affect, err = res.RowsAffected()
+	fmt.Println(affect)
+	stmt.Close()
+
+	w.Write([]byte("Ihr Bewohner wurde erfolgreich stoniert"))
 }

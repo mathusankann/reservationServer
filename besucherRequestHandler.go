@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -32,11 +33,13 @@ func getVisitor(id int) Visitor {
 		log.Panic(dberr)
 	}
 	var visitor Visitor
+	var cache sql.NullInt32
 	rows.Next()
-	dberr = rows.Scan(&visitor.ID, &visitor.Name, &visitor.Mail, &visitor.AccountID)
+	dberr = rows.Scan(&visitor.ID, &visitor.Name, &visitor.Mail, &cache)
 	if dberr != nil {
 		log.Println(dberr)
 	}
+	visitor.AccountID = int(cache.Int32)
 	rows.Close()
 	return visitor
 }
@@ -93,11 +96,13 @@ func getVistorByNamesorMail(attribute string, key string) Visitor {
 		log.Panic(dberr)
 	}
 	var visitor Visitor
+	var cache sql.NullInt32
 	rows.Next()
-	dberr = rows.Scan(&visitor.ID, &visitor.Name, &visitor.Mail, &visitor.AccountID)
+	dberr = rows.Scan(&visitor.ID, &visitor.Name, &visitor.Mail, &cache)
 	if dberr != nil {
 		log.Println(dberr)
 	}
+	visitor.AccountID = int(cache.Int32)
 	rows.Close()
 	return visitor
 }

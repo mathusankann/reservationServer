@@ -32,7 +32,6 @@ func (u Account) ComparePasswords(plainPwd string) bool {
 	// Since we'll be getting the hashed password from the DB it
 	// will be a string so we'll need to convert it to a byte slice
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(plainPwd))
-	log.Println(u.Password + " : " + plainPwd)
 	if err != nil {
 		log.Println(err)
 		return false

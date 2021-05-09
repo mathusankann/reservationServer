@@ -114,5 +114,5 @@ VALUES (3, 'User', true, false, false, false);
 
 #insert into account #Admin Account
 #values (1, 'admin', 'admin', 1)
-
-insert into station value (1, 'testStation')
+INSERT INTO tablets (NAME,maintenance)
+VALUES ('default',false)

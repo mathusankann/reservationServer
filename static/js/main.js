@@ -1,6 +1,7 @@
 let Grooms
 let flagAddStation;
 let userId;
+let residentName;
 
 function openRoom(room) {
     startRoomPost(room);
@@ -136,7 +137,7 @@ async function createRoom(name, stationName) {
     let room = new Room(name, 1, urls[2].url, urls[1].url, vistor.toString());
     room.station_id = await getStationByName(stationName)
 
-    sendRoomPost(JSON.stringify(room))
+    await sendRoomPost(JSON.stringify(room))
     //}
 }
 
@@ -391,6 +392,11 @@ function generateInterfaceRoom() {
     button.innerText = "Löschen"
     button.type="type"
     button.style.background="red"
+    button.onclick =()=>{
+        deleteResident(userId).then(()=>{
+            location.reload()
+        })
+    }
 
     div = document.createElement("div")
     div.style.width="100%"
@@ -404,6 +410,7 @@ function generateInterfaceRoom() {
 
 async function getVisitorsRoomInterface(name) {
    // console.log(this.value)
+    residentName =name
     userId = await getRoomIDBYName(name)
     await getAllVistorNamesByResidentID(userId,true)
 }
@@ -411,8 +418,25 @@ async function getVisitorsRoomInterface(name) {
 function addVisitorRoomInterface() {
     let name = document.getElementById("nameVisitor").value
     let mail = document.getElementById("mailVisitor").value
-    console.log(userId)
     addNewVisitor(name,mail,userId)
     document.getElementById("formReservation").style.display = "none"
 
 }
+
+function startConfWithVisitor() {
+    getVisitorByName(this.innerText.toString()).then((res)=>{
+        let meeting = new Meeting(0,null,null,userId,res.id,0)
+        console.log(meeting)
+        sendInviteMail(meeting).then((res)=>{
+            console.log("hier")
+            if(res){
+                getRoom(residentName)
+            }
+            else {
+                console.log("something went wrong ...")
+            }
+        })
+
+    })
+}
+
