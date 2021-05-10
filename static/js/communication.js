@@ -26,13 +26,13 @@ class User {
 }
 
 class Meeting {
-    constructor(id, time_start, time_end, bewohnerid) {
+    constructor(id, time_start, time_end, bewohnerid,besucherid, tabletid) {
         this.id = id
         this.time_start = time_start;
         this.time_end = time_end;
         this.bewohner_id = bewohnerid;
-       // this.besucher_id = besucherid;
-        //this.tablets_id = tabletid;
+        this.besucher_id = besucherid;
+        this.tablets_id = tabletid;
     }
 }
 
