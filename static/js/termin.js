@@ -528,7 +528,7 @@ async function generateInputInterfaceAddMeetingDesktop(div, startTime) {
     let startDate = new Date()
     startDate.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + diff)
     startDate.setHours(startTime, 0, 0, 0)
-    terminLabel.innerText = "Reservierung für den: " + startDate.toLocaleDateString() + " " + startDate.toLocaleTimeString() + "\n"
+    terminLabel.innerText = "\nReservierung für den: " + startDate.toLocaleDateString() + " " + startDate.toLocaleTimeString() + "\n"
     terminLabel.className = "caption"
     terminOverview.appendChild(terminLabel)
 
@@ -539,7 +539,7 @@ async function generateInputInterfaceAddMeetingDesktop(div, startTime) {
             if (dates.compare(startDate, reservedDates[i].time_start) === 0) {
                 if (!reservedCaptionFlag) {
                     terminLabel = document.createElement("label")
-                    terminLabel.innerText = "Reserviert\n"
+                    terminLabel.innerText = "\nReserviert\n"
                     terminLabel.className = "labelsReserving"
                     terminOverview.appendChild(terminLabel)
                     reservedCaptionFlag = true
@@ -551,11 +551,17 @@ async function generateInputInterfaceAddMeetingDesktop(div, startTime) {
                 let resident = await getter("/getRoomByID?ID=" + reservedDates[i].bewohner_id)
                 // console.log(resident)
                 residentLabel.innerText = "Bewohner: " + resident.name + "\n"
+                let roomLabel = document.createElement("label")
+                roomLabel.innerText = "Raum: 404\n"
                 let visitorLabel = document.createElement("label")
                 let visitor = await getter("/getVisitorByID?ID=" + reservedDates[i].besucher_id)
+                let mailLabel = document.createElement("label")
+                mailLabel.innerText = "Mail: " +visitor.mail
                 visitorLabel.innerText = "Besucher: " + visitor.name + "\n"
                 div.appendChild(residentLabel)
+                div.appendChild(roomLabel)
                 div.appendChild(visitorLabel)
+                div.appendChild(mailLabel)
                 terminOverview.appendChild(div)
                 booked++
             }
@@ -565,7 +571,7 @@ async function generateInputInterfaceAddMeetingDesktop(div, startTime) {
         let div = document.createElement("div")
         div.className = "reservingContainer"
         terminLabel = document.createElement("label")
-        terminLabel.innerText = "Reservierung\n"
+        terminLabel.innerText = "\nReservierung\n"
         terminLabel.className = "labelsReserving"
         terminOverview.appendChild(terminLabel)
         let residentLabel = document.createElement("label")
@@ -907,4 +913,5 @@ function addTablet() {
         })
     }
 
-}
+
+}/*groundzero*/

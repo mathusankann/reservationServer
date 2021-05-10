@@ -27,6 +27,7 @@ func getAccountByName(w http.ResponseWriter, r *http.Request) {
 	}
 	var accountId int
 	rows.Next()
+
 	dberr = rows.Scan(&accountId)
 	if dberr != nil {
 		log.Println(dberr)

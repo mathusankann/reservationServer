@@ -203,6 +203,7 @@ func getAllVistorNamesByResidentID(w http.ResponseWriter, r *http.Request) {
 		log.Panic(dberr)
 	}
 	var ind int
+
 	for rows.Next() {
 		dberr = rows.Scan(&ind)
 		index = append(index, ind)

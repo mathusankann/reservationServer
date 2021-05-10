@@ -2,7 +2,7 @@ let rooms;
 
 
 class Room {
-    constructor(name, roomid, join, create, invite, accountid, stationid) {
+    constructor(name, roomid, join, create, invite, accountid, stationid,meetingRunningLink,room) {
         this.name = name;
         this.id = roomid;
         this.join = join;
@@ -10,6 +10,8 @@ class Room {
         this.invite = invite
         this.station_id = stationid
         this.account_id = accountid
+        this.meetingRunningLink = meetingRunningLink
+        this.room = room
     }
 }
 
@@ -25,13 +27,13 @@ class User {
 }
 
 class Meeting {
-    constructor(id, time_start, time_end, bewohnerid, besucherid, tabletid) {
+    constructor(id, time_start, time_end, bewohnerid) {
         this.id = id
         this.time_start = time_start;
         this.time_end = time_end;
         this.bewohner_id = bewohnerid;
-        this.besucher_id = besucherid;
-        this.tablets_id = tabletid;
+       // this.besucher_id = besucherid;
+        //this.tablets_id = tabletid;
     }
 }
 
@@ -412,6 +414,11 @@ function getAllMeetingsDate(starttime, endtime) {
             if (200 === this.status) {
                 reservedDates = JSON.parse(this.responseText)
                 if (reservedDates == null) {
+                    document.getElementById("reservedDates").style.display="none"
+                    document.getElementById("buttonHolder").style.float="left"
+                    document.getElementById("userButton").style.float="left"
+
+                    //document.getElementById("")
                     return
                 }
                 let temp = new Date()

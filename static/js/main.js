@@ -11,6 +11,8 @@ function openRoom(room) {
 function init(rooms) {
     Grooms = rooms
     getAllMeetingsDate(currentWeeksMonday, currentSunday)
+    document.getElementById("buttonHolder").innerText="\n Bewohner"
+
     document.getElementById("userButton").innerText = ""
     const overview = document.getElementById("userButton");
     if (Grooms !== null) {
@@ -44,8 +46,9 @@ function init(rooms) {
 }
 
 async function initReservedDatesOverview(reservedDate, counter) {
+
     const roverview = document.getElementById("reservedDates")
-    roverview.innerText = "Anstehende Termine"
+    roverview.innerText = "\nAnstehende Termine"
     const innerReserver = document.createElement("div")
     innerReserver.className = "innerReserver"
     let len
@@ -56,6 +59,7 @@ async function initReservedDatesOverview(reservedDate, counter) {
     } else {
         diff = 7
     }
+
     if (counter + diff > reservedDate.length) {
         len = reservedDate.length
     } else {

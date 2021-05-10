@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Konferenzsystem</title>
-    <script  src="js/termin.js"></script>
-    <script  src="lib/bigbluebutton-api.js"></script>
+    <script src="js/termin.js"></script>
+    <script src="lib/bigbluebutton-api.js"></script>
     <script src="vendor/jsSHA.js"></script>
-    <script  src="js/communication.js"></script>
-    <script  src="js/main.js"></script>
+    <script src="js/communication.js"></script>
+    <script src="js/main.js"></script>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/termin.css">
 
@@ -33,41 +33,41 @@
 
 
 <div id="title"> Terminverwaltung</div>
-<div id="subTitle">  Auch in schweren Zeiten für Ihre Mitmenschen da sein...</div>
+<div id="subTitle"> Auch in schweren Zeiten für Ihre Mitmenschen da sein...</div>
 <br>
-<div id = "terminContainer">
-<div id="termin">
-    <table id="terminTable">
-        <caption id="week"></caption>
-        <tr>
-            <th id="prevWeek" value=-1> ‹</th>
-            <th class="days" id="monday">Montag</th>
-            <th class="days" id="tuesday">Dienstag</th>
-            <th class="days" id="wednesday">Mittwoch</th>
-            <th class="days" id="thursday">Donnerstag</th>
-            <th class="days" id="friday">  Freitag  </th>
-            <th class="days" id="saturday">Samstag</th>
-            <th class="days" id="sunday"> Sonntag</th>
-            <th id="nextWeek" value=1>›</th>
-        </tr>
-    </table>
+<div id="terminContainer">
+    <div id="termin">
+        <table id="terminTable">
+            <caption id="week"></caption>
+            <tr>
+                <th id="prevWeek" value=-1> ‹</th>
+                <th class="days" id="monday">Montag</th>
+                <th class="days" id="tuesday">Dienstag</th>
+                <th class="days" id="wednesday">Mittwoch</th>
+                <th class="days" id="thursday">Donnerstag</th>
+                <th class="days" id="friday"> Freitag</th>
+                <th class="days" id="saturday">Samstag</th>
+                <th class="days" id="sunday"> Sonntag</th>
+                <th id="nextWeek" value=1>›</th>
+            </tr>
+        </table>
 
-    <div id="formReservation" class="modal">
-        <form  class="modal-content animate">
-            <div class="imgcontainer">
+        <div id="formReservation" class="modal">
+            <form class="modal-content animate">
+                <div class="imgcontainer">
                 <span onclick="document.getElementById('formReservation').style.display='none'" class="close"
                       title="Close Modal">&times;</span>
-            </div>
-            <div id="test" class="container"></div>
-        </form>
+                </div>
+                <div id="test" class="container"></div>
+            </form>
+        </div>
     </div>
+    <div id="terminOverview"></div>
 </div>
-<div id="terminOverview"></div></div>
 <script>
     initTerminTable()
 </script>
 
-<br><br><br>
 <div id="overview">
     <div id="reservedDates"></div>
     <div id="buttonHolder" style="font-size: 0.8cm"> Bewohner</div>

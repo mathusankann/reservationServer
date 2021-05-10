@@ -53,13 +53,14 @@ CREATE TABLE tablets
 
 CREATE TABLE bewohner
 (
-    Id         int          NOT NULL AUTO_INCREMENT,
-    name       varchar(255) NOT NULL,
-    station_id int          NOT NULL,
-    inviteLink varchar(512) NOT NULL,
-    createLink varchar(512) NOT NULL,
-    joinLink   varchar(512) NOT NULL,
-    account_id int,
+    Id                 int          NOT NULL AUTO_INCREMENT,
+    name               varchar(255) NOT NULL,
+    station_id         int          NOT NULL,
+    inviteLink         varchar(512) NOT NULL,
+    createLink         varchar(512) NOT NULL,
+    joinLink           varchar(512) NOT NULL,
+
+    account_id         int,
     PRIMARY KEY (Id),
     FOREIGN KEY (station_id) REFERENCES station (id),
     FOREIGN KEY (account_id) REFERENCES account (id)
@@ -103,8 +104,6 @@ CREATE TABLE bewohner_hat_besucher
 
 
 
-
-
 INSERT INTO rolle #Admin
 VALUES (1, 'Admin', true, true, true, true);
 INSERT INTO rolle #Betreuer
@@ -114,5 +113,5 @@ VALUES (3, 'User', true, false, false, false);
 
 #insert into account #Admin Account
 #values (1, 'admin', 'admin', 1)
-INSERT INTO tablets (NAME,maintenance)
-VALUES ('default',false)
+INSERT INTO tablets (NAME, maintenance)
+VALUES ('default', false)
