@@ -106,7 +106,7 @@ span.psw {
     background-color: #fefefe;
     margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
     border: 1px solid #888;
-    width: 30%; /* Could be more or less, depending on screen size */
+    width: 45%; /* Could be more or less, depending on screen size */
 }
 
 @media (max-width: 991px) {
@@ -187,6 +187,9 @@ span.psw {
 
 #reservedDates{
     float: left;
+    font-size: 0.8cm;
+    width: 28%;
+    clear: both;
 }
 
 .sortBtn{
@@ -200,10 +203,7 @@ span.psw {
     background-color: white;
 }
 
-#reservedDates{
-    font-size: 0.8cm;
-    width: 28%;
-}
+
 
 .reserved{
     font-size: 0.6cm;
@@ -214,7 +214,7 @@ span.psw {
     background-color: #dddddd;
     cursor: pointer;
 }
-#innerReserver{
+.innerReserver{
     border-style: groove;
     border-color: black;
 }

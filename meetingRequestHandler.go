@@ -17,7 +17,6 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-	log.Println(incMeeting)
 	if !getRoomByID(incMeeting.BewohnerId).Verify() {
 		http.Error(w, "Room does not exists", http.StatusBadRequest)
 		return

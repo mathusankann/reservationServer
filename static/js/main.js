@@ -13,17 +13,15 @@ function init(rooms) {
     getAllMeetingsDate(currentWeeksMonday, currentSunday)
     document.getElementById("userButton").innerText = ""
     const overview = document.getElementById("userButton");
-
     if (Grooms !== null) {
         for (let i = 0; i < Grooms.length; i++) {
             let rs = Grooms[i].split(" ");
-
             const roomdiv = document.createElement("div")
             roomdiv.id = ("structs" + i);
             roomdiv.appendChild(document.createElement("br"))
             roomdiv.className = "rooms"
-
-            roomdiv.innerText = Grooms[i];
+            roomdiv.value = Grooms[i];
+            roomdiv.innerText = rs[0] + "\n" + rs[1]
             const a = document.createElement("div")
             a.className = "img"
             const img = document.createElement("img")
@@ -47,15 +45,21 @@ function init(rooms) {
 
 async function initReservedDatesOverview(reservedDate, counter) {
     const roverview = document.getElementById("reservedDates")
-    roverview.innerText=""
     roverview.innerText = "Anstehende Termine"
     const innerReserver = document.createElement("div")
-    innerReserver.id = "innerReserver"
+    innerReserver.className = "innerReserver"
     let len
-    if (counter + 7 > reservedDate.length) {
+    let diff
+    let width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+    if (width < 1500) {
+        diff = 3
+    } else {
+        diff = 7
+    }
+    if (counter + diff > reservedDate.length) {
         len = reservedDate.length
     } else {
-        len = counter + 7
+        len = counter + diff
     }
     if (counter === -1) {
         counter = 0
@@ -63,7 +67,7 @@ async function initReservedDatesOverview(reservedDate, counter) {
     for (let i = counter; i < len; i++) {
         let child = document.createElement("div")
         child.className = "reserved"
-        await getRoomByID(reservedDate[i].bewohner_id, child, innerReserver, reservedDate[i].time_start, reservedDate[i].time_end)
+        let x = await getRoomByID(reservedDate[i].bewohner_id, child, innerReserver, reservedDate[i].time_start, reservedDate[i].time_end)
         child.addEventListener("click", getRoomForOverview)
     }
     roverview.appendChild(innerReserver)
@@ -345,7 +349,6 @@ function showEditorPanel() {
 }
 
 
-
 function generateInterfaceRoom() {
     const form = document.getElementById("test")
     form.innerText = ""
@@ -365,11 +368,11 @@ function generateInterfaceRoom() {
     form.appendChild(nameInput)
     form.appendChild(mailInput)
     let div = document.createElement("div")
-    div.style.width="100%"
+    div.style.width = "100%"
     let button = document.createElement("button")
-    button.innerText="Hinzufügen"
-    button.type="button"
-    button.onclick=addVisitorRoomInterface
+    button.innerText = "Hinzufügen"
+    button.type = "button"
+    button.onclick = addVisitorRoomInterface
     div.appendChild(button)
     form.appendChild(div)
     dropdownLabel = document.createElement("label")
@@ -377,11 +380,11 @@ function generateInterfaceRoom() {
     dropdownLabel.innerText = "Raum öffnen mit ..."
     dropdownLabel.className = "labels"
     let dropdown = document.createElement("select")
-    dropdown.id="visitor"
+    dropdown.id = "visitor"
     form.appendChild(dropdownLabel)
     form.appendChild(dropdown)
     //console.log(this.innerText)
-    getVisitorsRoomInterface(this.innerText)
+    getVisitorsRoomInterface(this.value)
 
     dropdownLabel = document.createElement("label")
     dropdownLabel.htmlFor = "room"
@@ -390,16 +393,16 @@ function generateInterfaceRoom() {
     form.appendChild(dropdownLabel)
     button = document.createElement("button")
     button.innerText = "Löschen"
-    button.type="type"
-    button.style.background="red"
-    button.onclick =()=>{
-        deleteResident(userId).then(()=>{
+    button.type = "type"
+    button.style.background = "red"
+    button.onclick = () => {
+        deleteResident(userId).then(() => {
             location.reload()
         })
     }
 
     div = document.createElement("div")
-    div.style.width="100%"
+    div.style.width = "100%"
     div.appendChild(button)
     form.appendChild(div)
 
@@ -409,30 +412,29 @@ function generateInterfaceRoom() {
 }
 
 async function getVisitorsRoomInterface(name) {
-   // console.log(this.value)
-    residentName =name
+    // console.log(this.value)
+    residentName = name
     userId = await getRoomIDBYName(name)
-    await getAllVistorNamesByResidentID(userId,true)
+    await getAllVistorNamesByResidentID(userId, true)
 }
 
 function addVisitorRoomInterface() {
     let name = document.getElementById("nameVisitor").value
     let mail = document.getElementById("mailVisitor").value
-    addNewVisitor(name,mail,userId)
+    addNewVisitor(name, mail, userId)
     document.getElementById("formReservation").style.display = "none"
 
 }
 
 function startConfWithVisitor() {
-    getVisitorByName(this.innerText.toString()).then((res)=>{
-        let meeting = new Meeting(0,null,null,userId,res.id,0)
+    getVisitorByName(this.innerText.toString()).then((res) => {
+        let meeting = new Meeting(0, null, null, userId, res.id, 0)
         console.log(meeting)
-        sendInviteMail(meeting).then((res)=>{
+        sendInviteMail(meeting).then((res) => {
             console.log("hier")
-            if(res){
+            if (res) {
                 getRoom(residentName)
-            }
-            else {
+            } else {
                 console.log("something went wrong ...")
             }
         })

@@ -204,15 +204,15 @@ function getRoleByID(id) {
         if (4 === this.readyState) {
             if (200 === this.status) {
                 let role = JSON.parse(this.responseText)
-                console.log(role)
                 if (role.viewTermin) {
                     // addButtons(rooms)
                     init(rooms)
                 }
                 if (role.viewAllStationUser) {
-                    // document.getElementById("timeTableSettings").style.display="block"
+
                 }
                 if (role.viewAllUser) {
+                    document.getElementById("timeTableSettings").style.visibility="visible"
                     showEditorPanel()
                     //
                 }
@@ -327,7 +327,6 @@ function getAllRoomNamesByStationID(ID) {
                 if (200 === this.status) {
                     if (this.responseText !== "") {
                         rooms = JSON.parse(this.responseText);
-                        console.log(rooms)
                         //getUserAuthentication();
                         //init(rooms)
                         resolve(true)
@@ -349,11 +348,11 @@ function getAllRoomNamesByStationID(ID) {
 
 
 function getRoomByID(Id, child, roverview, timestart, timeend) {
+    return new Promise(((resolve, reject) => {
     const request = createAjaxRequest();
     request.onreadystatechange = function () {
         if (4 === this.readyState) {
             if (200 === this.status) {
-                return new Promise(((resolve, reject) => {
                     let r = JSON.parse(this.responseText)
                     let temp = new Date()
                     temp.setHours(temp.getHours() - 1)
@@ -371,14 +370,16 @@ function getRoomByID(Id, child, roverview, timestart, timeend) {
                         roverview.appendChild(child)
                     }
                     resolve(1)
-                }))
+
             } else {
+                resolve(0)
                 console.log(this.status + ":" + this.responseText);
             }
         }
     }
     request.open("GET", "/getRoomByID?ID=" + Id, true);
     request.send();
+    }))
 }
 
 function getAllRoom() {

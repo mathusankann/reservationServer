@@ -4,11 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"io/ioutil"
 	"log"
 	"net/http"
 	_ "os"
-	"path/filepath"
 	_ "time"
 )
 
@@ -89,21 +87,6 @@ func reminder() {
 	//db.Close()
 }
 */
-
-func serverInit() {
-	path := filepath.Join("./createReservationDB.sql")
-
-	c, ioErr := ioutil.ReadFile(path)
-	if ioErr != nil {
-		// handle error.
-	}
-	sqlString := string(c)
-	_, err := db.Exec(sqlString)
-	if err != nil {
-		// handle error.
-	}
-
-}
 
 func insertAdminAccount() {
 	var admin Account
