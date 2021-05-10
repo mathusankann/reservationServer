@@ -59,7 +59,8 @@ CREATE TABLE bewohner
     inviteLink         varchar(512) NOT NULL,
     createLink         varchar(512) NOT NULL,
     joinLink           varchar(512) NOT NULL,
-
+    meetingRunningLink varchar(512) NOT NULL,
+    room               varchar(255) NOT NULL,
     account_id         int,
     PRIMARY KEY (Id),
     FOREIGN KEY (station_id) REFERENCES station (id),

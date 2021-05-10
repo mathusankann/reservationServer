@@ -2,7 +2,7 @@ let rooms;
 
 
 class Room {
-    constructor(name, roomid, join, create, invite, accountid, stationid) {
+    constructor(name, roomid, join, create, invite, accountid, stationid,meetingRunningLink,room) {
         this.name = name;
         this.id = roomid;
         this.join = join;
@@ -10,6 +10,8 @@ class Room {
         this.invite = invite
         this.station_id = stationid
         this.account_id = accountid
+        this.meetingRunningLink = meetingRunningLink
+        this.room = room
 
     }
 }

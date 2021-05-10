@@ -131,13 +131,13 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 	}
 	//transaction
 
-	sqlStmt := fmt.Sprintf(`INSERT INTO bewohner(name,station_id,inviteLink,createLink,joinLink)VALUES(?,?,?,?,?)`)
+	sqlStmt := fmt.Sprintf(`INSERT INTO bewohner(name,station_id,inviteLink,createLink,joinLink,meetingRunningLink,room)VALUES(?,?,?,?,?,?,?)`)
 
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	_, err = statement.Exec(croom.Name, croom.StationId, croom.Join, croom.Create, croom.Invite)
+	_, err = statement.Exec(croom.Name, croom.StationId, croom.Join, croom.Create, croom.Invite, &croom.MeetingRunningLink, &croom.Room)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -160,7 +160,7 @@ func getRoom(key string) Resident {
 	var cache sql.NullInt32
 	var room2 Resident
 	rows.Next()
-	dberr = rows.Scan(&room2.Id, &room2.Name, &room2.StationId, &room2.Join, &room2.Create, &room2.Invite, &cache)
+	dberr = rows.Scan(&room2.Id, &room2.Name, &room2.StationId, &room2.Join, &room2.Create, &room2.Invite, &room2.MeetingRunningLink, &room2.Room, &cache)
 	if dberr != nil {
 		log.Println(dberr)
 	}
@@ -178,7 +178,7 @@ func getRoomByID(id int) Resident {
 	var room2 Resident
 	var cacheAccount sql.NullInt32
 	rows.Next()
-	dberr = rows.Scan(&room2.Id, &room2.Name, &room2.StationId, &room2.Invite, &room2.Create, &room2.Join, &cacheAccount)
+	dberr = rows.Scan(&room2.Id, &room2.Name, &room2.StationId, &room2.Invite, &room2.Create, &room2.Join, &room2.MeetingRunningLink, &room2.Room, &cacheAccount)
 	if dberr != nil {
 		log.Println(dberr)
 	}

@@ -108,7 +108,7 @@ func insertAdminAccount() {
 
 func initDbConnection() *sql.DB {
 	//var db, err = sql.Open("sqlite3", "Account.sqlite")
-	var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationdb?parseTime=true")
+	var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -119,7 +119,7 @@ func main() {
 
 	//serverInit()
 
-	//insertAdminAccount()
+	insertAdminAccount()
 	userMap = make(map[string]string)
 	fileServer := http.FileServer(http.Dir("./static")) // New code
 	http.Handle("/", fileServer)

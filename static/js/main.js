@@ -46,7 +46,6 @@ function init(rooms) {
 }
 
 async function initReservedDatesOverview(reservedDate, counter) {
-
     const roverview = document.getElementById("reservedDates")
     roverview.innerText = "\nAnstehende Termine"
     const innerReserver = document.createElement("div")
@@ -131,7 +130,7 @@ async function createRoom(name, stationName) {
     };
     urls = [];
     ref = api.availableApiCalls();
-    console.log(ref)
+    //console.log(ref)
     for (i = 0, len = ref.length; i < len; i++) {
         method = ref[i];
         urls.push({
@@ -142,7 +141,11 @@ async function createRoom(name, stationName) {
     params.password = "ap"
     params.fullName = "Besucher"
     let vistor = api.urlFor('join', params)
+
     let room = new Room(name, 1, urls[2].url, urls[1].url, vistor.toString());
+    room.meetingRunningLink=urls[3].url
+    //console.log(urls[3].url)
+    room.room = "not set"
     room.station_id = await getStationByName(stationName)
 
     await sendRoomPost(JSON.stringify(room))
