@@ -119,7 +119,7 @@ func main() {
 
 	//serverInit()
 
-	insertAdminAccount()
+	//insertAdminAccount()
 	userMap = make(map[string]string)
 	fileServer := http.FileServer(http.Dir("./static")) // New code
 	http.Handle("/", fileServer)
@@ -132,7 +132,7 @@ func main() {
 	http.HandleFunc("/getAllRoomByStationID", getAllRoomByStationID)
 	http.HandleFunc("/getRoomIDByName", getRoomIDByName)
 	http.HandleFunc("/deleteResident", deleteResident)
-
+	http.HandleFunc("/getAllResidentNamesByVisitorID", getAllResidentNamesByVisitorID)
 	//StationHandler
 	http.HandleFunc("/getAllStation", getAllStation)
 	http.HandleFunc("/getAllStationByName", getAllStationByName)
@@ -161,10 +161,13 @@ func main() {
 
 	//VisitorHandler
 	http.HandleFunc("/getVisitorByID", getVisitorByID)
-	http.HandleFunc("/getAllResidentNamesByVisitorID", getAllResidentNamesByVisitorID)
 	http.HandleFunc("/getVisitorbyname", getVisitorbyname)
 	http.HandleFunc("/getAllVistorNamesByResidentID", getAllVistorNamesByResidentID)
 	http.HandleFunc("/addNewVisitor", addNewVisitor)
+	http.HandleFunc("/registerVisitor", registerVisitor)
+	http.HandleFunc("/getVisitorByAccountID", getVisitorByAccountID)
+	http.HandleFunc("/getVisitorByMail", getVisitorByMail)
+
 	//http.HandleFunc("/addVisitorToResident", addVisitorToResident)
 
 	//BetreuerHandler

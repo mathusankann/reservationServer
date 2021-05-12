@@ -12,7 +12,6 @@ type Meeting struct {
 	BewohnerId       int       `json:"bewohner_id"`
 	BesucherId       int       `json:"besucher_id"`
 	TabletId         int       `json:"tablets_id"`
-	TempMail         string    `json:"mail"`
 }
 
 type CacheMeeting struct {

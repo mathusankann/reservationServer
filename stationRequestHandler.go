@@ -75,10 +75,11 @@ func getStation(name string) Station {
 		log.Panic(dberr)
 	}
 	var station Station
-	rows.Next()
-	dberr = rows.Scan(&station.Id, &station.Name)
-	if dberr != nil {
-		log.Println(dberr)
+	if rows.Next() {
+		dberr = rows.Scan(&station.Id, &station.Name)
+		if dberr != nil {
+			log.Println(dberr)
+		}
 	}
 	rows.Close()
 	return station
@@ -92,10 +93,11 @@ func getTablet(name string) Tablet {
 	}
 	var cache sql.NullInt32
 	var tablet Tablet
-	rows.Next()
-	dberr = rows.Scan(&tablet.Id, &tablet.Name, &tablet.Maintenance, &cache)
-	if dberr != nil {
-		log.Println(dberr)
+	if rows.Next() {
+		dberr = rows.Scan(&tablet.Id, &tablet.Name, &tablet.Maintenance, &cache)
+		if dberr != nil {
+			log.Println(dberr)
+		}
 	}
 	rows.Close()
 	tablet.StationID = int(cache.Int32)

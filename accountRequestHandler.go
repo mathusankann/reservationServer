@@ -26,11 +26,11 @@ func getAccountByName(w http.ResponseWriter, r *http.Request) {
 		log.Panic(dberr)
 	}
 	var accountId int
-	rows.Next()
-
-	dberr = rows.Scan(&accountId)
-	if dberr != nil {
-		log.Println(dberr)
+	if rows.Next() {
+		dberr = rows.Scan(&accountId)
+		if dberr != nil {
+			log.Println(dberr)
+		}
 	}
 	rows.Close()
 	w.Header().Set("Content-Type", "application/json")
@@ -97,7 +97,6 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln(err.Error())
 	}
 	statement.Close()
-
 	w.Write([]byte("ok"))
 }
 
@@ -129,10 +128,12 @@ func getUser(name string) Account {
 		log.Panic(dberr)
 	}
 	var user2 Account
-	rows.Next()
-	dberr = rows.Scan(&user2.ID, &user2.Username, &user2.Password, &user2.RoleId)
-	if dberr != nil {
-		log.Println(dberr)
+
+	if rows.Next() {
+		dberr = rows.Scan(&user2.ID, &user2.Username, &user2.Password, &user2.RoleId)
+		if dberr != nil {
+			log.Println(dberr)
+		}
 	}
 	rows.Close()
 	return user2
@@ -167,10 +168,11 @@ func getRoleByName(w http.ResponseWriter, r *http.Request) {
 		log.Panic(dberr)
 	}
 	var role Role
-	rows.Next()
-	dberr = rows.Scan(&role.ID, &role.Name, &role.ViewTermin, &role.EditUser, &role.ViewAllStationUser, &role.ViewAllUser)
-	if dberr != nil {
-		log.Println(dberr)
+	if rows.Next() {
+		dberr = rows.Scan(&role.ID, &role.Name, &role.ViewTermin, &role.EditUser, &role.ViewAllStationUser, &role.ViewAllUser)
+		if dberr != nil {
+			log.Println(dberr)
+		}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	jsonFile, _ := json.Marshal(role)
@@ -193,10 +195,11 @@ func getRoleByID(w http.ResponseWriter, r *http.Request) {
 	}
 	var role Role
 	w.Header().Set("Content-Type", "application/json")
-	rows.Next()
-	dberr = rows.Scan(&role.ID, &role.Name, &role.ViewTermin, &role.EditUser, &role.ViewAllStationUser, &role.ViewAllUser)
-	if dberr != nil {
-		log.Println(dberr)
+	if rows.Next() {
+		dberr = rows.Scan(&role.ID, &role.Name, &role.ViewTermin, &role.EditUser, &role.ViewAllStationUser, &role.ViewAllUser)
+		if dberr != nil {
+			log.Println(dberr)
+		}
 	}
 	jsonFile, _ := json.Marshal(role)
 	w.Write(jsonFile)

@@ -17,54 +17,44 @@ func getVisitorByID(w http.ResponseWriter, r *http.Request) {
 	}
 	id, _ := strconv.ParseInt(keys[0], 10, 32)
 	w.Header().Set("Content-Type", "application/json")
-	jsonFile, _ := json.Marshal(getVisitor(int(id)))
+	jsonFile, _ := json.Marshal(getVisitor(int(id), "id"))
 	w.Write(jsonFile)
 
 }
 
-func getVisitor(id int) Visitor {
+func getVisitorByAccountID(w http.ResponseWriter, r *http.Request) {
+	keys, err := r.URL.Query()["AccountID"]
+	if !err || len(keys[0]) < 1 {
+		log.Println("Url Param 'ID' is missing")
+		return
+	}
+	id, _ := strconv.ParseInt(keys[0], 10, 32)
+	w.Header().Set("Content-Type", "application/json")
+	jsonFile, _ := json.Marshal(getVisitor(int(id), "account_id"))
+	w.Write(jsonFile)
+}
+
+func getVisitor(id int, column string) Visitor {
 	/*db, dberr := sql.Open("sqlite3", "Account.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
 	}*/
-	queryStmt := fmt.Sprintf("Select * From besucher Where id= %d", id)
+	queryStmt := fmt.Sprintf("Select * From besucher Where %s= %d", column, id)
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
 		log.Panic(dberr)
 	}
 	var visitor Visitor
 	var cache sql.NullInt32
-	rows.Next()
-	dberr = rows.Scan(&visitor.ID, &visitor.Name, &visitor.Mail, &cache)
-	if dberr != nil {
-		log.Println(dberr)
+	if rows.Next() {
+		dberr = rows.Scan(&visitor.ID, &visitor.Name, &visitor.Mail, &cache)
+		if dberr != nil {
+			log.Println(dberr)
+		}
+		visitor.AccountID = int(cache.Int32)
 	}
-	visitor.AccountID = int(cache.Int32)
 	rows.Close()
 	return visitor
-}
-
-func getAllResidentNamesByVisitorID(w http.ResponseWriter, r *http.Request) {
-	var residentNames []string
-	keys, err := r.URL.Query()["ID"]
-	if !err || len(keys[0]) < 1 {
-		log.Println("Url Param 'ID' is missing")
-		return
-	}
-	id, _ := strconv.ParseInt(keys[0], 10, 32)
-	queryStmt := fmt.Sprintf("Select 'name' From bewohner_hat_besucher Where besucher_id= %d", id)
-	rows, dberr := db.Query(queryStmt)
-	if dberr != nil {
-		log.Panic(dberr)
-	}
-	var resident string
-	for rows.Next() {
-		dberr = rows.Scan(&resident)
-		residentNames = append(residentNames, resident)
-	}
-	rows.Close()
-	jsonFile, _ := json.Marshal(residentNames)
-	w.Write(jsonFile)
 }
 
 func getVisitorbyname(w http.ResponseWriter, r *http.Request) {
@@ -97,14 +87,30 @@ func getVistorByNamesorMail(attribute string, key string) Visitor {
 	}
 	var visitor Visitor
 	var cache sql.NullInt32
-	rows.Next()
-	dberr = rows.Scan(&visitor.ID, &visitor.Name, &visitor.Mail, &cache)
-	if dberr != nil {
-		log.Println(dberr)
+	if rows.Next() {
+		dberr = rows.Scan(&visitor.ID, &visitor.Name, &visitor.Mail, &cache)
+		if dberr != nil {
+			log.Println(dberr)
+		}
+		visitor.AccountID = int(cache.Int32)
 	}
-	visitor.AccountID = int(cache.Int32)
 	rows.Close()
 	return visitor
+}
+func getVisitorByMail(w http.ResponseWriter, r *http.Request) {
+	var incVisitor Visitor
+	err := json.NewDecoder(r.Body).Decode(&incVisitor)
+	if err != nil {
+		log.Println(err)
+	}
+	visitor := getVistorByNamesorMail("mail", incVisitor.Mail)
+	if !visitor.Verify() {
+		http.Error(w, "Visitor not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	jsonFile, _ := json.Marshal(visitor)
+	w.Write(jsonFile)
 }
 
 func addVisitorToResident(visitor int, resident int) {
@@ -163,5 +169,37 @@ func addNewVisitor(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	jsonFile, _ := json.Marshal(visitor)
 	w.Write(jsonFile)
+
+}
+
+func registerVisitor(w http.ResponseWriter, r *http.Request) {
+	var incVisitor Visitor
+	err := json.NewDecoder(r.Body).Decode(&incVisitor)
+	if err != nil {
+		log.Println(err)
+	}
+
+	visitor := getVistorByNamesorMail("mail", incVisitor.Mail)
+	if !visitor.Verify() {
+		http.Error(w, "This Mail has no rights to make an account", http.StatusBadRequest)
+		return
+	}
+	if visitor.AccountID == 0 {
+		account := getUser(incVisitor.Name)
+		sqlStmt := fmt.Sprintf("UPDATE besucher SET account_id = ? WHERE Id = ?")
+		statement, err := db.Prepare(sqlStmt)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		_, err = statement.Exec(account.ID, visitor.ID)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		statement.Close()
+		w.Write([]byte("Account has been created"))
+	} else {
+		http.Error(w, "This Mail has already an account", http.StatusBadRequest)
+		return
+	}
 
 }

@@ -38,10 +38,11 @@ func getStationIDByAccountID(id int) int {
 	if dberr != nil {
 		log.Panic(dberr)
 	}
-	rows.Next()
-	err := rows.Scan(&stationID)
-	if err != nil {
-		log.Println(err)
+	if rows.Next() {
+		err := rows.Scan(&stationID)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	return stationID
@@ -159,12 +160,13 @@ func getRoom(key string) Resident {
 	}
 	var cache sql.NullInt32
 	var room2 Resident
-	rows.Next()
-	dberr = rows.Scan(&room2.Id, &room2.Name, &room2.StationId, &room2.Join, &room2.Create, &room2.Invite, &room2.MeetingRunningLink, &room2.Room, &cache)
-	if dberr != nil {
-		log.Println(dberr)
+	if rows.Next() {
+		dberr = rows.Scan(&room2.Id, &room2.Name, &room2.StationId, &room2.Join, &room2.Create, &room2.Invite, &room2.MeetingRunningLink, &room2.Room, &cache)
+		if dberr != nil {
+			log.Println(dberr)
+		}
+		room2.AccountId = int(cache.Int32)
 	}
-	room2.AccountId = int(cache.Int32)
 	rows.Close()
 	return room2
 }
@@ -177,12 +179,13 @@ func getRoomByID(id int) Resident {
 	}
 	var room2 Resident
 	var cacheAccount sql.NullInt32
-	rows.Next()
-	dberr = rows.Scan(&room2.Id, &room2.Name, &room2.StationId, &room2.Invite, &room2.Create, &room2.Join, &room2.MeetingRunningLink, &room2.Room, &cacheAccount)
-	if dberr != nil {
-		log.Println(dberr)
+	if rows.Next() {
+		dberr = rows.Scan(&room2.Id, &room2.Name, &room2.StationId, &room2.Invite, &room2.Create, &room2.Join, &room2.MeetingRunningLink, &room2.Room, &cacheAccount)
+		if dberr != nil {
+			log.Println(dberr)
+		}
+		room2.AccountId = int(cacheAccount.Int32)
 	}
-	room2.AccountId = int(cacheAccount.Int32)
 	rows.Close()
 	return room2
 }
@@ -311,4 +314,46 @@ func deleteResident(w http.ResponseWriter, r *http.Request) {
 	stmt.Close()
 
 	w.Write([]byte("Ihr Bewohner wurde erfolgreich stoniert"))
+}
+
+func getAllResidentNamesByVisitorID(w http.ResponseWriter, r *http.Request) {
+	var visitorNames []string
+	var index []int
+	keys, err := r.URL.Query()["ID"]
+	if !err || len(keys[0]) < 1 {
+		log.Println("Url Param 'ID' is missing")
+		return
+	}
+	//id, _ := strconv.ParseInt(keys[0], 10, 32)
+	queryStmt := fmt.Sprintf("Select bewohner_id From bewohner_hat_besucher Where besucher_id=%s", keys[0])
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	var ind int
+
+	for rows.Next() {
+		dberr = rows.Scan(&ind)
+		index = append(index, ind)
+	}
+	rows.Close()
+
+	for i := 0; i < len(index); i++ {
+		queryStmt := fmt.Sprintf("Select name From bewohner Where id= %d", index[i])
+		rows, dberr := db.Query(queryStmt)
+		if dberr != nil {
+			log.Panic(dberr)
+		}
+		var name string
+		rows.Next()
+		dberr = rows.Scan(&name)
+		if dberr != nil {
+			log.Println(dberr)
+		}
+		visitorNames = append(visitorNames, name)
+	}
+
+	rows.Close()
+	jsonFile, _ := json.Marshal(visitorNames)
+	w.Write(jsonFile)
 }

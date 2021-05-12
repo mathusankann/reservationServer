@@ -1,3 +1,5 @@
+
+
 const day = 86400000;
 let reservedDates;
 let currentMonday;
@@ -17,6 +19,9 @@ let timeOut = []
 let tablets;
 let weekday = new Array(7);
 let oldMark = null
+let account;
+let user
+let userRights;
 weekday[0] = "Montag";
 weekday[1] = "Dienstag";
 weekday[2] = "Mittwoch";
@@ -164,11 +169,17 @@ async function initTerminTable() {
     MAX_TABLETS = await getter("getAllTabletsByMaintenance")
     disableDays = await getter("/getDayOuts")
     disableTimes = await getter("/getTimeOut")
+    account = await getter("/getUserAuthenticationCookie?key=" + document.cookie.split('=')[1])
+    userRights = await getter("/getRoleByID?ID=" + account.role_id)
+    if (!userRights.viewAllUser && !userRights.viewAllStationUser) {
+        user = await getter("/getVisitorByAccountID?AccountID=" + account.id)
+    }
     await getAllMeetings(currentMonday, currentSunday)
 
 }
 
 function setDates() {
+
     let currenDate = new Date()
     currenDate.setSeconds(0, 0)
     let startTime = 8
@@ -244,7 +255,7 @@ function setDates() {
                         })
 
                     } else {
-                        entities.innerText = "Abgelaufen"
+                        //  entities.innerText = "Abgelaufen"
                         entities.className = "expired"
                     }
                 }
@@ -359,7 +370,7 @@ function deleteAllEventListener() {
             // let entities = document.createElement("th")
             //entry.appendChild(entities)
             let entities = document.getElementById(i.toString() + "_" + j.toString())
-            entities.removeEventListener("click", generateInputInterfaceAddTermin)
+            entities.removeEventListener("click", generateDependingOnScreen)
         }
     }
 }
@@ -430,11 +441,11 @@ function compareWithReservedDates(b, tempStart, tempEnd) {
                 //  reserved.setHours(reserved.getHours())
                 if (dates.compare(reserved, b) === 0) {
                     counter++
-                    if (MAX_TABLETS !==null) {
+                    if (MAX_TABLETS !== null) {
                         if (counter >= MAX_TABLETS.length) {
                             resolve([true, tempStart, tempEnd, false])
                         }
-                    }else{
+                    } else {
                         resolve([true, tempStart, tempEnd, true])
                     }
                 }
@@ -510,8 +521,7 @@ function generateDependingOnScreen() {
             if (booked < MAX_TABLETS.length) {
                 generateInputInterfaceAddTermin(this)
             }
-        }
-        else{
+        } else {
             generateInputInterfaceAddTermin(this)
         }
         // console.log(this)
@@ -531,7 +541,6 @@ async function generateInputInterfaceAddMeetingDesktop(div, startTime) {
     terminLabel.innerText = "\nReservierung für den: " + startDate.toLocaleDateString() + " " + startDate.toLocaleTimeString() + "\n"
     terminLabel.className = "caption"
     terminOverview.appendChild(terminLabel)
-
     //Reserved
     let reservedCaptionFlag = false
     if (reservedDates !== null) {
@@ -547,22 +556,24 @@ async function generateInputInterfaceAddMeetingDesktop(div, startTime) {
                 // console.log(reservedDates[i])
                 let div = document.createElement("div")
                 div.className = "reservingContainer"
-                let residentLabel = document.createElement("label")
-                let resident = await getter("/getRoomByID?ID=" + reservedDates[i].bewohner_id)
-                // console.log(resident)
-                residentLabel.innerText = "Bewohner: " + resident.name + "\n"
-                let roomLabel = document.createElement("label")
-                roomLabel.innerText = "Raum: 404\n"
-                let visitorLabel = document.createElement("label")
-                let visitor = await getter("/getVisitorByID?ID=" + reservedDates[i].besucher_id)
-                let mailLabel = document.createElement("label")
-                mailLabel.innerText = "Mail: " +visitor.mail
-                visitorLabel.innerText = "Besucher: " + visitor.name + "\n"
-                div.appendChild(residentLabel)
-                div.appendChild(roomLabel)
-                div.appendChild(visitorLabel)
-                div.appendChild(mailLabel)
-                terminOverview.appendChild(div)
+                if (userRights.viewAllUser || userRights.viewAllStationUser || reservedDates[i].besucher_id === user.id) {
+                    let residentLabel = document.createElement("label")
+                    let resident = await getter("/getRoomByID?ID=" + reservedDates[i].bewohner_id)
+                    // console.log(resident)
+                    residentLabel.innerText = "Bewohner: " + resident.name + "\n"
+                    let roomLabel = document.createElement("label")
+                    roomLabel.innerText = "Raum: 404\n"
+                    let visitorLabel = document.createElement("label")
+                    let visitor = await getter("/getVisitorByID?ID=" + reservedDates[i].besucher_id)
+                    let mailLabel = document.createElement("label")
+                    mailLabel.innerText = "Mail: " + visitor.mail
+                    visitorLabel.innerText = "Besucher: " + visitor.name + "\n"
+                    div.appendChild(residentLabel)
+                    div.appendChild(roomLabel)
+                    div.appendChild(visitorLabel)
+                    div.appendChild(mailLabel)
+                    terminOverview.appendChild(div)
+                }
                 booked++
             }
         }
@@ -580,6 +591,96 @@ async function generateInputInterfaceAddMeetingDesktop(div, startTime) {
         let dropdown = document.createElement("select")
         dropdown.name = "resident"
         dropdown.id = "wuser"
+        if (userRights.viewAllUser || userRights.viewAllStationUser) {
+            if (rooms != null) {
+                for (let i = 0; i < rooms.length; i++) {
+                    let option = document.createElement("option")
+                    option.value = rooms[i]
+                    option.innerText = rooms[i]
+                    option.addEventListener("click", getVisitors)
+                    dropdown.appendChild(option)
+                    if (i === 0) {
+                        option.click()
+                    }
+                }
+                div.appendChild(residentLabel)
+                div.appendChild(dropdown)
+                dropdown = document.createElement("select")
+                dropdown.id = "visitor"
+                let dropdownLabel = document.createElement("label")
+                dropdownLabel.htmlFor = "visitor"
+                dropdownLabel.innerText = "Besucher"
+                div.appendChild(dropdownLabel)
+                div.appendChild(dropdown)
+                let sendButton = document.createElement("button")
+                sendButton.type = "button"
+                sendButton.innerText = "Abschicken"
+                sendButton.id = "sendButton"
+                sendButton.addEventListener("click", addTermin)
+                div.appendChild(sendButton)
+                terminOverview.appendChild(div)
+            }
+        } else {
+            lowerUserInterface(terminOverview,div)
+        }
+
+    }
+
+    //reserving
+
+}
+
+
+async function lowerUserInterface(terminOverview, div) {
+    let dropdownLabel = document.createElement("label")
+    dropdownLabel.htmlFor = "visitor"
+    dropdownLabel.innerText = "Besucher"
+    let dropdown = document.createElement("select")
+    dropdown.id = "visitor"
+    let option = document.createElement("option")
+    option.value = user.name
+    option.innerText = user.name
+    // option.addEventListener("click", getVisitors)
+    dropdown.appendChild(option)
+    //option.click()
+    div.appendChild(dropdownLabel)
+    div.appendChild(dropdown)
+    let listOfResidents = await getter("/getAllResidentNamesByVisitorID?ID=" + user.id)
+    dropdownLabel = document.createElement("label")
+    dropdownLabel.innerText = "Bewohner"
+    dropdownLabel.htmlFor = "resident"
+    dropdown = document.createElement("select")
+    dropdown.name = "resident"
+    dropdown.id = "wuser"
+    for (let i = 0; i < listOfResidents.length; i++) {
+        let option = document.createElement("option")
+        option.value = listOfResidents[i]
+        option.innerText = listOfResidents[i]
+        dropdown.appendChild(option)
+    }
+    div.appendChild(dropdownLabel)
+    div.appendChild(dropdown)
+
+    let sendButton = document.createElement("button")
+    sendButton.type = "button"
+    sendButton.innerText = "Abschicken"
+    sendButton.id = "sendButton"
+    sendButton.addEventListener("click", addTermin)
+    div.appendChild(sendButton)
+    terminOverview.appendChild(div)
+
+}
+
+async function generateInputInterfaceAddTermin(div) {
+    const form = document.getElementById("test")
+    let dropdownLabel = document.createElement("label")
+    if (userRights.viewAllUser || userRights.viewAllStationUser) {
+        dropdownLabel.htmlFor = "wuser"
+        dropdownLabel.innerText = "Bewohner"
+        dropdownLabel.className = "labels"
+        let dropdown = document.createElement("select")
+        dropdown.name = "Bewohner"
+        dropdown.id = "wuser"
         if (rooms != null) {
             for (let i = 0; i < rooms.length; i++) {
                 let option = document.createElement("option")
@@ -592,72 +693,59 @@ async function generateInputInterfaceAddMeetingDesktop(div, startTime) {
                 }
             }
         }
-        div.appendChild(residentLabel)
-        div.appendChild(dropdown)
+        form.appendChild(dropdownLabel)
+        form.appendChild(dropdown)
         dropdown = document.createElement("select")
         dropdown.id = "visitor"
-        let dropdownLabel = document.createElement("label")
+        dropdown.name = "Besucher"
+        dropdown.style.width = "90%"
+        dropdownLabel = document.createElement("label")
+        dropdownLabel.className = "labels"
         dropdownLabel.htmlFor = "visitor"
         dropdownLabel.innerText = "Besucher"
-        div.appendChild(dropdownLabel)
-        div.appendChild(dropdown)
-        let sendButton = document.createElement("button")
-        sendButton.type = "button"
-        sendButton.innerText = "Abschicken"
-        sendButton.id = "sendButton"
-        sendButton.addEventListener("click", addTermin)
-        div.appendChild(sendButton)
-        terminOverview.appendChild(div)
-    }
+        let addNewVisitorButton = document.createElement("button")
+        let vContainer = document.createElement("div")
+        addNewVisitorButton.innerText = "+"
+        addNewVisitorButton.id = "addVisitor"
+        addNewVisitorButton.type = "button"
+        addNewVisitorButton.onclick = setVisitor
+        vContainer.id = "vContainer"
+        vContainer.appendChild(dropdown)
+        vContainer.appendChild(addNewVisitorButton)
+        form.appendChild(dropdownLabel)
+        form.appendChild(vContainer)
+    } else {
+        dropdownLabel.className = "labels"
+        dropdownLabel.htmlFor = "visitor"
+        dropdownLabel.innerText = "Besucher"
+        let dropdown = document.createElement("select")
+        dropdown.name = "visitor"
+        dropdown.id = "visitor"
+        let option = document.createElement("option")
+        option.value = user.name
+        option.innerText = user.name
+        // option.addEventListener("click", getVisitors)
+        dropdown.appendChild(option)
+        form.appendChild(dropdownLabel)
+        form.appendChild(dropdown)
 
-    //reserving
-
-}
-
-
-function generateInputInterfaceAddTermin(div) {
-    const form = document.getElementById("test")
-    let dropdownLabel = document.createElement("label")
-    dropdownLabel.htmlFor = "wuser"
-    dropdownLabel.innerText = "Bewohner"
-    dropdownLabel.className = "labels"
-    let dropdown = document.createElement("select")
-    dropdown.name = "Bewohner"
-    dropdown.id = "wuser"
-    if (rooms != null) {
-        for (let i = 0; i < rooms.length; i++) {
+        let listOfResidents = await getter("/getAllResidentNamesByVisitorID?ID=" + user.id)
+        dropdownLabel = document.createElement("label")
+        dropdownLabel.innerText = "Bewohner"
+        dropdownLabel.htmlFor = "resident"
+        dropdownLabel.className = "labels"
+        dropdown = document.createElement("select")
+        dropdown.name = "resident"
+        dropdown.id = "wuser"
+        for (let i = 0; i < listOfResidents.length; i++) {
             let option = document.createElement("option")
-            option.value = rooms[i]
-            option.innerText = rooms[i]
-            option.addEventListener("click", getVisitors)
+            option.value = listOfResidents[i]
+            option.innerText = listOfResidents[i]
             dropdown.appendChild(option)
-            if (i === 0) {
-                option.click()
-            }
         }
+        form.appendChild(dropdownLabel)
+        form.appendChild(dropdown)
     }
-    form.appendChild(dropdownLabel)
-    form.appendChild(dropdown)
-    dropdown = document.createElement("select")
-    dropdown.id = "visitor"
-    dropdown.name = "Besucher"
-    dropdown.style.width = "90%"
-    dropdownLabel = document.createElement("label")
-    dropdownLabel.className = "labels"
-    dropdownLabel.htmlFor = "visitor"
-    dropdownLabel.innerText = "Besucher"
-    let addNewVisitorButton = document.createElement("button")
-    let vContainer = document.createElement("div")
-    addNewVisitorButton.innerText = "+"
-    addNewVisitorButton.id = "addVisitor"
-    addNewVisitorButton.type = "button"
-    addNewVisitorButton.onclick = setVisitor
-    vContainer.id = "vContainer"
-    vContainer.appendChild(dropdown)
-    vContainer.appendChild(addNewVisitorButton)
-    form.appendChild(dropdownLabel)
-    form.appendChild(vContainer)
-
     let sendButton = document.createElement("button")
     sendButton.type = "button"
     sendButton.innerText = "Abschicken"

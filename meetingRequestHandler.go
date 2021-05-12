@@ -7,7 +7,8 @@ import (
 	gomail "gopkg.in/mail.v2"
 	"log"
 	"net/http"
-	_ "strconv"
+	"strconv"
+
 	"strings"
 )
 
@@ -41,23 +42,22 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 	timeString = timeArray[0] + " " + timeArray[1] + "+00:00"
 	incMeeting.Id = getMeetingByTimestamp(timeString)
 
-	/*
-		room := getRoomByID(incMeeting.BewohnerId)
-		dateString := incMeeting.MeetingDateStart.String()
-		dateString = strings.Split(dateString, "+")[0]
-		dateArray := strings.Split(dateString, " ")
-		timeArray = strings.Split(dateArray[1], ":")
+	room := getRoomByID(incMeeting.BewohnerId)
+	dateString := incMeeting.MeetingDateStart.String()
+	dateString = strings.Split(dateString, "+")[0]
+	dateArray := strings.Split(dateString, " ")
+	timeArray = strings.Split(dateArray[1], ":")
 
-		hour, err := strconv.Atoi(timeArray[0])
-		if err != nil {
-			log.Println(err)
-		}
-		hour = hour + 2
-		wholeString := dateArray[0] + " um " + strconv.Itoa(hour) + ":" + timeArray[1] + "statt"
+	hour, err := strconv.Atoi(timeArray[0])
+	if err != nil {
+		log.Println(err)
+	}
+	hour = hour + 2
+	wholeString := dateArray[0] + " um " + strconv.Itoa(hour) + ":" + timeArray[1] + "statt"
 
-		body := fmt.Sprintf("Ihr Konferenzlink: %s \n Die Konferenz findet am %s \n Sie haben "+
-			"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://reserv.jitsi-mathu.de/deleteMeeting?meetingID=%d", room.Invite, wholeString, incMeeting.Id)
-		go sendInvitation(incMeeting,body)*/
+	body := fmt.Sprintf("Ihr Konferenzlink: %s \n Die Konferenz findet am %s \n Sie haben "+
+		"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://reserv.jitsi-mathu.de/deleteMeeting?meetingID=%d", room.Invite, wholeString, incMeeting.Id)
+	go sendInvitation(incMeeting, body)
 	w.Write([]byte("ok"))
 
 }
@@ -131,7 +131,7 @@ func sendInvitation(incMeeting Meeting, body string) {
 	// Set E-Mail sender
 	m.SetHeader("From", "TerminMa3@outlook.de")
 	//Set E-Mail receivers
-	visitor := getVisitor(incMeeting.BesucherId)
+	visitor := getVisitor(incMeeting.BesucherId, "id")
 	m.SetHeader("To", visitor.Mail)
 	// Set E-Mail subject
 	m.SetHeader("Subject", "Konferenzlink")
@@ -162,10 +162,11 @@ func getMeetingByTimestamp(startTime string) int {
 		log.Panic(dberr)
 	}
 	var meeting2 Meeting
-	rows.Next()
-	dberr = rows.Scan(&meeting2.Id)
-	if dberr != nil {
-		log.Println(dberr)
+	if rows.Next() {
+		dberr = rows.Scan(&meeting2.Id)
+		if dberr != nil {
+			log.Println(dberr)
+		}
 	}
 	rows.Close()
 	return meeting2.Id

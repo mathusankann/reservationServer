@@ -11,7 +11,7 @@ function openRoom(room) {
 function init(rooms) {
     Grooms = rooms
     getAllMeetingsDate(currentWeeksMonday, currentSunday)
-    document.getElementById("buttonHolder").innerText="\n Bewohner"
+    document.getElementById("buttonHolder").innerText = "\n Bewohner"
 
     document.getElementById("userButton").innerText = ""
     const overview = document.getElementById("userButton");
@@ -101,7 +101,7 @@ function addButtons(rooms) {
 }
 
 
-async function createRoom(name, stationName) {
+async function createRoom(name, stationName,roomNumber) {
     console.log("hier")
     //if (document.cookie !== "") {
     let api, i, len, method, params, ref, urls;
@@ -143,9 +143,9 @@ async function createRoom(name, stationName) {
     let vistor = api.urlFor('join', params)
 
     let room = new Room(name, 1, urls[2].url, urls[1].url, vistor.toString());
-    room.meetingRunningLink=urls[3].url
+    room.meetingRunningLink = urls[3].url
     //console.log(urls[3].url)
-    room.room = "not set"
+    room.room = roomNumber
     room.station_id = await getStationByName(stationName)
 
     await sendRoomPost(JSON.stringify(room))
@@ -232,6 +232,11 @@ async function generateInputInterfaceAddRoom() {
     nameInput.id = "nameVisitor"
     form.appendChild(dropdownLabel)
     form.appendChild(nameInput)
+    nameInput = document.createElement("input")
+    nameInput.type = "text"
+    nameInput.placeholder = "Raumnummer"
+    nameInput.id = "roomNumber"
+    form.appendChild(nameInput)
     let sendButton = document.createElement("button")
     sendButton.type = "button"
     sendButton.innerText = "Erstellen"
@@ -276,6 +281,12 @@ function setNewStation() {
     nameInput.id = "nameVisitor"
     form.appendChild(dropdownLabel)
     form.appendChild(nameInput)
+    nameInput = document.createElement("input")
+    nameInput.type = "text"
+    nameInput.placeholder = "Raumnummer"
+    nameInput.id = "roomNumber"
+    form.appendChild(nameInput)
+
     let sendButton = document.createElement("button")
     sendButton.type = "button"
     sendButton.innerText = "Erstellen"
@@ -291,6 +302,7 @@ async function setResident() {
         let userName = document.getElementById("userInput").value
         let password = document.getElementById("passwordInput").value
         let residentName = document.getElementById("nameVisitor").value
+        let roomNumber = document.getElementById("roomNumber").value
         let stationID;
         /* createStation(stationName).then(() => {
                  getStationByName(stationName).then((res) => {
@@ -310,7 +322,7 @@ async function setResident() {
         await createStation(stationName)
         stationID = await getStationByName(stationName)
         console.log(stationID)
-        createRoom(residentName, stationName)
+        createRoom(residentName, stationName,roomNumber)
         await createUser(0, userName, password, 2)
         getAccountIDByName(userName).then((userID) => {
             createMinder(0, stationID, userName, userID).then(() => {
@@ -319,11 +331,11 @@ async function setResident() {
             })
         })
 
-
     } else {
         let stationName = document.getElementById("station").value
         let residentName = document.getElementById("nameVisitor").value
-        await createRoom(residentName, stationName)
+        let roomNumber = document.getElementById("roomNumber").value
+        await createRoom(residentName, stationName,roomNumber)
         location.reload();
     }
 
@@ -449,3 +461,68 @@ function startConfWithVisitor() {
     })
 }
 
+function openTab(evt, tabName) {
+    // Declare all variables
+    var i, tabcontent, tablinks;
+    // Get all elements with class="tabcontent" and hide them
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    // Get all elements with class="tablinks" and remove the class "active"
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+function showPasswordToggle() {
+    let x = document.getElementById("pswRegister");
+
+    if (x.type === "password") {
+        x.type = "text";
+    } else {
+        x.type = "password";
+    }
+
+}
+
+function clearAllInputs() {
+    document.getElementById("uname").innerText = ""
+    document.getElementById("uname").value = ""
+    document.getElementById("psw").innerText = ""
+    document.getElementById("psw").value = ""
+    document.getElementById("unameRegister").innerText = ""
+    document.getElementById("unameRegister").value = ""
+    document.getElementById("mailRegister").innerText = ""
+    document.getElementById("mailRegister").value = ""
+    document.getElementById("pswRegister").innerText = ""
+    document.getElementById("pswRegister").value = ""
+    document.getElementById("showPassword").checked = false
+}
+
+function addVisitorAccount() {
+    let visitorName = document.getElementById("unameRegister").value
+    let visitorMail = document.getElementById("mailRegister").value
+    let password = document.getElementById("pswRegister").value
+    let visitor = new Visitor(0,visitorName,visitorMail,0)
+    getterPOst("/getVisitorByMail",visitor).then((res)=>{
+        if(res!==null) {
+            (visitorName !== "" && visitorMail !== "" && password !== "")
+            {
+                createUser(0, visitorName, password, 3).then(() => {
+                    let visitorStruct = new Visitor(0, visitorName, visitorMail, 0)
+                    setOuts("/registerVisitor", visitorStruct).then(() => {
+                        location.reload()
+                    })
+                })
+            }
+        }
+    })
+
+}

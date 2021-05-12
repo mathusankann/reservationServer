@@ -155,13 +155,14 @@ async function getUserAuthentication() {
         request.onreadystatechange = async function () {
             if (4 === this.readyState) {
                 if (200 === this.status) {
-                    document.getElementById("id01").style.display = "none";
+                   /* document.getElementById("id01").style.display = "none";
                     // document.getElementById("login_btn").style.display = "none";
                     document.getElementById("logout_btn").style.display = "block";
                     document.getElementById("v_blocker").style.display = "none"
                     let user = JSON.parse(this.responseText)
                     await getAllRoomNamesByStationID(user.id)
-                    getRoleByID(user.role_id)
+                    getRoleByID(user.role_id)*/
+                    location.reload()
 
                 } else {
                     console.log(this.status + ":" + this.responseText);
@@ -218,6 +219,10 @@ function getRoleByID(id) {
                     document.getElementById("timeTableSettings").style.visibility="visible"
                     showEditorPanel()
                     //
+                }
+                if(!role.viewAllStationUser&&!role.viewAllUser){
+                    document.getElementById("overview").style.display="none"
+                    document.getElementById("reservedDates").innerText =""
                 }
 
             }
@@ -448,10 +453,6 @@ function getAllVistorNamesByResidentID(Id, addEvent) {
         request.onreadystatechange = function () {
             if (4 === this.readyState) {
                 if (200 === this.status) {
-                    /* return new Promise(((resolve, reject) => {
-                         let listVisitor = JSON.parse(this.responseText)
-                         resolve(listVisitor)
-                     }))*/
                     let listVisitor = JSON.parse(this.responseText)
                     let dropdown = document.getElementById("visitor")
                     dropdown.innerText = ""
@@ -594,6 +595,10 @@ function createUser(id, name, password, roleID) {
                 if (200 === this.status) {
                     // let val = JSON.parse(this.responseText)
                     //console.log(this.responseText)
+                    resolve("done")
+                }
+                else{
+                    console.log(this.responseText)
                     resolve("done")
                 }
             }
@@ -766,6 +771,26 @@ function setOuts(path,parameter) {
                 if (200 === this.status) {
                     console.log(this.responseText)
                     resolve(true)
+                } else {
+                    console.log(this.responseText)
+                    resolve(null)
+                }
+            }
+        }
+        request.open("POST", path, true);
+        request.send(JSON.stringify(parameter));
+    }))
+}
+
+function getterPOst(path,parameter) {
+    return new Promise(((resolve, reject) => {
+        const request = createAjaxRequest();
+        request.onreadystatechange = function () {
+            if (4 === this.readyState) {
+                if (200 === this.status) {
+                    let val = JSON.parse(this.responseText)
+                    //console.log(this.responseText)
+                    resolve(val)
                 } else {
                     console.log(this.responseText)
                     resolve(null)
