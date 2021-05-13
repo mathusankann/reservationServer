@@ -1,0 +1,17 @@
+version: "3.6"
+services:
+  reserver_v1.1:
+    build: .
+    networks:
+      - proxy
+      - db_reserver-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.reserv.entrypoints=http"
+      - "traefik.http.routers.reserv.rule=Host(`reserv.jitsi-mathu.de`)"     ### Bitte anpassen wie im Schritt 1###
+      - "traefik.docker.network=proxy"
+networks:
+  db_reserver-net:
+    external: true
+  proxy:
+    external: true

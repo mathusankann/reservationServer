@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/reseervation.iml" filepath="$PROJECT_DIR$/.idea/reseervation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/reserverGo.iml" filepath="$PROJECT_DIR$/.idea/reserverGo.iml" />
     </modules>
   </component>
 </project>
