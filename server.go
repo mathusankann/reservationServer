@@ -51,7 +51,19 @@ func initDbConnection() *sql.DB {
 	return db
 }
 
+func  settingsFile(w http.ResponseWriter, r *http.Request) {
+	data, err := ioutil.ReadFile("./static/js/test.js")
+	if err != nil {
+		http.Error(w, "Couldn't read file", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	w.Write(data)
+}
+
+
 func main() {
+	insertAdminAccount()
 	jsonFile, err := os.Open("settings.json")
 	if err !=nil{
 		log.Panic("something went wrong --> settings.json")
@@ -62,6 +74,8 @@ func main() {
 	userMap = make(map[string]string)
 	fileServer := http.FileServer(http.Dir("./static")) // New code
 	http.Handle("/", fileServer)
+	http.HandleFunc("/settingsFile", settingsFile)
+
 	//ResidentHandler
 	http.HandleFunc("/getRoom", GetRoom)
 	http.HandleFunc("/createRoom", CreateRoom)

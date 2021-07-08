@@ -1,17 +1,36 @@
 version: "3.6"
 services:
+  mariadb:
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Spartan17
+    networks:
+      reserver-net:
+        ipv4_address: 192.168.124.110
+    command: --init-file /data/application/init.sql
+    volumes:
+      - ./init.sql:/data/application/init.sql
+
   reserver_v1.1:
     build: .
+    depends_on:
+      - mariadb
     networks:
-      - proxy
-      - db_reserver-net
+      - traefik_proxy
+      - reserver-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.reserv.entrypoints=http"
-      - "traefik.http.routers.reserv.rule=Host(`reserv.jitsi-mathu.de`)"     ### Bitte anpassen wie im Schritt 1###
-      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.reserv.rule=Host(`reserv.jitsi-mathu.de`)"
+      - "traefik.docker.network=traefik_proxy"
+
+
 networks:
-  db_reserver-net:
-    external: true
-  proxy:
+  reserver-net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.168.124.0/24"
+  traefik_proxy:
     external: true
