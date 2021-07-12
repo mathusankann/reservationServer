@@ -44,7 +44,7 @@ func insertAdminAccount() {
 
 func initDbConnection() *sql.DB {
 	//var db, err = sql.Open("sqlite3", "Account.sqlite")
-	var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
+	var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -52,6 +52,8 @@ func initDbConnection() *sql.DB {
 }
 
 func settingsFile(w http.ResponseWriter, r *http.Request) {
+	resp, err := http.Get("http://192.168.178.72/settingsFile")
+	log.Println(resp)
 	data, err := ioutil.ReadFile("./static/js/test.js")
 	if err != nil {
 		http.Error(w, "Couldn't read file", http.StatusInternalServerError)
@@ -131,7 +133,7 @@ func main() {
 	http.HandleFunc("/getRoleByID", getRoleByID)
 
 	fmt.Printf("Starting server at port 8080\n")
-	if err := http.ListenAndServeTLS(":443", "", "", nil); err != nil {
+	if err := http.ListenAndServe(":80", nil); err != nil {
 		log.Fatal(err)
 	}
 

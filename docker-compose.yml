@@ -17,14 +17,20 @@ services:
     depends_on:
       - mariadb
     networks:
-      - traefik_proxy
+      - proxy
       - reserver-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.reserv.entrypoints=http"
-      - "traefik.http.routers.reserv.rule=Host(`reserv.jitsi-mathu.de`)"
-      - "traefik.docker.network=traefik_proxy"
-
+      - "traefik.http.routers.reserv.rule=Host(`reservation.jitsi-mathu.de`)"     ### Bitte anpassen wie im Schritt 1 ###
+      - "traefik.http.middlewares.reserv-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.reserv.middlewares=reserv-https-redirect"
+      - "traefik.http.routers.reserv-secure.entrypoints=https"
+      - "traefik.http.routers.reserv-secure.rule=Host(`reservation.jitsi-mathu.de`)"    ### Bitte anpassen wie im Schritt 1 ###
+      - "traefik.http.routers.reserv-secure.tls=true"
+      - "traefik.http.routers.reserv-secure.tls.certresolver=http"
+      - "traefik.http.routers.reserv-secure.service=reserver-v1-1-reservationserver"
+      - "traefik.docker.network=proxy"
 
 networks:
   reserver-net:
@@ -32,5 +38,5 @@ networks:
       driver: default
       config:
         - subnet: "192.168.124.0/24"
-  traefik_proxy:
+  proxy:
     external: true
