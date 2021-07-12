@@ -1,5 +1,4 @@
-function f() {
-    console.log("test")
-}
-
-f()
+window.addEventListener('load', function () {
+    console.log("done")
+    console.log(document.body);
+})

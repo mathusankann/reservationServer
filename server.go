@@ -12,10 +12,10 @@ import (
 	_ "os"
 	_ "time"
 )
+
 type Host struct {
 	Name string `json:"name"`
 }
-
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -44,14 +44,14 @@ func insertAdminAccount() {
 
 func initDbConnection() *sql.DB {
 	//var db, err = sql.Open("sqlite3", "Account.sqlite")
-	var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
+	var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	return db
 }
 
-func  settingsFile(w http.ResponseWriter, r *http.Request) {
+func settingsFile(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadFile("./static/js/test.js")
 	if err != nil {
 		http.Error(w, "Couldn't read file", http.StatusInternalServerError)
@@ -61,15 +61,14 @@ func  settingsFile(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-
 func main() {
 	insertAdminAccount()
 	jsonFile, err := os.Open("settings.json")
-	if err !=nil{
+	if err != nil {
 		log.Panic("something went wrong --> settings.json")
 	}
 	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue,&host)
+	json.Unmarshal(byteValue, &host)
 	//insertAdminAccount()
 	userMap = make(map[string]string)
 	fileServer := http.FileServer(http.Dir("./static")) // New code
@@ -132,7 +131,7 @@ func main() {
 	http.HandleFunc("/getRoleByID", getRoleByID)
 
 	fmt.Printf("Starting server at port 8080\n")
-	if err := http.ListenAndServe(":80", nil); err != nil {
+	if err := http.ListenAndServeTLS(":443", "", "", nil); err != nil {
 		log.Fatal(err)
 	}
 

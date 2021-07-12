@@ -105,7 +105,7 @@ async function createRoom(name, stationName,roomNumber) {
     console.log("hier")
     //if (document.cookie !== "") {
     let api, i, len, method, params, ref, urls;
-    api = new BigBlueButtonApi("https://kon.jitsi-mathu.de/bigbluebutton/api", "zLY4hvAAQTrBpMVNhGCM84ZlQl03A14sGjVHJPKT");
+    api = new BigBlueButtonApi("https://kon.jitsi-mathu.de/bigbluebutton/api", "Eh7iAAkg9cib4wObQv5gADIE2OlNeo9gKEnyYitl");
     //todo shared secret request
 
     //const username = document.getElementById("name").value
