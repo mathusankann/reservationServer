@@ -32,6 +32,11 @@ type Day struct {
 	Value bool   `json:"value"`
 }
 
+type configUser struct {
+	User  string `json:"user"`
+	Value []int  `json:"value"`
+}
+
 func (tablets Tablet) Verify() bool {
 	return tablets.Name != ""
 }
@@ -282,6 +287,30 @@ func setDayOuts(w http.ResponseWriter, r *http.Request) {
 }
 func getDayOuts(w http.ResponseWriter, r *http.Request) {
 	jsonFile, err := os.Open("./week.json")
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "week.json does not exist", http.StatusNotFound)
+		return
+	}
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(byteValue)
+}
+
+func setKonfSettings(w http.ResponseWriter, r *http.Request) {
+	var settings []configUser
+	err := json.NewDecoder(r.Body).Decode(&settings)
+	if err != nil {
+		log.Println(err)
+	}
+
+	file, _ := json.MarshalIndent(settings, "", " ")
+	_ = ioutil.WriteFile("konfSetting.json", file, 0644)
+	w.Write([]byte("done"))
+
+}
+func getKonfSettings(w http.ResponseWriter, r *http.Request) {
+	jsonFile, err := os.Open("./konfSetting.json")
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "week.json does not exist", http.StatusNotFound)

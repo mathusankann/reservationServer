@@ -1,0 +1,50 @@
+[
+  {
+    "name": "default"
+  },
+  {
+    "name": "actionbar_default"
+  },
+  {
+    "name": "actionbar_disabled"
+  },
+  {
+    "name": "actionbar_medium"
+  },
+  {
+    "name": "actionbar_max"
+  },
+  {
+    "name": "navbar_default"
+  },
+  {
+    "name": "navbar_disabled"
+  },
+  {
+    "name": "chat_default"
+  },
+  {
+    "name": "chat_inactiv"
+  },
+  {
+    "name": "chat_disabled"
+  },
+  {
+    "name": "userlist_default"
+  },
+  {
+    "name": "userlist_inactiv"
+  },
+  {
+    "name": "userlist_disabled"
+  },
+  {
+    "name": "presentation_default"
+  },
+  {
+    "name": "presentation_inactiv"
+  },
+  {
+    "name": "presentation_disabled"
+  }
+]

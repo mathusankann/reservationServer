@@ -1,0 +1,103 @@
+#title{
+    font-size: 2cm;
+    cursor:default ;
+    float: left;
+    width: 100%;
+
+}
+#dropBoxUser{
+    width: 15%;
+    clear: both;
+    float: left;
+
+}
+
+#settingDropbox{
+    width: 15%;
+    clear: both;
+    float: left;
+    margin-right: 40px;
+}
+#settingView{
+    width: 15%;
+    clear: both;
+    float: left;
+}
+
+#saveButton{
+    width: 15%;
+    clear: both;
+    float: left;
+}
+
+.button{
+    width: 80%;
+    height: 40px;
+    border-style: none;
+    border-radius: 6px;
+    background-color: #dddddd;
+    margin: 5px auto;
+    font-weight: bold;
+    
+}
+
+.button:hover{
+    cursor: pointer;
+    background-color: #888888;
+
+}
+
+.container{
+    margin-top: 20px;
+    background-color: #dddddd;
+    display: grid;
+    border-radius: 20px;
+    font-weight: bold;
+}
+body{
+
+}
+.imgPreview {
+    max-width: 75%;
+    max-height: 70%;
+    border-style: groove;
+    border-color: black;
+}
+
+.imgSetting{
+    margin: 5px auto;
+    width:  200px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.imgSetting:hover{
+    opacity: 0.3;
+    cursor: pointer;
+}
+.selected{
+    border-color: red;
+    border-style: groove;
+}
+
+.selectedSetting{
+    background-color: #888888;
+}
+
+.inFocus{
+
+}
+
+.outOfFocus{
+    display: none;
+}
+select{
+    height: 40px;
+}
+select:hover{
+    cursor: pointer;
+}
+option:hover{
+    cursor: pointer;
+}

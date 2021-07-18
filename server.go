@@ -53,8 +53,7 @@ func initDbConnection() *sql.DB {
 
 func settingsFile(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Get("http://192.168.178.72/settingsFile")
-	log.Println(resp)
-	data, err := ioutil.ReadFile("./static/js/test.js")
+	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		http.Error(w, "Couldn't read file", http.StatusInternalServerError)
 		return
@@ -74,7 +73,11 @@ func main() {
 	//insertAdminAccount()
 	userMap = make(map[string]string)
 	fileServer := http.FileServer(http.Dir("./static")) // New code
+
 	http.Handle("/", fileServer)
+
+	http.Handle("/static/", http.StripPrefix("/static/", fileServer))
+
 	http.HandleFunc("/settingsFile", settingsFile)
 
 	//ResidentHandler
@@ -99,6 +102,8 @@ func main() {
 
 	http.HandleFunc("/getDayOuts", getDayOuts)
 	http.HandleFunc("/setDayOuts", setDayOuts)
+	http.HandleFunc("/getKonfSettings", getKonfSettings)
+	http.HandleFunc("/setKonfSettings", setKonfSettings)
 
 	//AccountHandler
 	http.HandleFunc("/addUser", addUser)
@@ -133,7 +138,7 @@ func main() {
 	http.HandleFunc("/getRoleByID", getRoleByID)
 
 	fmt.Printf("Starting server at port 8080\n")
-	if err := http.ListenAndServe(":80", nil); err != nil {
+	if err := http.ListenAndServe(":5000", nil); err != nil {
 		log.Fatal(err)
 	}
 
