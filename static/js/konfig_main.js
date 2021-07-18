@@ -324,8 +324,10 @@ function setSettings() {
     document.getElementById("saveButton").innerHTML = ""
     generateLiveViewButton()
     const div = document.getElementById("dropBoxUser")
-    settings[div.children[0].value].value = currentSettings
+    console.log()
+    settings[div.children[0].children[0].value].value = currentSettings
     flagChanged = false
+    console.log(settings)
     setOuts("/setKonfSettings", settings)
 }
 
