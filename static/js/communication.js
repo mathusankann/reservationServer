@@ -1,5 +1,7 @@
 let rooms;
 let counter =2;
+const SUCCESS = "#539955"
+const FAIL ="#d03838"
 
 class Room {
     constructor(name, roomid, join, create, invite, accountid, stationid,meetingRunningLink,room) {
@@ -166,7 +168,7 @@ async function getUserAuthentication() {
                 } else {
                     console.log(this.status + ":" + this.responseText);
                     if(counter>3){
-                        openAlert("Passwort oder Benutzername falsch","#d03838")
+                        openAlert("Passwort oder Benutzername falsch",FAIL)
                     }
                 }
             }
@@ -187,7 +189,7 @@ function getUserAuthenticationCookie() {
     request.onreadystatechange = async function () {
         if (4 === this.readyState) {
             if (200 === this.status) {
-                openAlert("Erfolgreich angemeldet","#539955")
+                openAlert("Erfolgreich angemeldet",SUCCESS)
                 document.getElementById("uname").innerText = ""
                 document.getElementById("psw").innerText = ""
                 document.getElementById("id01").style.display = "none";
@@ -513,6 +515,10 @@ function addNewVisitor(name, mail, id) {
                     let val = JSON.parse(this.responseText)
                     //console.log(this.responseText)
                     resolve(val)
+                    openAlert("Erfolgreich hinzugefügt","Grün")
+                }
+                else {
+                    openAlert(this.responseText,"red")
                 }
             }
         }

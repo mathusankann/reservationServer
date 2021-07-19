@@ -35,7 +35,7 @@
 
                 <label for="psw"><b>Passwort</b></label>
                 <input id="psw" type="password" placeholder="Passwort eingeben" name="psw" required>
-                <button type="button" onclick="getUserAuthentication()">Login</button>
+                <button id="loginButton" type="button" onclick="getUserAuthentication()">Login</button>
             </div>
             <div id="registerToggle" class="tabcontent">
                 <label for="unameRegister"><b>Benutzername</b></label>
@@ -52,7 +52,7 @@
                     <input id="showPassword" type="checkbox" onclick="showPasswordToggle()">
                 </div>
 
-                <button type="button" onclick="addVisitorAccount()">Regisitieren</button>
+                <button  id="registerButton" type="button" onclick="addVisitorAccount()">Regisitieren</button>
             </div>
         </div>
     </form>
@@ -96,6 +96,7 @@
     document.getElementById("defaultTab").click()
     initTerminTable()
     clearAllInputs()
+    setEventListener()
 </script>
 
 <div id="overview">

@@ -101,7 +101,7 @@ function addButtons(rooms) {
 }
 
 
-async function createRoom(name, stationName,roomNumber) {
+async function createRoom(name, stationName, roomNumber) {
     console.log("hier")
     //if (document.cookie !== "") {
     let api, i, len, method, params, ref, urls;
@@ -322,7 +322,7 @@ async function setResident() {
         await createStation(stationName)
         stationID = await getStationByName(stationName)
         console.log(stationID)
-        createRoom(residentName, stationName,roomNumber)
+        createRoom(residentName, stationName, roomNumber)
         await createUser(0, userName, password, 2)
         getAccountIDByName(userName).then((userID) => {
             createMinder(0, stationID, userName, userID).then(() => {
@@ -335,7 +335,7 @@ async function setResident() {
         let stationName = document.getElementById("station").value
         let residentName = document.getElementById("nameVisitor").value
         let roomNumber = document.getElementById("roomNumber").value
-        await createRoom(residentName, stationName,roomNumber)
+        await createRoom(residentName, stationName, roomNumber)
         location.reload();
     }
 
@@ -461,8 +461,14 @@ function startConfWithVisitor() {
     })
 }
 
+function setEventListener() {
+
+}
+
+
 function openTab(evt, tabName) {
     // Declare all variables
+    evt.preventDefault()
     var i, tabcontent, tablinks;
     // Get all elements with class="tabcontent" and hide them
     tabcontent = document.getElementsByClassName("tabcontent");
@@ -479,6 +485,14 @@ function openTab(evt, tabName) {
     // Show the current tab, and add an "active" class to the button that opened the tab
     document.getElementById(tabName).style.display = "block";
     evt.currentTarget.className += " active";
+
+    if(evt.currentTarget.innerText ==="Anmelden"){
+        document.getElementById("psw").addEventListener("keydown",f)
+        document.getElementById("pswRegister").removeEventListener("keydown",f1)
+    }else{
+        document.getElementById("pswRegister").addEventListener("keydown",f1)
+        document.getElementById("psw").removeEventListener("keydown",f)
+    }
 }
 
 function showPasswordToggle() {
@@ -489,7 +503,17 @@ function showPasswordToggle() {
     } else {
         x.type = "password";
     }
+}
+function f(e) {
+    if(e.code==="Enter"){
+        getUserAuthentication()
+    }
+}
 
+function f1(e) {
+    if(e.code==="Enter"){
+        addVisitorAccount()
+    }
 }
 
 function clearAllInputs() {
@@ -510,9 +534,9 @@ function addVisitorAccount() {
     let visitorName = document.getElementById("unameRegister").value
     let visitorMail = document.getElementById("mailRegister").value
     let password = document.getElementById("pswRegister").value
-    let visitor = new Visitor(0,visitorName,visitorMail,0)
-    getterPOst("/getVisitorByMail",visitor,true).then((res)=>{
-        if(res!==null) {
+    let visitor = new Visitor(0, visitorName, visitorMail, 0)
+    getterPOst("/getVisitorByMail", visitor, true).then((res) => {
+        if (res !== null) {
             (visitorName !== "" && visitorMail !== "" && password !== "")
             {
                 createUser(0, visitorName, password, 3).then(() => {
