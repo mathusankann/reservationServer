@@ -511,7 +511,7 @@ function addVisitorAccount() {
     let visitorMail = document.getElementById("mailRegister").value
     let password = document.getElementById("pswRegister").value
     let visitor = new Visitor(0,visitorName,visitorMail,0)
-    getterPOst("/getVisitorByMail",visitor).then((res)=>{
+    getterPOst("/getVisitorByMail",visitor,true).then((res)=>{
         if(res!==null) {
             (visitorName !== "" && visitorMail !== "" && password !== "")
             {

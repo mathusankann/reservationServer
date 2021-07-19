@@ -1,5 +1,5 @@
 let rooms;
-
+let counter =2;
 
 class Room {
     constructor(name, roomid, join, create, invite, accountid, stationid,meetingRunningLink,room) {
@@ -148,7 +148,6 @@ async function getUserAuthentication() {
     if (document.cookie === "") {
         document.getElementById("uname").innerText = ""
         document.getElementById("psw").innerText = ""
-
         await getAllRoom()
         let user = new User(0, document.getElementById("uname").value, document.getElementById("psw").value, 0)
         const request = createAjaxRequest();
@@ -166,6 +165,9 @@ async function getUserAuthentication() {
 
                 } else {
                     console.log(this.status + ":" + this.responseText);
+                    if(counter>3){
+                        openAlert("Passwort oder Benutzername falsch","#d03838")
+                    }
                 }
             }
         }
@@ -174,6 +176,9 @@ async function getUserAuthentication() {
     } else {
         getUserAuthenticationCookie()
     }
+    console.log(counter)
+    counter++
+
 }
 
 
@@ -182,6 +187,7 @@ function getUserAuthenticationCookie() {
     request.onreadystatechange = async function () {
         if (4 === this.readyState) {
             if (200 === this.status) {
+                openAlert("Erfolgreich angemeldet","#539955")
                 document.getElementById("uname").innerText = ""
                 document.getElementById("psw").innerText = ""
                 document.getElementById("id01").style.display = "none";
@@ -769,10 +775,10 @@ function setOuts(path,parameter) {
         request.onreadystatechange = function () {
             if (4 === this.readyState) {
                 if (200 === this.status) {
-                    console.log(this.responseText)
+                    openAlert(this.responseText)
                     resolve(true)
                 } else {
-                    console.log(this.responseText)
+                    openAlert(this.responseText)
                     resolve(null)
                 }
             }
@@ -782,7 +788,7 @@ function setOuts(path,parameter) {
     }))
 }
 
-function getterPOst(path,parameter) {
+function getterPOst(path,parameter,flag =false) {
     return new Promise(((resolve, reject) => {
         const request = createAjaxRequest();
         request.onreadystatechange = function () {
@@ -792,7 +798,9 @@ function getterPOst(path,parameter) {
                     //console.log(this.responseText)
                     resolve(val)
                 } else {
-                    console.log(this.responseText)
+                    if (flag){
+                        openAlert(this.responseText,"red")
+                    }
                     resolve(null)
                 }
             }

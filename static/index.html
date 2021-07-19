@@ -9,11 +9,17 @@
     <script src="vendor/jsSHA.js"></script>
     <script src="js/communication.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/error.js"></script>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="/static/css/termin.css">
+    <link rel="stylesheet" href="css/alert.css">
 
 </head>
 <body onload="getUserAuthentication()">
+<div class="alert" id="alert" style="z-index: 5">
+    <div class="text-alert" id="alert-text"></div>
+</div>
+
 <div id="v_blocker"></div>
 <button id="logout_btn" onclick="userLogout()">Logout</button>
 <div id="id01" class="modal">
