@@ -6,6 +6,7 @@ const settingButton = ["Aktiviert", "Deaktiviert"]
 const settingActionBar = ["Deaktiviert", "Default", "Medium", "Max"]
 const functionNames = [settingViewActionBar, settingViewNavigationBar, settingViewChat, settingViewUserList, settingViewPresentation, resetView]
 
+
 let currentView = 0
 let flagChanged = false
 const INFOCUS = "imgPreview inFocus"
@@ -15,13 +16,44 @@ let currentButton
 let settings
 let currentSettings
 
-async function getAllSettings() {
+
+async function getAllSettingsBBB(e) {
+    setPlaceHolderBackground(e.target.value)
+    createDivs()
+    currentButton=undefined
+    imgArray=[]
+
     settings = await getter("/getKonfSettings")
     changePicture()
-    generateUserDropMenu().then(() => {
+    toggle(0,focusImage)
 
+    generateUserDropMenu().then(() => {
     })
 
+}
+
+function createDivs(){
+    const main = document.getElementById("main")
+    main.innerHTML=""
+    let div = document.createElement("div")
+    div.id="title"
+    div.innerText="Konfigurator-BigBlueButton"
+    main.appendChild(div)
+    div = document.createElement("div")
+    div.id="dropBoxUser"
+    main.appendChild(div)
+    div = document.createElement("div")
+    div.id="settingDropbox"
+    main.appendChild(div)
+    div = document.createElement("div")
+    div.id="settingView"
+    main.appendChild(div)
+    div = document.createElement("div")
+    div.id="saveButton"
+    main.appendChild(div)
+    div = document.createElement("div")
+    div.id="preview"
+    main.appendChild(div)
 }
 
 function setEventListenerUnload() {
@@ -50,13 +82,12 @@ function generateUserDropMenu() {
                 }
                 currentView = e.target.value
                 currentSettings = settings[e.target.value].value
-
+                document.getElementById("settingView").innerHTML=""
                 dropMenu()
-
                 if (!flagChanged) {
                     generateLiveViewButton()
                 } else {
-                    generateSaveButton()
+                    generateSaveButton(setSettings)
                 }
             })
             if (i === 1) {
@@ -89,7 +120,7 @@ function dropMenu() {
             button.innerText = buttonNames[i] + ":" + settingButtonNames[currentSettings[i]]
         }
         if(currentButton===i){
-            button.className = "button selectedSetting"
+            button.className = "button"
         }else{
             button.className = "button"
         }
@@ -111,22 +142,6 @@ function loadAllPictures() {
 }
 
 
-function settingInit(e) {
-    const view = document.getElementById("settingView")
-    view.innerHTML = ""
-    let container = document.createElement("div")
-    container.id = "imgContainer"
-    container.className = "container"
-    view.appendChild(container)
-
-    if (currentButton !== undefined) {
-        document.getElementById("buttonContainer").children[currentButton].className = "button"
-    }
-    currentButton = e
-    document.getElementById("buttonContainer").children[currentButton].className = "button selectedSetting"
-
-    return container
-}
 
 
 function settingViewActionBar() {
@@ -190,7 +205,7 @@ function resetView() {
     setEventListenerUnload()
     dropMenu()
     document.getElementById("saveButton").innerHTML = ""
-    generateSaveButton()
+    generateSaveButton(setSettings)
 
 }
 
@@ -220,7 +235,7 @@ function initPreview() {
 
 function imageGenerator(name, container, callback, place, arrayPlace) {
     let image = document.createElement("img")
-    image.src = '../bbb-views/' + name + ".png"
+    image.src = '/static/bbb-views/' + name + ".png"
     image.className = "imgSetting"
     image.addEventListener("click", callback)
     container.appendChild(image)
@@ -243,7 +258,6 @@ function buttonGenerator(container, array, offset, settingPlace) {
                 }
             } else {
                 togglePreview(focusImage, i + offset, settingPlace, i, "imgContainer", buttonNames[settingPlace] + ":" + settingButtonNames[i], settingPlace)
-
             }
         })
         container.appendChild(button)
@@ -265,7 +279,7 @@ function togglePreview(oldImage, newImage, settingPlace, setplace, divID, name, 
         imgArray[newImage].className = INFOCUS
         imgArray[oldImage].className = OFFFOCUS
         focusImage = newImage
-        generateSaveButton()
+        generateSaveButton(setSettings)
     }
 
 }
@@ -304,18 +318,7 @@ function generateLiveViewButton() {
     container.appendChild(button)
 }
 
-function generateSaveButton() {
-    const saveButton = document.getElementById("saveButton")
-    saveButton.innerHTML = ""
-    let container = document.createElement("div")
-    saveButton.appendChild(container)
-    container.className = "container"
-    let button = document.createElement("button")
-    button.innerText = "Speichern"
-    button.className = "imgSetting"
-    button.onclick = setSettings
-    container.appendChild(button)
-}
+
 
 function setSettings() {
     window.onbeforeunload = function () {
@@ -324,10 +327,9 @@ function setSettings() {
     document.getElementById("saveButton").innerHTML = ""
     generateLiveViewButton()
     const div = document.getElementById("dropBoxUser")
-    console.log()
     settings[div.children[0].children[0].value].value = currentSettings
     flagChanged = false
-    console.log(settings)
+    openAlert("Erfolgreich gespeichert",SUCCESS)
     setOuts("/setKonfSettings", settings)
 }
 

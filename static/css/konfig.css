@@ -1,103 +1,226 @@
-#title{
+#title {
     font-size: 2cm;
-    cursor:default ;
+    cursor: default;
     float: left;
     width: 100%;
-
+    background-color: white;
 }
-#dropBoxUser{
+
+#dropBoxUser {
+    margin-left: 15px;
     width: 15%;
     clear: both;
     float: left;
 
 }
 
-#settingDropbox{
+#settingDropbox {
+    margin-left: 15px;
     width: 15%;
     clear: both;
     float: left;
     margin-right: 40px;
 }
-#settingView{
+
+#settingView {
+    margin-left: 15px;
     width: 15%;
     clear: both;
     float: left;
 }
 
-#saveButton{
+#main {
+    width: 97%;
+    float: left;
+    background-color: #dddddd;
+}
+
+#iconBox {
+    width: 2%;
+    height: 100%;
+    float: left;
+    background-color: white;
+}
+
+#saveButton {
+    margin-left: 15px;
     width: 15%;
     clear: both;
     float: left;
 }
 
-.button{
+.button {
     width: 80%;
     height: 40px;
-    border-style: none;
-    border-radius: 6px;
-    background-color: #dddddd;
+    background-color: white;
     margin: 5px auto;
     font-weight: bold;
-    
+    border-style: none;
 }
 
-.button:hover{
+.button:hover {
     cursor: pointer;
     background-color: #888888;
-
 }
 
-.container{
+.container {
     margin-top: 20px;
-    background-color: #dddddd;
+    background-color: white;
     display: grid;
     border-radius: 20px;
     font-weight: bold;
 }
-body{
 
-}
+
 .imgPreview {
+    margin-top: 10px;
     max-width: 75%;
     max-height: 70%;
     border-style: groove;
     border-color: black;
 }
 
-.imgSetting{
+.placeHolder{
+    margin-top: 25px;
+}
+
+.icon{
+    max-width: 75%;
+    max-height: 70%;
+    margin: auto;
+    display: grid;
+    padding: 5px 0;
+}
+
+.iconMenu {
+    max-width: 75%;
+    max-height: 70%;
+    margin-top: 25px;
+
+}
+
+.placeHolder:hover{
+    cursor: pointer;
+    background-color: #dddddd;
+}
+.placeHolder-selected{
+    background-color: #dddddd;
+
+}
+
+.views{
+    margin-left: 15px;
+    width: 15%;
+    float: left;
+}
+
+
+.imgSetting {
     margin: 5px auto;
-    width:  200px;
+    width: 200px;
     height: 70px;
     object-fit: cover;
-    border-radius: 4px;
+    background-color: white;
+    border-style: none;
+    font-weight: bold;
+
 }
 
-.imgSetting:hover{
-    opacity: 0.3;
+.imgSetting:hover {
     cursor: pointer;
-}
-.selected{
-    border-color: red;
-    border-style: groove;
-}
-
-.selectedSetting{
     background-color: #888888;
 }
 
-.inFocus{
+.selected {
+    border-color: red;
+    border-style: groove;
+    background-color: coral;
+}
+
+.selected:hover{
+    cursor: pointer;
+    opacity: 0.4;
+}
+
+
+.selectedSetting {
+    background-color: #888888;
+}
+
+.inFocus {
 
 }
 
-.outOfFocus{
+.outOfFocus {
     display: none;
 }
-select{
+
+select {
     height: 40px;
 }
-select:hover{
+
+select:hover {
     cursor: pointer;
 }
-option:hover{
+
+option:hover {
     cursor: pointer;
+}
+
+
+#traefik{
+    width: 100%;
+    height: 124em;
+}
+
+/* The sidepanel menu */
+.sidepanel {
+    height: 100%; /* Specify a height */
+    width: 0; /* 0 width - change this with JavaScript */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Stay on top */
+    top: 0;
+    left: 0;
+    background-color: white; /* Black*/
+    overflow-x: hidden; /* Disable horizontal scroll */
+    padding-top: 60px; /* Place content 60px from the top */
+    transition: 0.5s; /* 0.5 second transition effect to slide in the sidepanel */
+}
+
+/* The sidepanel links */
+.sidepanel a {
+    padding: 8px 8px 8px 32px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #818181;
+    display: block;
+    transition: 0.3s;
+}
+
+/* When you mouse over the navigation links, change their color */
+.sidepanel a:hover {
+    color: #f1f1f1;
+}
+
+/* Position and style the close button (top right corner) */
+.sidepanel .closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+}
+
+/* Style the button that is used to open the sidepanel */
+.openbtn {
+    font-size: 20px;
+    cursor: pointer;
+    background-color: #111;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+}
+
+.openbtn:hover {
+    background-color: #444;
 }

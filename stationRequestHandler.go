@@ -303,7 +303,6 @@ func setKonfSettings(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-
 	file, _ := json.MarshalIndent(settings, "", " ")
 	_ = ioutil.WriteFile("konfSetting.json", file, 0644)
 	w.Write([]byte("done"))

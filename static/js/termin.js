@@ -112,7 +112,9 @@ async function prevWeeks() {
         if (oldMark !== null) {
             oldMark.innerText = ""
         }
-        document.getElementById("terminOverview").innerText = ""
+        if(document.getElementById("terminOverview")!==null){
+            document.getElementById("terminOverview").innerText = ""
+        }
 
         //  deleteNodes()
         await getAllMeetings(currentMonday, currentSunday)
@@ -141,8 +143,10 @@ async function nextWeek() {
     //setDates()
 }
 
-async function initTerminTable() {
-    document.getElementById('id01').style.display = 'block'
+async function initTerminTable(debug=false) {
+    if(document.getElementById('id01')!==null){
+        document.getElementById('id01').style.display = 'block'
+    }
     document.getElementById("prevWeek").addEventListener("click", prevWeeks)
     document.getElementById("nextWeek").addEventListener("click", nextWeek)
     for (let i = 0; i < 7; i++) {
@@ -154,8 +158,6 @@ async function initTerminTable() {
             if (i == 4) {
                 half = half + 1
             }
-
-
             let appendString = ""
             for (let j = 0; j < half; j++) {
                 appendString = appendString + "\u00A0"
@@ -166,7 +168,7 @@ async function initTerminTable() {
 
     await initCurrentWeeksMonday()
     await setCaption()
-    MAX_TABLETS = await getter("getAllTabletsByMaintenance")
+    MAX_TABLETS = await getter("/getAllTabletsByMaintenance")
     disableDays = await getter("/getDayOuts")
     disableTimes = await getter("/getTimeOut")
     account = await getter("/getUserAuthenticationCookie?key=" + document.cookie.split('=')[1])
@@ -178,8 +180,7 @@ async function initTerminTable() {
 
 }
 
-function setDates() {
-
+function setDates(debug =false) {
     let currenDate = new Date()
     currenDate.setSeconds(0, 0)
     let startTime = 8
@@ -253,7 +254,6 @@ function setDates() {
                             }
 
                         })
-
                     } else {
                         //  entities.innerText = "Abgelaufen"
                         entities.className = "expired"
@@ -315,7 +315,7 @@ async function addTermin() {
 }
 
 
-function getAllMeetings(starttime, endtime) {
+function getAllMeetings(starttime, endtime,debug=false) {
     let tempStart = new Date();
     tempStart.setFullYear(starttime.getFullYear(), starttime.getMonth(), starttime.getDate() - 1)
     tempStart.setHours(tempStart.getHours() + 2)
@@ -331,7 +331,6 @@ function getAllMeetings(starttime, endtime) {
             if (200 === this.status) {
                 return new Promise(((resolve, reject) => {
                     reservedDates = JSON.parse(this.responseText)
-
                     setDates()
                     resolve(reservedDates)
                 }))
@@ -374,6 +373,8 @@ function deleteAllEventListener() {
         }
     }
 }
+
+
 
 let dates = {
     convert: function (d) {
@@ -475,59 +476,62 @@ function formatDate(date) {
 
 function generateDependingOnScreen() {
     const form = document.getElementById("test")
-    form.innerText = ""
-    const terminOverview = document.getElementById("terminOverview")
-    terminOverview.innerText = ""
-    flagAddVisitor = false
-    this.innerText = "X"
-    if (oldMark !== null) {
-        if (oldMark.id === this.id) {
-            this.innerText = ""
-            oldMark = null
+    if (form!==null){
+        form.innerText = ""
+        const terminOverview = document.getElementById("terminOverview")
+        terminOverview.innerText = ""
+        flagAddVisitor = false
+        this.innerText = "X"
+        if (oldMark !== null) {
+            if (oldMark.id === this.id) {
+                this.innerText = ""
+                oldMark = null
+            } else {
+                oldMark.innerText = ""
+                oldMark = this
+            }
         } else {
-            oldMark.innerText = ""
             oldMark = this
         }
-    } else {
-        oldMark = this
-    }
-    let text = this.value.split("-")
+        let text = this.value.split("-")
 
-    let startTime = parseInt(text[0].split(":")[0])
-    let endTime = parseInt(text[1].split(":")[0])
+        let startTime = parseInt(text[0].split(":")[0])
+        let endTime = parseInt(text[1].split(":")[0])
 
-    let diff = parseInt(this.id.split("_")[1]) - 1;
+        let diff = parseInt(this.id.split("_")[1]) - 1;
 
-    let startDate = new Date()
-    let endDate = new Date()
-    startDate.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + diff)
-    startDate.setHours(startTime, 0, 0, 0)
+        let startDate = new Date()
+        let endDate = new Date()
+        startDate.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + diff)
+        startDate.setHours(startTime, 0, 0, 0)
 
-    endDate.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + diff)
-    endDate.setHours(endTime, 0, 0, 0)
-    startTerminUser = startDate;
-    endTerminUser = endDate;
-    //console.log(this.value)
-    let width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
-    //console.log(width)
-    let booked = 0
-    if (width < 1500) {
-        if (reservedDates !== null) {
-            for (let i = 0; i < reservedDates.length; i++) {
-                if (dates.compare(startDate, reservedDates[i].time_start) === 0) {
-                    booked++
+        endDate.setFullYear(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() + diff)
+        endDate.setHours(endTime, 0, 0, 0)
+        startTerminUser = startDate;
+        endTerminUser = endDate;
+        //console.log(this.value)
+        let width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+        //console.log(width)
+        let booked = 0
+        if (width < 1500) {
+            if (reservedDates !== null) {
+                for (let i = 0; i < reservedDates.length; i++) {
+                    if (dates.compare(startDate, reservedDates[i].time_start) === 0) {
+                        booked++
+                    }
                 }
-            }
-            if (booked < MAX_TABLETS.length) {
+                if (booked < MAX_TABLETS.length) {
+                    generateInputInterfaceAddTermin(this)
+                }
+            } else {
                 generateInputInterfaceAddTermin(this)
             }
+            // console.log(this)
         } else {
-            generateInputInterfaceAddTermin(this)
+            generateInputInterfaceAddMeetingDesktop(this, startTime)
         }
-        // console.log(this)
-    } else {
-        generateInputInterfaceAddMeetingDesktop(this, startTime)
     }
+
 }
 
 async function generateInputInterfaceAddMeetingDesktop(div, startTime) {
@@ -959,7 +963,7 @@ function setWeekdays() {
     }
     let tabletPromises = []
     for (let i = 0; i < tablets.length; i++) {
-        let tabletBool = document.getElementById(tablets[i].name + "_" + tablets[i].id).checked
+        let tabletBoolf = document.getElementById(tablets[i].name + "_" + tablets[i].id).checked
         let tempTab = new Tablet(tablets[i].id, tablets[i].name, tabletBool, tablets[i].station_id)
 
         tabletPromises.push(setOuts("/disableTablet", tempTab))
