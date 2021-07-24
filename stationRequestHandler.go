@@ -308,6 +308,7 @@ func setKonfSettings(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("done"))
 
 }
+
 func getKonfSettings(w http.ResponseWriter, r *http.Request) {
 	jsonFile, err := os.Open("./konfSetting.json")
 	if err != nil {

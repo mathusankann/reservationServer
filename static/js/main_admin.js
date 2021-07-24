@@ -1,11 +1,13 @@
-const mainFunctions=[
-    expandMenu,()=>{ location.reload()},
-    getAllSettingsBBB,
-    getSettingsDocker,
-    getAllSettingsReservation,
-    setTraefikInSite
-]
+//const mainFunctions=[expandMenu,()=>{ location.reload()},getAllSettingsBBB,getSettingsDocker,getAllSettingsReservation,setTraefikInSite]
 
+const mainFunctions=[
+    expandMenu,
+    ()=>{location.href="/static/htmls/configHome.html"},
+    ()=>{location.href="/static/htmls/configBBB.html"},
+    ()=>{location.href="/static/htmls/configDocker.html"},
+    ()=>{location.href="/static/htmls/configReserv.html"},
+    ()=>{location.href="/static/htmls/configTraefik.html"}
+]
 
 
 

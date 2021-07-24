@@ -16,20 +16,16 @@ let currentButton
 let settings
 let currentSettings
 
-
 async function getAllSettingsBBB(e) {
-    setPlaceHolderBackground(e.target.value)
+   // setPlaceHolderBackground(e.target.value)
     createDivs()
     currentButton=undefined
     imgArray=[]
-
     settings = await getter("/getKonfSettings")
     changePicture()
     toggle(0,focusImage)
-
     generateUserDropMenu().then(() => {
     })
-
 }
 
 function createDivs(){

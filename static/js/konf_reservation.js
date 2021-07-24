@@ -1,7 +1,11 @@
-let reservFuntions = [terminPlanerSettings ]
-let reservButtons = ["Terminplaner Konfigurator"]
+let reservFuntions = [terminPlanerSettings,userConfigInterface ]
+let reservButtons = ["Terminplaner Konfigurator","Benutzer Verwaltung"]
 let terminButtons = ["Zeiten", "Tage"]
 let terminFunctions = [disableTimes2, disableDays2]
+
+let db =["Benutzer","Station","Bewohner","Tablett"]
+
+
 
 let disabledTimesArray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 let disabledDaysArray = [0, 0, 0, 0, 0, 0, 0]
@@ -9,7 +13,13 @@ let disabledDaysArray = [0, 0, 0, 0, 0, 0, 0]
 let timeOutArray = []
 let dayOutArray = []
 
+let currentButton
 
+function userConfigInterface() {
+    document.getElementById("terminContainer").style.display="none"
+    let container = settingInit(1)
+    buttonGeneratorPlain(db, terminFunctions, container)
+}
 
 function generateTimeOutValues() {
     timeOutArray = []
@@ -68,7 +78,7 @@ function generateDayOut() {
     for (let i = 0; i < dayOutArray.length; i++) {
         if (dayOutArray[i].value) {
             disabledDaysArray[i] = 1
-            disableDaysEntity(null, true, i)
+            disableDaysEntity(null, true, i+1)
         }
     }
 
@@ -76,7 +86,6 @@ function generateDayOut() {
 
 
 function disableTimes2(resetFlag = 1) {
-
     for (let i = 0; i < 13; i++) {
         let entity = document.getElementById(i.toString() + "_0")
         let entity2 = document.getElementById(i.toString() + "_8")
@@ -158,20 +167,18 @@ function disableDays2(resetFlag = 1) {
 
 
 async function terminPlanerSettings() {
-
+    document.getElementById("terminContainer").style.display="block"
     timeOutArray = await getter("/getTimeOut")
     dayOutArray = await getter("/getDayOuts")
     setTimeOutArrayWithInc()
     generateDayOut()
-
-
     let container = settingInit(0)
     buttonGeneratorPlain(terminButtons, terminFunctions, container)
 }
 
 function getAllSettingsReservation(e) {
-    currentButton=undefined
-    setPlaceHolderBackground(e.target.value)
+
+    //setPlaceHolderBackground(e.target.value)
     createDivsReservation().then(() => {
         initTerminTable().then(() => {
             deleteAllEventListener()
