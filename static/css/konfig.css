@@ -36,7 +36,7 @@
 }
 
 #iconBox {
-    width: 2%;
+    width: 3%;
     height: 100%;
     float: left;
     background-color: white;
@@ -223,4 +223,102 @@ option:hover {
 
 .openbtn:hover {
     background-color: #444;
+}
+
+#dockerContainer{
+    width: 70%;
+    height: 100%;
+    float: left;
+
+}
+
+#dockerSetter{
+    width: 25%;
+    float: left;
+
+
+}
+
+.dContainer {
+    font-size: 100%;
+    background: white;
+    cursor: pointer;
+    width:19%;
+    border-style: groove;
+    border-radius: 10px;
+    float: left;
+}
+
+.dContainer:hover{
+    opacity: 0.4;
+}
+
+.setterContainer{
+    background: white;
+    border-style: groove;
+    border-radius: 10px;
+
+}
+
+.containerLabel{
+    font-size: medium;
+    font-weight: bold;
+    margin-left: 3px;
+
+}
+
+.containerContent{
+    margin-left: 3px;
+    border-bottom: black;
+    border-bottom-style: groove;
+}
+.dockerButtons{
+    width: 100%;
+    background-color: black;
+    border-radius: 10px;
+}
+
+#piechart{
+    border-radius: 10px;
+    border-style: groove;
+    background-color: white;
+    width: 30%;
+    clear: both;
+
+    float: left;
+}
+#runningMeetings{
+    float: left;
+    width: 50%;
+    background-color: white;
+    margin-left: 5%;
+    margin-top:2%;
+    border-style: groove;
+    border-radius: 10px;
+}
+
+td,th{
+    border: 2px solid rgb(0, 0, 0);
+    padding: 12px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+caption{
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#mainAdmin{
+    width: 90%;
+    margin: 4% auto;
+}
+
+.logOutAdmin{
+    background-color: #4CAF50;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
 }

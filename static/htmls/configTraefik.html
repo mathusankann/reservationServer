@@ -1,26 +1,23 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
     <script src="/static/js/error.js"></script>
-
     <script src="/static/js/main_admin.js"></script>
     <script src="/static/js/communication.js"></script>
-
     <link rel="stylesheet" href="/static/css/konfig.css">
     <link rel="stylesheet" href="/static/css/alert.css">
+
 
     <meta charset="UTF-8">
     <title>Konfigurator</title>
 </head>
-<body onload="generateIconOverview()">
+<body onload="generateIconOverview(); setTraefikInSite()">
 <div class="alert" id="alert" style="z-index: 5">
     <div class="text-alert" id="alert-text"></div>
 </div>
 <div id="mySidepanel" class="sidepanel"></div>
 <div id="iconBox"></div>
 <div id="main"> </div>
-
 
 </body>
 </html>

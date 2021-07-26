@@ -4,12 +4,16 @@
     float: left;
 }
 .rooms {
-    font-size: 20px;
+    font-size: 100%;
+    background: white;
     cursor: pointer;
     width:20%;
     border-style: groove;
     border-radius: 10px;
     float: left;
+}
+.rooms:hover{
+    opacity: 0.4;
 }
 
 .konfImg{
@@ -51,7 +55,6 @@ button {
     margin: 8px 0;
     border: none;
     cursor: pointer;
-
 }
 
 button:hover {

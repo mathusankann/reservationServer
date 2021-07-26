@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	_ "os"
+	"strings"
 	_ "time"
 )
 
@@ -21,7 +23,7 @@ const charset = "abcdefghijklmnopqrstuvwxyz" +
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 var db = initDbConnection()
-var userMap map[string]string
+var UserMap map[string]string
 var host Host
 
 func insertAdminAccount() {
@@ -52,6 +54,109 @@ func initDbConnection() *sql.DB {
 	return db
 }
 
+func sendGetRequest(w http.ResponseWriter, r *http.Request) {
+	var requestString string
+	_ = json.NewDecoder(r.Body).Decode(&requestString)
+	resp, err := http.Get(requestString)
+	if err != nil {
+		http.Error(w, "Couldn't reach local server", http.StatusInternalServerError)
+		return
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	sb := string(body)
+	//log.Println(sb)
+	if err != nil {
+		http.Error(w, "Couldn't read incoming message", http.StatusNotFound)
+		return
+	}
+	jsonData, _ := json.Marshal(sb)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write(jsonData)
+}
+
+func getAllDockerContainer(w http.ResponseWriter, r *http.Request) {
+	resp, err := http.Get("http://192.168.178.102:7777/getAllDockerContainer")
+	if err != nil {
+		http.Error(w, "Couldn't reach local server", http.StatusInternalServerError)
+		return
+	}
+	//We Read the response body on the line below.
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		http.Error(w, "Couldn't read incoming message", http.StatusNotFound)
+		return
+	}
+	//Convert the body to type string
+	sb := string(body)
+	docker := strings.Split(sb, `\n`)
+	var dockerArray [][]string
+	var tempArray []string
+	var tempWord string
+	var tempCutArray []string
+	for i := 0; i < len(docker); i++ {
+		tempArray = strings.Split(docker[i], " ")
+		for j := 0; j < len(tempArray); j++ {
+			if tempArray[j] != "" {
+				tempWord = tempWord + " " + tempArray[j]
+			}
+			if tempArray[j] == "" && tempWord != "" {
+				tempCutArray = append(tempCutArray, tempWord)
+				tempWord = ""
+			}
+		}
+		if tempWord != "" {
+			tempCutArray = append(tempCutArray, tempWord)
+			tempWord = ""
+			dockerArray = append(dockerArray, tempCutArray)
+			tempCutArray = nil
+		}
+
+	}
+	jsonData, _ := json.Marshal(dockerArray)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write(jsonData)
+}
+
+func postRunCommand(w http.ResponseWriter, r *http.Request) {
+	var cmds []string
+	_ = json.NewDecoder(r.Body).Decode(&cmds)
+	jsonData, err := json.Marshal(cmds)
+	if err != nil {
+		http.Error(w, "Faulty string", http.StatusFailedDependency)
+		return
+	}
+
+	resp, err := http.Post("http://192.168.178.102:7777/runCommands", "application/json",
+		bytes.NewBuffer(jsonData))
+	if err != nil {
+		http.Error(w, "Couldn't reach local server", http.StatusInternalServerError)
+		return
+	}
+	//We Read the response body on the line below.
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		http.Error(w, "Couldn't read incoming message", http.StatusNotFound)
+		return
+	}
+	//Convert the body to type string
+	//	sb := string(body)
+	//	log.Printf(sb)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write(body)
+}
+
+/*func getAllMeetingsRunning(w http.ResponseWriter, r *http.Request) {
+
+	resp, err := http.Get("https://jitsi.jitsi-mathu.de/bigbluebutton/api/getMeetings?checksum=bf1fff0cc4ae42bda9322c62f3c359bd1a463726")
+	if err != nil {
+		http.Error(w, "Couldn't reach local server", http.StatusInternalServerError)
+		return
+	}
+}*/
+
 func settingsFile(w http.ResponseWriter, r *http.Request) {
 	/*resp, err := http.Get("http://192.168.178.72/settingsFile")
 	data, err := ioutil.ReadAll(resp.Body)*/
@@ -75,7 +180,7 @@ func main() {
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	json.Unmarshal(byteValue, &host)
 	//insertAdminAccount()
-	userMap = make(map[string]string)
+	UserMap = make(map[string]string)
 	fileServer := http.FileServer(http.Dir("./static")) // New code
 
 	http.Handle("/", fileServer)
@@ -83,6 +188,10 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", fileServer))
 
 	http.HandleFunc("/settingsFile", settingsFile)
+	http.HandleFunc("/getAllDockerContainer", getAllDockerContainer)
+	http.HandleFunc("/postRunCommand", postRunCommand)
+	http.HandleFunc("/sendGetRequest", sendGetRequest)
+	http.HandleFunc("/removeAuthenticateUser", removeAuthenticateUser)
 
 	//ResidentHandler
 	http.HandleFunc("/getRoom", GetRoom)

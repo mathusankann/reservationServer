@@ -12,7 +12,6 @@ function init(rooms) {
     Grooms = rooms
     getAllMeetingsDate(currentWeeksMonday, currentSunday)
     document.getElementById("buttonHolder").innerText = "\n Bewohner"
-
     document.getElementById("userButton").innerText = ""
     const overview = document.getElementById("userButton");
     if (Grooms !== null) {
@@ -35,11 +34,6 @@ function init(rooms) {
             //roomdiv.appendChild(img);
             overview.appendChild(roomdiv)
             roomdiv.addEventListener("click", generateInterfaceRoom)
-            const activ = document.createElement("img")
-            activ.src = "media/img/redpoint.gif"
-            activ.className = "activind"
-            roomdiv.appendChild(activ)
-
         }
     }
 
@@ -102,12 +96,10 @@ function addButtons(rooms) {
 
 
 async function createRoom(name, stationName, roomNumber) {
-    console.log("hier")
     //if (document.cookie !== "") {
     let api, i, len, method, params, ref, urls;
     api = new BigBlueButtonApi("https://mathu.jitsi-mathu.de/bigbluebutton/api", "Eh7iAAkg9cib4wObQv5gADIE2OlNeo9gKEnyYitl");
     //todo shared secret request
-
     //const username = document.getElementById("name").value
     // A hash of parameters.
     // The parameter names are the same names BigBlueButton expects to receive in the API calls.
@@ -178,7 +170,7 @@ function something() {
 }
 
 function userLogout() {
-
+    getter("/removeAuthenticateUser?key="+ document.cookie.split('=')[1])
     let cookies = document.cookie.split(";");
     for (let i = 0; i < cookies.length; i++) {
         let cookie = cookies[i];
@@ -210,7 +202,6 @@ async function generateInputInterfaceAddRoom() {
             dropdown.appendChild(option)
         }
     }
-
     let addNewStationButton = document.createElement("button")
     addNewStationButton.innerText = "+"
     addNewStationButton.id = "addVisitor"

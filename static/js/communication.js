@@ -224,8 +224,8 @@ function getRoleByID(id) {
 
                 }
                 if (role.viewAllUser) {
-                    document.getElementById("timeTableSettings").style.visibility="visible"
-                    showEditorPanel()
+                    location.href="/static/htmls/configBBB.html"
+
                     //
                 }
                 if(!role.viewAllStationUser&&!role.viewAllUser){

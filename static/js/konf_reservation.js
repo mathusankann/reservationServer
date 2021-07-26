@@ -3,7 +3,7 @@ let reservButtons = ["Terminplaner Konfigurator","Benutzer Verwaltung"]
 let terminButtons = ["Zeiten", "Tage"]
 let terminFunctions = [disableTimes2, disableDays2]
 
-let db =["Benutzer","Station","Bewohner","Tablett"]
+let db =["Mitarbeiter","Bewohner","Besucher","Tablett"]
 
 
 
@@ -107,6 +107,10 @@ function disableTimes2(resetFlag = 1) {
     }
 }
 
+function generateViewSqlContainer() {
+
+}
+
 function disableTimeEntity(e, flag = false, value = 0) {
     for (let i = 1; i < 8; i++) {
         if (flag) {
@@ -177,9 +181,10 @@ async function terminPlanerSettings() {
 }
 
 function getAllSettingsReservation(e) {
-
     //setPlaceHolderBackground(e.target.value)
+    checkAuthentication()
     createDivsReservation().then(() => {
+        createLogOutButton()
         initTerminTable().then(() => {
             deleteAllEventListener()
             document.getElementById("prevWeek").removeEventListener("click", prevWeeks)
@@ -189,6 +194,7 @@ function getAllSettingsReservation(e) {
             document.styleSheets[2].rules[9].style.cursor = "default"
             document.getElementById("week").remove()
             dropMenuReservation(reservButtons, reservFuntions)
+
         })
     })
 
@@ -210,6 +216,10 @@ function createDivsReservation() {
 
         div = document.createElement("div")
         div.id = "settingView"
+        main.appendChild(div)
+
+        div = document.createElement("div")
+        div.id = "sqlContainer"
         main.appendChild(div)
 
         div = document.createElement("div")

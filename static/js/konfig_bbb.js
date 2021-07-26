@@ -18,6 +18,7 @@ let currentSettings
 
 async function getAllSettingsBBB(e) {
    // setPlaceHolderBackground(e.target.value)
+    checkAuthentication()
     createDivs()
     currentButton=undefined
     imgArray=[]
@@ -35,6 +36,7 @@ function createDivs(){
     div.id="title"
     div.innerText="Konfigurator-BigBlueButton"
     main.appendChild(div)
+    createLogOutButton()
     div = document.createElement("div")
     div.id="dropBoxUser"
     main.appendChild(div)
@@ -50,6 +52,8 @@ function createDivs(){
     div = document.createElement("div")
     div.id="preview"
     main.appendChild(div)
+
+
 }
 
 function setEventListenerUnload() {

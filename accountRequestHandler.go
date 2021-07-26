@@ -62,7 +62,7 @@ func getUserAuthentication(w http.ResponseWriter, r *http.Request) {
 
 		// value of cookie
 		ck.Value = String(25)
-		userMap[ck.Value] = dbUser.Username
+		UserMap[ck.Value] = dbUser.Username
 
 		// write the cookie to response
 		http.SetCookie(w, &ck)
@@ -72,6 +72,17 @@ func getUserAuthentication(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Username or password incorrect  ", http.StatusBadRequest)
 		return
 	}
+}
+
+func removeAuthenticateUser(w http.ResponseWriter, r *http.Request) {
+	keys, err := r.URL.Query()["key"]
+	if !err || len(keys[0]) < 1 {
+		log.Println("Url Param 'Key' is missing")
+		return
+	}
+	delete(UserMap, keys[0])
+	log.Println(len(UserMap))
+	w.Write([]byte("ok"))
 }
 
 func addUser(w http.ResponseWriter, r *http.Request) {
@@ -107,7 +118,7 @@ func getUserAuthenticationCookie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var dbUser Account
-	dbUser = getUser(userMap[keys[0]])
+	dbUser = getUser(UserMap[keys[0]])
 	if !dbUser.Check() {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
