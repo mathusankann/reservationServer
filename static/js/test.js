@@ -3,7 +3,7 @@ let currentSettings
 
 window.addEventListener('DOMContentLoaded', function () {
     setTimeout(async function () {
-        settings = await getter("nothing")
+        settings = await getter("")
         if (true) ;//todo depending on role
         getContent().then((content) => {
             currentSettings = settings[2].value

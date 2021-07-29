@@ -6,10 +6,11 @@ import (
 )
 
 type Account struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	RoleId   int    `json:"role_id"`
+	ID        int    `json:"id"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	RoleId    int    `json:"role_id"`
+	StationID int    `json:"station_id"`
 }
 
 func (u *Account) HashAndSalt(pwd []byte) string {

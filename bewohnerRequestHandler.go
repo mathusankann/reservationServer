@@ -68,6 +68,30 @@ func GetRoomByID(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func updateResident(w http.ResponseWriter, r *http.Request) {
+	var incResident Resident
+	err := json.NewDecoder(r.Body).Decode(&incResident)
+	if err != nil {
+		log.Println(err)
+	}
+	if localGetStationByID(incResident.StationId).Name == "" {
+		http.Error(w, "Station existiert nicht", http.StatusBadRequest)
+		return
+	}
+	sqlStmt := fmt.Sprintf(`UPDATE bewohner Set station_id =?,name=?,room=? Where id=?`)
+	statement, err := db.Prepare(sqlStmt)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = statement.Exec(incResident.StationId, incResident.Name, incResident.Room, incResident.Id)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	statement.Close()
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte("ok"))
+}
+
 func GetAllRoomNames(w http.ResponseWriter, r *http.Request) {
 	var listNames []string
 	/*db, dberr := sql.Open("sqlite3", "Account.sqlite")
@@ -111,7 +135,7 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-	if !croom.Verify() {
+	if !croom.Verify() { //todo check for name already exisiting
 		http.Error(w, "faulty Account", http.StatusBadRequest)
 		return
 	}
@@ -119,17 +143,6 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 	if dberr != nil {
 		log.Panic(dberr)
 	}*/
-	queryStmt := fmt.Sprintf("Select name From bewohner Where name= '%s'", croom.Name)
-	rows, dberr := db.Query(queryStmt)
-	if dberr != nil {
-		log.Panic(dberr)
-
-	}
-	rows.Close()
-	if rows.Next() {
-		http.Error(w, "Username already exists", http.StatusBadRequest)
-		return
-	}
 	//transaction
 
 	sqlStmt := fmt.Sprintf(`INSERT INTO bewohner(name,station_id,inviteLink,createLink,joinLink,meetingRunningLink,room)VALUES(?,?,?,?,?,?,?)`)
@@ -190,6 +203,24 @@ func getRoomByID(id int) Resident {
 	return room2
 }
 
+func getAllVisitors(w http.ResponseWriter, r *http.Request) {
+	var visitorNames []string
+	queryStmt := fmt.Sprintf("Select name From besucher")
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	var name string
+	for rows.Next() {
+		dberr = rows.Scan(&name)
+		visitorNames = append(visitorNames, name)
+	}
+
+	rows.Close()
+	jsonFile, _ := json.Marshal(visitorNames)
+	w.Write(jsonFile)
+}
+
 func getAllVistorNamesByResidentID(w http.ResponseWriter, r *http.Request) {
 	var visitorNames []string
 	var index []int
@@ -241,7 +272,7 @@ func getAllRoomByStationID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id, _ := strconv.ParseInt(keys[0], 10, 32)
-	queryStmt := fmt.Sprintf("Select name From bewohner Where station_id= %d", getStationIDByAccountID(int(id)))
+	queryStmt := fmt.Sprintf("Select name From bewohner Where station_id= %d", id)
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
 		log.Panic(dberr)
@@ -264,7 +295,7 @@ func getAllRoomByStationID(w http.ResponseWriter, r *http.Request) {
 func getRoomIDByName(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["Name"]
 	if !err || len(keys[0]) < 1 {
-		log.Println("Url Param 'Name' is missing")
+		log.Println("Url Param 'Name' is missing") //todo fehlermeldung!!!!!
 		return
 	}
 	jsonFile, _ := json.Marshal(getRoom(keys[0]).Id)

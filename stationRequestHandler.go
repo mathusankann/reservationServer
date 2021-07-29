@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 type Station struct {
@@ -41,6 +42,39 @@ func (tablets Tablet) Verify() bool {
 	return tablets.Name != ""
 }
 
+func getStationByID(w http.ResponseWriter, r *http.Request) {
+	keys, err := r.URL.Query()["ID"]
+	if !err || len(keys[0]) < 1 {
+		log.Println("Url Param 'Name' is missing")
+		return
+	}
+	id, _ := strconv.ParseInt(keys[0], 10, 32)
+
+	station := localGetStationByID(int(id))
+
+	w.Header().Set("Content-Type", "application/json")
+	jsonFile, _ := json.Marshal(station)
+	w.Write(jsonFile)
+
+}
+
+func localGetStationByID(id int) Station {
+	queryStmt := fmt.Sprintf("Select * From station Where id= '%d'", id)
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	var station Station
+	if rows.Next() {
+		dberr = rows.Scan(&station.Id, &station.Name)
+		if dberr != nil {
+			log.Println(dberr)
+		}
+	}
+	rows.Close()
+	return station
+}
+
 func getAllStation(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select name From station ")
 	rows, dberr := db.Query(queryStmt)
@@ -65,10 +99,11 @@ func getAllStation(w http.ResponseWriter, r *http.Request) {
 func getAllStationByName(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["name"]
 	if !err || len(keys[0]) < 1 {
-		log.Println("Url Param 'Name' is missing")
+		log.Println("Url Param 'name' is missing")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
+	log.Println(getStation(keys[0]).Id)
 	jsonFile, _ := json.Marshal(getStation(keys[0]).Id)
 	w.Write(jsonFile)
 }
@@ -88,6 +123,43 @@ func getStation(name string) Station {
 	}
 	rows.Close()
 	return station
+}
+
+func getTabletByName(w http.ResponseWriter, r *http.Request) {
+	keys, err := r.URL.Query()["name"]
+	if !err || len(keys[0]) < 1 {
+		log.Println("Url Param 'Name' is missing")
+		return
+	}
+	tablet := getTablet(keys[0])
+	jsonFile, _ := json.Marshal(tablet)
+	w.Write(jsonFile)
+}
+
+func getTabletByID(w http.ResponseWriter, r *http.Request) {
+	keys, err := r.URL.Query()["id"]
+	if !err || len(keys[0]) < 1 {
+		log.Println("Url Param 'id' is missing")
+		return
+	}
+	id, _ := strconv.ParseInt(keys[0], 10, 32)
+	queryStmt := fmt.Sprintf("Select * From tablets Where id= '%d'", id)
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	var cache sql.NullInt32
+	var tablet Tablet
+	if rows.Next() {
+		dberr = rows.Scan(&tablet.Id, &tablet.Name, &tablet.Maintenance, &cache)
+		if dberr != nil {
+			log.Println(dberr)
+		}
+	}
+	rows.Close()
+	tablet.StationID = int(cache.Int32)
+	jsonFile, _ := json.Marshal(tablet)
+	w.Write(jsonFile)
 }
 
 func getTablet(name string) Tablet {
@@ -166,6 +238,31 @@ func getAllTablets(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonFile)
 }
 
+func getAllTabletsNames(w http.ResponseWriter, r *http.Request) {
+	var listTablets []string
+	/*db, dberr := sql.Open("sqlite3", "Account.sqlite")
+	if dberr != nil {
+		log.Panic(dberr)
+	}*/
+	queryStmt := fmt.Sprintf("Select name From tablets")
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	var cache string
+	for rows.Next() {
+		err := rows.Scan(&cache)
+		if err != nil {
+			log.Println(err)
+		}
+		listTablets = append(listTablets, cache)
+	}
+	jsonFile, _ := json.Marshal(listTablets)
+	w.Write(jsonFile)
+}
+
 func getAllTabletsByMaintenance(w http.ResponseWriter, r *http.Request) {
 	var listTablets []Tablet
 	/*db, dberr := sql.Open("sqlite3", "Account.sqlite")
@@ -224,18 +321,22 @@ func addTablet(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func disableTablet(w http.ResponseWriter, r *http.Request) {
+func updateTablet(w http.ResponseWriter, r *http.Request) {
 	var incTablet Tablet
 	err := json.NewDecoder(r.Body).Decode(&incTablet)
 	if err != nil {
 		log.Println(err)
 	}
-	sqlStmt := fmt.Sprintf("UPDATE tablets SET maintenance = ? WHERE Id = ?")
+	if getTablet(incTablet.Name).Verify() && getTablet(incTablet.Name).Maintenance == incTablet.Maintenance {
+		http.Error(w, "Tablet already exists", http.StatusBadRequest)
+		return
+	}
+	sqlStmt := fmt.Sprintf("UPDATE tablets SET name = ?, maintenance = ? WHERE Id = ?")
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	_, err = statement.Exec(incTablet.Maintenance, incTablet.Id)
+	_, err = statement.Exec(incTablet.Name, incTablet.Maintenance, incTablet.Id)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

@@ -179,13 +179,13 @@ span.psw {
 
  }
  #buttonHolder{
-     float: right;
      width: 70%;
+     display: none;
  }
 
 #userButton{
-    float: right;
     width: 70%;
+    display: none;
 }
 
 #reservedDates{
@@ -193,6 +193,7 @@ span.psw {
     font-size: 0.8cm;
     width: 28%;
     clear: both;
+    display: none;
 }
 
 .sortBtn{

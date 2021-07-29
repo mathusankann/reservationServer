@@ -281,7 +281,6 @@ function containsTime(start, end, disableTimes) {
 
 async function addTermin() {
     if (document.getElementById("wuser").value !== "") {
-        console.log("test")
         let userId = document.getElementById("wuser").value
         startTerminUser = startTerminUser.toISOString()
         endTerminUser = endTerminUser.toISOString()

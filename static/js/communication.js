@@ -20,11 +20,13 @@ class Room {
 
 
 class User {
-    constructor(id, name, passwort, role) {
+    constructor(id, name, passwort, role,stationID) {
         this.Id = id;
         this.username = name;
         this.password = passwort;
         this.role_id = role;
+        this.station_id = stationID
+
     }
 
 }
@@ -135,7 +137,10 @@ function sendMeetingPost(data) {
     request.onreadystatechange = function () {
         if (4 === this.readyState) {
             if (200 === this.status) {
-                location.reload();
+                openAlert("Erfolgreich reserviert",SUCCESS)
+                setTimeout(function () {
+                    location.reload();
+                },1000)
             } else {
                 console.log(this.status + ":" + this.responseText);
             }
@@ -151,7 +156,7 @@ async function getUserAuthentication() {
         document.getElementById("uname").innerText = ""
         document.getElementById("psw").innerText = ""
         await getAllRoom()
-        let user = new User(0, document.getElementById("uname").value, document.getElementById("psw").value, 0)
+        let user = new User(0, document.getElementById("uname").value, document.getElementById("psw").value, 0,null)
         const request = createAjaxRequest();
         request.onreadystatechange = async function () {
             if (4 === this.readyState) {
@@ -197,7 +202,7 @@ function getUserAuthenticationCookie() {
                 document.getElementById("logout_btn").style.display = "block";
                 document.getElementById("v_blocker").style.display = "none"
                 let user = JSON.parse(this.responseText)
-                await getAllRoomNamesByStationID(user.id)
+                await getAllRoomNamesByStationID(user.station_id)
                 getRoleByID(user.role_id)
 
             } else {
@@ -225,12 +230,18 @@ function getRoleByID(id) {
                 }
                 if (role.viewAllUser) {
                     location.href="/static/htmls/configBBB.html"
-
+                   // document.getElementById("timeTableSettings").style.visibility="visible"
+                    //showEditorPanel()
                     //
                 }
                 if(!role.viewAllStationUser&&!role.viewAllUser){
-                    document.getElementById("overview").style.display="none"
-                    document.getElementById("reservedDates").innerText =""
+                    if ( document.getElementById("overview")!==null){
+                        document.getElementById("overview").remove()
+                    } if ( document.getElementById("reservedDates")!==null){
+                        document.getElementById("reservedDates").remove()
+                    } if ( document.getElementById("iconBox")!==null){
+                        document.getElementById("iconBox").remove()
+                    }
                 }
 
             }
@@ -515,7 +526,7 @@ function addNewVisitor(name, mail, id) {
                     let val = JSON.parse(this.responseText)
                     //console.log(this.responseText)
                     resolve(val)
-                    openAlert("Erfolgreich hinzugefügt","Grün")
+                    openAlert("Erfolgreich hinzugefügt",SUCCESS)
                 }
                 else {
                     openAlert(this.responseText,"red")
@@ -598,8 +609,9 @@ function createStation(name) {
     }))
 }
 
-function createUser(id, name, password, roleID) {
-    let user = new User(id, name, password, roleID)
+function createUser(id, name, password, roleID,accountID) {
+    let user = new User(id, name, password, roleID,accountID)
+    console.log(user)
     return new Promise(((resolve, reject) => {
         const request = createAjaxRequest();
         request.onreadystatechange = function () {
@@ -725,6 +737,7 @@ function getter(path) {
                     //console.log(this.responseText)
                     resolve(val)
                 } else {
+                    openAlert(this.responseText,FAIL)
                     console.log(this.responseText)
                     resolve(null)
                 }
@@ -801,7 +814,7 @@ function getterPOst(path,parameter,flag =false) {
             if (4 === this.readyState) {
                 if (200 === this.status) {
                     let val = JSON.parse(this.responseText)
-                    //console.log(this.responseText)
+                    console.log(this.responseText)
                     resolve(val)
                 } else {
                     if (flag){

@@ -32,7 +32,7 @@
 #main {
     width: 97%;
     float: left;
-    background-color: #dddddd;
+    background-color: #f1f0f0;
 }
 
 #iconBox {
@@ -156,7 +156,7 @@
 }
 
 select {
-    height: 40px;
+    height: 47px;
 }
 
 select:hover {
@@ -240,7 +240,7 @@ option:hover {
 }
 
 .dContainer {
-    font-size: 100%;
+    font-size: 120%;
     background: white;
     cursor: pointer;
     width:19%;
@@ -305,8 +305,9 @@ td,th{
 }
 
 caption{
-    font-size: 20px;
-    font-weight: bold;
+    font-size: 25px;
+    width: 100%;
+    text-align: left;
 }
 
 #mainAdmin{
@@ -321,4 +322,36 @@ caption{
     margin: 8px 0;
     border: none;
     cursor: pointer;
+}
+
+#configureContainer{
+    width: 20%;
+    float: left;
+}
+
+img.avatar {
+    width: 40%;
+    border-radius: 50%;
+}
+
+.konfImg{
+    width: 50%;
+    margin-left: 25%;
+}
+#sqlContainer{
+    display: none;
+    width: 45%;
+    float: left;
+    background-color: white;
+    border-style: groove;
+}
+
+#sqlInterface{
+    display: none;
+    width: 30%;
+    float: left;
+    background-color: white;
+
+    margin-left: 10px;
+    border-style: groove;
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,16 +15,43 @@ func getSharedSecret(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func getAllAccounts(w http.ResponseWriter, r *http.Request) {
+
+	var listNames []string
+	/*db, dberr := sql.Open("sqlite3", "Account.sqlite")
+	if dberr != nil {
+		log.Panic(dberr)
+	}*/
+	queryStmt := fmt.Sprintf("Select username From account")
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	for rows.Next() {
+		var name string
+		err := rows.Scan(&name)
+		if err != nil {
+			log.Println(err)
+		}
+		listNames = append(listNames, name)
+	}
+	jsonFile, _ := json.Marshal(listNames)
+	w.Write(jsonFile)
+}
+
 func getAccountByName(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["name"]
 	if !err || len(keys[0]) < 1 {
-		log.Println("Url Param 'Name' is missing")
+		http.Error(w, "Name des Benutzers fehlt", http.StatusBadRequest)
 		return
 	}
 	queryStmt := fmt.Sprintf("Select id From account Where username= '%s'", keys[0])
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
-		log.Panic(dberr)
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		return
 	}
 	var accountId int
 	if rows.Next() {
@@ -66,8 +94,10 @@ func getUserAuthentication(w http.ResponseWriter, r *http.Request) {
 
 		// write the cookie to response
 		http.SetCookie(w, &ck)
+		log.Println(len(UserMap))
 		jsonFile, _ := json.Marshal(dbUser)
 		w.Write(jsonFile)
+
 	} else {
 		http.Error(w, "Username or password incorrect  ", http.StatusBadRequest)
 		return
@@ -80,9 +110,12 @@ func removeAuthenticateUser(w http.ResponseWriter, r *http.Request) {
 		log.Println("Url Param 'Key' is missing")
 		return
 	}
+	user := UserMap[keys[0]]
 	delete(UserMap, keys[0])
 	log.Println(len(UserMap))
-	w.Write([]byte("ok"))
+	w.Header().Set("Content-Type", "application/json")
+	jsonFile, _ := json.Marshal(user)
+	w.Write(jsonFile)
 }
 
 func addUser(w http.ResponseWriter, r *http.Request) {
@@ -98,12 +131,12 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 	incUser.HashAndSalt([]byte(incUser.Password))
 	//transaction
 	//	db, err := sql.Open("sqlite3", "Account.sqlite")
-	sqlStmt := fmt.Sprintf(`INSERT INTO account(username,password,role_id)VALUES(?,?,?)`)
+	sqlStmt := fmt.Sprintf(`INSERT INTO account(username,password,role_id,station_id)VALUES(?,?,?,?)`)
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	_, err = statement.Exec(incUser.Username, incUser.Password, incUser.RoleId)
+	_, err = statement.Exec(incUser.Username, incUser.Password, incUser.RoleId, incUser.StationID)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -139,15 +172,70 @@ func getUser(name string) Account {
 		log.Panic(dberr)
 	}
 	var user2 Account
-
+	var cache sql.NullInt32
 	if rows.Next() {
-		dberr = rows.Scan(&user2.ID, &user2.Username, &user2.Password, &user2.RoleId)
+		dberr = rows.Scan(&user2.ID, &user2.Username, &user2.Password, &user2.RoleId, &cache)
+		if dberr != nil {
+			log.Println(dberr)
+		}
+		user2.StationID = int(cache.Int32)
+	}
+	rows.Close()
+	return user2
+}
+
+func getUserByID(w http.ResponseWriter, r *http.Request) {
+	keys, err := r.URL.Query()["id"]
+	if !err || len(keys[0]) < 1 {
+		log.Println("Url Param 'Name' is missing")
+		return
+	}
+	id, _ := strconv.ParseInt(keys[0], 10, 32)
+	queryStmt := fmt.Sprintf("Select * From account Where id= '%d'", id)
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	var account Account
+	if rows.Next() {
+		dberr = rows.Scan(&account.ID, &account.Username, &account.Password, &account.RoleId, &account.StationID)
 		if dberr != nil {
 			log.Println(dberr)
 		}
 	}
 	rows.Close()
-	return user2
+	w.Header().Set("Content-Type", "application/json")
+	jsonFile, _ := json.Marshal(account)
+	w.Write(jsonFile)
+}
+
+func updateAccount(w http.ResponseWriter, r *http.Request) {
+	var incUser Account
+	err := json.NewDecoder(r.Body).Decode(&incUser)
+	if err != nil {
+		log.Println(err)
+	}
+	if getUser(incUser.Username).Check() && getUser(incUser.Username).Password == incUser.Password {
+		http.Error(w, "Username already exists", http.StatusBadRequest)
+		return
+	}
+	if getUser(incUser.Username).Password != incUser.Password {
+		incUser.HashAndSalt([]byte(incUser.Password))
+	}
+	//transaction
+	//	db, err := sql.Open("sqlite3", "Account.sqlite")
+	sqlStmt := fmt.Sprintf(`UPDATE account Set username =?,password=? Where id=?`)
+	statement, err := db.Prepare(sqlStmt)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = statement.Exec(incUser.Username, incUser.Password, incUser.ID)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	statement.Close()
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte("ok"))
 }
 
 func getAllRoles(w http.ResponseWriter, r *http.Request) {

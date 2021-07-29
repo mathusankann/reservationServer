@@ -25,19 +25,9 @@ CREATE TABLE account
     username varchar(255) NOT NULL,
     password varchar(255) NOT NULL,
     role_id  int          not null,
+    station_id int        ,
     PRIMARY KEY (Id),
     FOREIGN KEY (role_id) REFERENCES rolle (id)
-);
-
-CREATE TABLE betreuer
-(
-    Id         int          not null AUTO_INCREMENT,
-    name       varchar(255) NOT NULL,
-    station_id int          not null,
-    account_id int,
-    PRIMARY KEY (id),
-    FOREIGN KEY (station_id) REFERENCES station (Id),
-    FOREIGN KEY (account_id) REFERENCES account (id)
 );
 
 
@@ -87,6 +77,8 @@ CREATE TABLE meeting
     bewohner_id int      not null,
     besucher_id int,
     tablets_id  int,
+    pending     boolean not NULL,
+    request_bewohner boolean not NULL ,
     PRIMARY KEY (Id),
     Foreign Key (tablets_id) REFERENCES tablets (Id),
     foreign key (bewohner_id) references bewohner (Id),

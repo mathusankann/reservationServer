@@ -27,6 +27,10 @@ var UserMap map[string]string
 var host Host
 
 func insertAdminAccount() {
+	var check = getUser("admin")
+	if check.Check() {
+		return
+	}
 	var admin Account
 	admin.Username = "admin"
 	admin.Password = "admin"
@@ -203,15 +207,21 @@ func main() {
 	http.HandleFunc("/getRoomIDByName", getRoomIDByName)
 	http.HandleFunc("/deleteResident", deleteResident)
 	http.HandleFunc("/getAllResidentNamesByVisitorID", getAllResidentNamesByVisitorID)
+	http.HandleFunc("/updateResident", updateResident)
+
 	//StationHandler
 	http.HandleFunc("/getAllStation", getAllStation)
 	http.HandleFunc("/getAllStationByName", getAllStationByName)
+	http.HandleFunc("/getStationByID", getStationByID)
 	http.HandleFunc("/getAllTablets", getAllTablets)
+	http.HandleFunc("/getAllTabletsNames", getAllTabletsNames)
 	http.HandleFunc("/getTimeOut", getTimeOut)
 	http.HandleFunc("/setTimeOuts", setTimeOuts)
-	http.HandleFunc("/disableTablet", disableTablet)
+	http.HandleFunc("/updateTablet", updateTablet)
 	http.HandleFunc("/addTablet", addTablet)
 	http.HandleFunc("/getAllTabletsByMaintenance", getAllTabletsByMaintenance)
+	http.HandleFunc("/getTabletByName", getTabletByName)
+	http.HandleFunc("/getTabletByID", getTabletByID)
 
 	http.HandleFunc("/getDayOuts", getDayOuts)
 	http.HandleFunc("/setDayOuts", setDayOuts)
@@ -224,6 +234,9 @@ func main() {
 	http.HandleFunc("/getUserAuthenticationCookie", getUserAuthenticationCookie)
 	http.HandleFunc("/createNewStation", createNewStation)
 	http.HandleFunc("/getAccountByName", getAccountByName)
+	http.HandleFunc("/getAllAccounts", getAllAccounts)
+	http.HandleFunc("/getUserByID", getUserByID)
+	http.HandleFunc("/updateAccount", updateAccount)
 
 	//MeetingHandler
 	http.HandleFunc("/setMeeting", setMeeting)
@@ -239,12 +252,13 @@ func main() {
 	http.HandleFunc("/registerVisitor", registerVisitor)
 	http.HandleFunc("/getVisitorByAccountID", getVisitorByAccountID)
 	http.HandleFunc("/getVisitorByMail", getVisitorByMail)
+	http.HandleFunc("/getAllVisitors", getAllVisitors)
 
 	//http.HandleFunc("/addVisitorToResident", addVisitorToResident)
 
 	//BetreuerHandler
 	http.HandleFunc("/getAllRoomNamesByStation", getAllRoomNamesByStation)
-	http.HandleFunc("/addNewMinder", addNewMinder)
+	//http.HandleFunc("/addNewMinder", addNewMinder)
 	//RoleHandler
 	http.HandleFunc("/getAllRole", getAllRoles)
 	http.HandleFunc("/getRoleByName", getRoleByName)

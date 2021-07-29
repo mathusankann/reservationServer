@@ -1,23 +1,46 @@
 //const mainFunctions=[expandMenu,()=>{ location.reload()},getAllSettingsBBB,getSettingsDocker,getAllSettingsReservation,setTraefikInSite] ()=>{location.href="/static/htmls/configHome.html"}
 
-const mainFunctions=[
+
+let test2 = setInterval(function () {
+    clearInterval(test2)
+}, 100)
+
+
+const mainFunctions = [
     expandMenu,
-    ()=>{location.href="/static/htmls/configBBB.html"},
-    ()=>{location.href="/static/htmls/configDocker.html"},
-    ()=>{location.href="/static/htmls/configReserv.html"},
-    ()=>{location.href="/static/htmls/configTraefik.html"}
+    () => {
+        location.href = "/static/htmls/configBBB.html"
+    },
+    () => {
+        location.href = "/static/htmls/configDocker.html"
+    },
+    () => {
+        location.href = "/static/htmls/configReserv.html"
+    },
+    () => {
+        location.href = "/static/htmls/configTraefik.html"
+    }
 ]
 
 
 function checkAuthentication() {
-    if(document.cookie===""){
-        location.href="/"
+    if (document.cookie === "" || (!document.cookie.includes("admin"))) {
+        console.log(document.cookie.includes("admin"))
+        location.href = "/"
+        return "user"
+    } else {
+        return "admin"
     }
 }
 
-function generateIconOverview() {
+function generateIconOverviewAdmin() {
     checkAuthentication()
-    const div= document.getElementById("iconBox")
+    generateIconOverview("/static/htmls/icon.json",mainFunctions)
+
+}
+
+function generateIconOverview(path,array) {
+    const div = document.getElementById("iconBox")
     const request = createAjaxRequest();
     request.onreadystatechange = function () {
         if ((4 === this.readyState) && (200 === this.status)) {
@@ -25,17 +48,20 @@ function generateIconOverview() {
             for (let i = 0; i < imageList.length; i++) {
                 let image = document.createElement("img")
                 image.src = '/static/media/img/' + imageList[i].name
-                image.className="icon"
+                image.className = "icon"
                 image.value = i
                 let container = document.createElement("div")
-                container.className="placeHolder"
+                container.className = "placeHolder"
                 container.appendChild(image)
-                container.addEventListener("click",mainFunctions[i])
+                container.addEventListener("click", array[i])
+                if (i === 0) {
+                    container.style.visibility = "hidden"
+                }
                 div.appendChild(container)
             }
         }
     }
-    request.open("GET", "icon.json", true);
+    request.open("GET", path, true);
     request.send();
 }
 
@@ -57,28 +83,28 @@ function closeNav() {
 }
 
 
-function setPlaceHolderBackground(value=2) {
+function setPlaceHolderBackground(value = 2) {
     const icons = document.getElementById("iconBox")
-    for(let i =0;i<icons.childNodes.length;i++){
-        icons.childNodes[i].className="placeHolder"
+    for (let i = 0; i < icons.childNodes.length; i++) {
+        icons.childNodes[i].className = "placeHolder"
         console.log(value)
-        if(value === i){
-            icons.childNodes[i].className="placeHolder placeHolder-selected"
+        if (value === i) {
+            icons.childNodes[i].className = "placeHolder placeHolder-selected"
         }
     }
 }
 
 function setTraefikInSite() {
     checkAuthentication()
-    const main= document.getElementById("main")
-    main.innerHTML=""
+    const main = document.getElementById("main")
+    main.innerHTML = ""
     let div = document.createElement("div")
-    div.id="title"
-    div.innerText="Traefik"
+    div.id = "title"
+    div.innerText = "Traefik"
     main.appendChild(div)
     let iframe = document.createElement("iframe")
-    iframe.src="http://docker.jitsi-mathu.de/"
-    iframe.id="traefik"
+    iframe.src = "http://docker.jitsi-mathu.de/"
+    iframe.id = "traefik"
     main.appendChild(iframe)
     createLogOutButton()
 }
@@ -86,26 +112,27 @@ function setTraefikInSite() {
 function createLogOutButton() {
     let title = document.getElementById("title")
     let button = document.createElement("button")
-    button.className="logOutAdmin"
-    button.innerText="Logout"
-    button.style.float="right"
-    button.addEventListener("click",logOut)
+    button.className = "logOutAdmin"
+    button.innerText = "Logout"
+    button.style.float = "right"
+    button.addEventListener("click", logOut)
     title.appendChild(button)
 }
 
 function logOut() {
-    getter("/removeAuthenticateUser?key="+ document.cookie.split('=')[1])
-    location.href="/"
-    let cookies = document.cookie.split(";");
-    for (let i = 0; i < cookies.length; i++) {
-        let cookie = cookies[i];
-        let eqPos = cookie.indexOf("=");
-        let name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-    }
+    getter("/removeAuthenticateUser?key=" + document.cookie.split('=')[1]).then(() => {
+        location.href = "/"
+        let cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            let cookie = cookies[i];
+            let eqPos = cookie.indexOf("=");
+            let name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        }
+    })
 }
 
-function dropMenuReservation(buttons,callbacks) {
+function dropMenuReservation(buttons, callbacks) {
     const div = document.getElementById("settingDropbox")
     div.innerHTML = ""
     let container = document.createElement("div")
@@ -121,12 +148,13 @@ function dropMenuReservation(buttons,callbacks) {
     }
 }
 
-function buttonGeneratorPlain(array,functionStringCallback,container) {
+function buttonGeneratorPlain(array, functionStringCallback, container) {
     for (let i = 0; i < array.length; i++) {
         let button = document.createElement("button")
         button.innerText = array[i]
+        button.value = i
         button.className = "button"
-        button.addEventListener("click",functionStringCallback[i])
+        button.addEventListener("click", functionStringCallback[i])
         container.appendChild(button)
     }
 }

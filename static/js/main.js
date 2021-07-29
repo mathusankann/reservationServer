@@ -3,10 +3,47 @@ let flagAddStation;
 let userId;
 let residentName;
 
+
+let functionsArray=[()=>{
+    console.log("placeholder")
+},openHomePage,showStationResidents,showRequests]
+
+
+
+
+
+
 function openRoom(room) {
     startRoomPost(room);
 }
 
+function openHomePage(){
+    location.reload()
+}
+function showStationResidents(){
+    console.log("test")
+    document.getElementById("termin").style.display="none"
+    document.getElementById("terminOverview").style.display="none"
+    document.getElementById("reservedDates").style.display="none"
+    document.getElementById("buttonHolder").style.display="block"
+    document.getElementById("userButton").style.display="block"
+
+}
+
+function showRequests(){
+    console.log("test")
+    document.getElementById("termin").style.display="none"
+
+    document.getElementById("terminOverview").style.display="none"
+    document.getElementById("buttonHolder").style.display="none"
+    document.getElementById("userButton").style.display="none"
+    document.getElementById("reservedDates").style.display="block"
+}
+
+
+let test = setInterval(function () {
+    clearInterval(test)
+},100)
 
 function init(rooms) {
     Grooms = rooms
@@ -36,12 +73,22 @@ function init(rooms) {
             roomdiv.addEventListener("click", generateInterfaceRoom)
         }
     }
-
 }
+
+
+function generateIconOverViewUser(){
+    generateIconOverview("icon.json",functionsArray)
+}
+
 
 async function initReservedDatesOverview(reservedDate, counter) {
     const roverview = document.getElementById("reservedDates")
-    roverview.innerText = "\nAnstehende Termine"
+    let divElement = document.createElement("div")
+    divElement.innerText = "Terminanfragen"
+    roverview.appendChild(divElement)
+    divElement = document.createElement("div")
+    roverview.appendChild(divElement)
+    divElement.innerText = "Anstehende Termine"
     const innerReserver = document.createElement("div")
     innerReserver.className = "innerReserver"
     let len
@@ -52,7 +99,6 @@ async function initReservedDatesOverview(reservedDate, counter) {
     } else {
         diff = 7
     }
-
     if (counter + diff > reservedDate.length) {
         len = reservedDate.length
     } else {
@@ -67,7 +113,7 @@ async function initReservedDatesOverview(reservedDate, counter) {
         let x = await getRoomByID(reservedDate[i].bewohner_id, child, innerReserver, reservedDate[i].time_start, reservedDate[i].time_end)
         child.addEventListener("click", getRoomForOverview)
     }
-    roverview.appendChild(innerReserver)
+    divElement.appendChild(innerReserver)
 }
 
 
@@ -95,54 +141,7 @@ function addButtons(rooms) {
 }
 
 
-async function createRoom(name, stationName, roomNumber) {
-    //if (document.cookie !== "") {
-    let api, i, len, method, params, ref, urls;
-    api = new BigBlueButtonApi("https://mathu.jitsi-mathu.de/bigbluebutton/api", "Eh7iAAkg9cib4wObQv5gADIE2OlNeo9gKEnyYitl");
-    //todo shared secret request
-    //const username = document.getElementById("name").value
-    // A hash of parameters.
-    // The parameter names are the same names BigBlueButton expects to receive in the API calls.
-    // The lib will make sure that, for each API call, only the parameters supported will be used.
-    params = {
-        name: name,
-        meetingID: "2", //todo request MeetingID
-        moderatorPW: "mp",
-        attendeePW: "ap",
-        password: "ap", // usually equals "moderatorPW"
-        welcome: "<br>Welcome to <b>%%CONFNAME%%</b>!",
-        fullName: name,
-        publish: false,
-        // random: "416074726",
-        record: false,
-        // recordID: "random-9998650",
-        //voiceBridge: "75858", //todo request videoBridgeID
-        meta_anything: "My Meta Parameter",
-        custom_customParameter: "Will be passed as 'customParameter' to all calls"
-    };
-    urls = [];
-    ref = api.availableApiCalls();
-    //console.log(ref)
-    for (i = 0, len = ref.length; i < len; i++) {
-        method = ref[i];
-        urls.push({
-            name: method,
-            url: api.urlFor(method, params)
-        });
-    }
-    params.password = "ap"
-    params.fullName = "Besucher"
-    let vistor = api.urlFor('join', params)
 
-    let room = new Room(name, 1, urls[2].url, urls[1].url, vistor.toString());
-    room.meetingRunningLink = urls[3].url
-    //console.log(urls[3].url)
-    room.room = roomNumber
-    room.station_id = await getStationByName(stationName)
-
-    await sendRoomPost(JSON.stringify(room))
-    //}
-}
 
 function initTermin() {
 
@@ -170,16 +169,17 @@ function something() {
 }
 
 function userLogout() {
-    getter("/removeAuthenticateUser?key="+ document.cookie.split('=')[1])
-    let cookies = document.cookie.split(";");
-    for (let i = 0; i < cookies.length; i++) {
-        let cookie = cookies[i];
-        let eqPos = cookie.indexOf("=");
-        let name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    }
-    location.reload();
+    getter("/removeAuthenticateUser?key="+ document.cookie.split('=')[1]).then(()=>{
+        let cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            let cookie = cookies[i];
+            let eqPos = cookie.indexOf("=");
+            let name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        }
+        location.reload();
 
+    })
 }
 
 async function generateInputInterfaceAddRoom() {
@@ -314,12 +314,9 @@ async function setResident() {
         stationID = await getStationByName(stationName)
         console.log(stationID)
         createRoom(residentName, stationName, roomNumber)
-        await createUser(0, userName, password, 2)
+        await createUser(0, userName, password, 2,stationID)
         getAccountIDByName(userName).then((userID) => {
-            createMinder(0, stationID, userName, userID).then(() => {
-                console.log("created")
-                location.reload();
-            })
+
         })
 
     } else {
