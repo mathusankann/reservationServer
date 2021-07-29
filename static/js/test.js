@@ -1,22 +1,49 @@
 let settings
 let currentSettings
+let index
+
 
 window.addEventListener('DOMContentLoaded', function () {
     setTimeout(async function () {
         settings = await getter("")
-        if (true) ;//todo depending on role
-        getContent().then((content) => {
-            currentSettings = settings[2].value
-            console.log(settings)
-            changeButtonSize(currentSettings[0], content)
-            settingsNavBar(currentSettings[1], content)
-            disableChat(currentSettings[2],content)
-            disableUserList(currentSettings[3], content)
-            togglePresentation(currentSettings[4], content)
+        getMeetingID().then((meetingID)=>{
+            getter("/getActiveMeetings?meetingID="+meetingID).then((val)=>{
+                if (!val.running&&val.visitor) {
+                    index= 2
+                }else if (val.running&&val.visitor){
+                    index = 3
+                }else{
+                    index=1
+                }
+                getContent().then((content) => {
+                    currentSettings = settings[index].value
+                    console.log(settings)
+                    changeButtonSize(currentSettings[0], content)
+                    settingsNavBar(currentSettings[1], content)
+                    disableChat(currentSettings[2],content)
+                    disableUserList(currentSettings[3], content)
+                    togglePresentation(currentSettings[4], content)
+                })
+            })
+
         })
+
     }, 2000);
 }, false)
 
+function getMeetingID() {
+    return new Promise(((resolve, reject) => {
+        let link = window.location.href
+        link = link.split("&")
+        for(let i =0;i<link.length;i++){
+            if (link[i].includes("meetingID")){
+                resolve(link[i])
+            }
+        }
+        resolve(null)
+    }))
+
+}
 
 function getContent() {
     return new Promise(((resolve, reject) => {

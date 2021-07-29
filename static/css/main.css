@@ -189,11 +189,10 @@ span.psw {
 }
 
 #reservedDates{
-    float: left;
     font-size: 0.8cm;
-    width: 28%;
-    clear: both;
     display: none;
+    float: left;
+    width: 100%;
 }
 
 .sortBtn{
@@ -209,9 +208,13 @@ span.psw {
 
 
 
-.reserved{
+.reserved {
+    background-color: white;
     font-size: 0.6cm;
-
+    border-bottom: #888888;
+    border-style: groove;
+    width: 99%;
+    margin: auto;
 }
 
 .reserved:hover{
@@ -303,4 +306,27 @@ span.psw {
     padding: 6px 12px;
     border: 1px solid #ccc;
     border-top: none;
+}
+.requestText{
+    background-color: white;
+    font-size: 0.6cm;
+    width: 99%;
+    border-bottom: #888888;
+    border-style: groove;
+    margin: auto;
+}
+
+.requestButtons{
+    width: 100%;
+    background-color: white;
+    border-style: none;
+    color: white;
+    font-size: 15px;
+
+}
+
+.requestChild{
+    float: left;
+    width: 40%;
+    margin-left: 5%;
 }

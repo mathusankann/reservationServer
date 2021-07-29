@@ -25,13 +25,13 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 	//transaction
 	//db, err := sql.Open("sqlite3", "Account.sqlite")
 	//sqlStmt := fmt.Sprintf(`INSERT INTO meeting(start_date,end_date,bewohner_id,tablets_id)VALUES(?,?,?,?,?)`)
-	sqlStmt := fmt.Sprintf(`INSERT INTO meeting(start_date,end_date,bewohner_id,besucher_id)VALUES(?,?,?,?)`)
+	sqlStmt := fmt.Sprintf(`INSERT INTO meeting(start_date,end_date,bewohner_id,besucher_id,pending,request_bewohner)VALUES(?,?,?,?,?,?)`)
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 	//_, err = statement.Exec(incMeeting.MeetingDateStart, incMeeting.MeetingDateEnd, incMeeting.BewohnerId, incMeeting.BesucherId, incMeeting.TabletId)
-	_, err = statement.Exec(incMeeting.MeetingDateStart, incMeeting.MeetingDateEnd, incMeeting.BewohnerId, incMeeting.BesucherId)
+	_, err = statement.Exec(incMeeting.MeetingDateStart, incMeeting.MeetingDateEnd, incMeeting.BewohnerId, incMeeting.BesucherId, incMeeting.Pending, incMeeting.RequestBewohner)
 	if err != nil {
 		println("Hier Fehler: 3")
 		log.Fatalln(err.Error())
@@ -56,7 +56,7 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 	wholeString := dateArray[0] + " um " + strconv.Itoa(hour) + ":" + timeArray[1] + "statt"
 
 	body := fmt.Sprintf("Ihr Konferenzlink: %s \n Die Konferenz findet am %s \n Sie haben "+
-		"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://%s/deleteMeeting?meetingID=%d", room.Invite, wholeString,host.Name,incMeeting.Id )
+		"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://%s/deleteMeeting?meetingID=%d", room.Invite, wholeString, host.Name, incMeeting.Id)
 	go sendInvitation(incMeeting, body)
 	w.Write([]byte("ok"))
 
@@ -72,19 +72,24 @@ func deleteMeeting(w http.ResponseWriter, r *http.Request) {
 	/*if dberr != nil {
 		log.Panic(dberr)
 	}*/
+	id, _ := strconv.ParseInt(deleteID[0], 10, 32)
+	localDeleteMeeting(int(id))
+
+	w.Write([]byte("Ihr Meeting wurde erfolgreich stoniert"))
+}
+
+func localDeleteMeeting(deleteID int) {
 	stmt, err := db.Prepare("delete from meeting where id=?")
 	if err != nil {
 		log.Panic(err)
 	}
-	res, err := stmt.Exec(deleteID[0])
+	res, err := stmt.Exec(deleteID)
 	if err != nil {
 		log.Panic(err)
 	}
 	affect, err := res.RowsAffected()
 	fmt.Println(affect)
 	stmt.Close()
-
-	w.Write([]byte("Ihr Meeting wurde erfolgreich stoniert"))
 }
 
 func getAllMeetings(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +114,7 @@ func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var cachedates CacheMeeting
 		var dates Meeting
-		err := rows.Scan(&cachedates.Id, &cachedates.MeetingDateStart, &cachedates.MeetingDateEnd, &cachedates.BewohnerId, &cachedates.BesucherId, &cachedates.TabletId)
+		err := rows.Scan(&cachedates.Id, &cachedates.MeetingDateStart, &cachedates.MeetingDateEnd, &cachedates.BewohnerId, &cachedates.BesucherId, &cachedates.TabletId, &cachedates.Pending, &cachedates.RequestBewohner)
 		if err != nil {
 			log.Print("GetAllMeetings: ")
 			log.Println(err)
@@ -151,7 +156,6 @@ func sendInvitation(incMeeting Meeting, body string) {
 }
 
 func getMeetingByTimestamp(startTime string) int {
-
 	/*db, dberr := sql.Open("sqlite3", "Account.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
@@ -170,7 +174,35 @@ func getMeetingByTimestamp(startTime string) int {
 	}
 	rows.Close()
 	return meeting2.Id
+}
 
+func updateMeeting(w http.ResponseWriter, r *http.Request) {
+	keys, derr := r.URL.Query()["accept"]
+
+	mID, derr := r.URL.Query()["meetingID"]
+
+	if !derr || len(keys[0]) < 1 || len(mID[0]) < 1 {
+		log.Println("Url Param 'accept' is missing")
+		return
+	}
+	id, _ := strconv.ParseInt(keys[0], 10, 32)
+	meetingID, _ := strconv.ParseInt(mID[0], 10, 32)
+	if id == 0 {
+		sqlStmt := fmt.Sprintf(`UPDATE meeting Set pending =? Where id=?`)
+		statement, err := db.Prepare(sqlStmt)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		_, err = statement.Exec(false, meetingID)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		statement.Close()
+	} else {
+		localDeleteMeeting(int(meetingID))
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte("ok"))
 }
 
 func sendInvitationMail(w http.ResponseWriter, r *http.Request) {

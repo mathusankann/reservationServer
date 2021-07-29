@@ -190,39 +190,42 @@ function settingInit(e) {
 
 
 function getRunningCon() {
-    return new Promise(((resolve, reject) => {
-        let api, i, len, method, params, ref, urls;
-        api = new BigBlueButtonApi("https://mathu.jitsi-mathu.de/bigbluebutton/api", "Eh7iAAkg9cib4wObQv5gADIE2OlNeo9gKEnyYitl");
-        //todo shared secret request
-        //const username = document.getElementById("name").value
-        // A hash of parameters.
-        // The parameter names are the same names BigBlueButton expects to receive in the API calls.
-        // The lib will make sure that, for each API call, only the parameters supported will be used.
-        params = {
-            name: name,
-            meetingID: "2", //todo request MeetingID
-            moderatorPW: "mp",
-            attendeePW: "admin",
-            password: "admin", // usually equals "moderatorPW"
-            welcome: "<br>Welcome to <b>%%CONFNAME%%</b>!",
-            fullName: "Admin",
-            publish: false,
-            // random: "416074726",
-            record: false,
-            // recordID: "random-9998650",
-            //voiceBridge: "75858", //todo request videoBridgeID
-            meta_anything: "My Meta Parameter",
-            custom_customParameter: "Will be passed as 'customParameter' to all calls"
-        };
-        urls = [];
-        ref = api.availableApiCalls();
-        for (i = 0, len = ref.length; i < len; i++) {
-            method = ref[i];
-            urls.push({
-                name: method,
-                url: api.urlFor(method, params)
-            });
-        }
-        resolve(urls[6])
-    }))
+    getter("/getAllRoomNames").then((val)=>{
+        return new Promise(((resolve, reject) => {
+            let api, i, len, method, params, ref, urls;
+            api = new BigBlueButtonApi("https://mathu.jitsi-mathu.de/bigbluebutton/api/", "Eh7iAAkg9cib4wObQv5gADIE2OlNeo9gKEnyYitl");
+            //todo shared secret request
+            //const username = document.getElementById("name").value
+            // A hash of parameters.
+            // The parameter names are the same names BigBlueButton expects to receive in the API calls.
+            // The lib will make sure that, for each API call, only the parameters supported will be used.
+            params = {
+                name: name,
+                meetingID: val.length.toString(),
+                moderatorPW: "mp",
+                attendeePW: "admin",
+                password: "admin", // usually equals "moderatorPW"
+                welcome: "<br>Welcome to <b>%%CONFNAME%%</b>!",
+                fullName: "Admin",
+                publish: false,
+                // random: "416074726",
+                record: false,
+                // recordID: "random-9998650",
+                //voiceBridge: "75858",
+                meta_anything: "My Meta Parameter",
+                custom_customParameter: "Will be passed as 'customParameter' to all calls"
+            };
+            urls = [];
+            ref = api.availableApiCalls();
+            for (i = 0, len = ref.length; i < len; i++) {
+                method = ref[i];
+                urls.push({
+                    name: method,
+                    url: api.urlFor(method, params)
+                });
+            }
+            resolve(urls[6])
+        }))
+    })
+
 }

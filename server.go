@@ -19,12 +19,43 @@ type Host struct {
 	Name string `json:"name"`
 }
 
+type meetingIdentification struct {
+	Running bool `json:"running"`
+	Visitor bool `json:"visitor"`
+}
+
 const charset = "abcdefghijklmnopqrstuvwxyz" +
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 var db = initDbConnection()
 var UserMap map[string]string
+var ActiveMeetings map[string]bool
 var host Host
+
+func getActiveMeetings(w http.ResponseWriter, r *http.Request) {
+	var meetingIdentification meetingIdentification
+	keys, err := r.URL.Query()["meetingID"]
+	if !err || len(keys[0]) < 1 {
+		log.Println("Url Param 'meetingID' is missing")
+		return
+	}
+	meetingID := ActiveMeetings[keys[0]]
+	if meetingID == false {
+		meetingIdentification.Running = false
+		if localGetRoomMeetingID(keys[0]).Name != "" {
+			ActiveMeetings[keys[0]] = true
+			meetingIdentification.Visitor = true
+		} else {
+			meetingIdentification.Visitor = false
+		}
+	} else {
+		meetingIdentification.Running = true
+	}
+	jsonData, _ := json.Marshal(meetingIdentification)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write(jsonData)
+}
 
 func insertAdminAccount() {
 	var check = getUser("admin")
@@ -50,8 +81,8 @@ func insertAdminAccount() {
 
 func initDbConnection() *sql.DB {
 	//var db, err = sql.Open("sqlite3", "Account.sqlite")
-	//var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
-	var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
+	var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
+	//var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -162,8 +193,8 @@ func postRunCommand(w http.ResponseWriter, r *http.Request) {
 }*/
 
 func settingsFile(w http.ResponseWriter, r *http.Request) {
-	/*resp, err := http.Get("http://192.168.178.72/settingsFile")
-	data, err := ioutil.ReadAll(resp.Body)*/
+	//resp, err := http.Get("http://192.168.178.72/settingsFile")
+	//data, err := ioutil.ReadAll(resp.Body)
 
 	data, err := ioutil.ReadFile("./static/js/test.js")
 	if err != nil {
@@ -196,6 +227,7 @@ func main() {
 	http.HandleFunc("/postRunCommand", postRunCommand)
 	http.HandleFunc("/sendGetRequest", sendGetRequest)
 	http.HandleFunc("/removeAuthenticateUser", removeAuthenticateUser)
+	http.HandleFunc("/getActiveMeetings", getActiveMeetings)
 
 	//ResidentHandler
 	http.HandleFunc("/getRoom", GetRoom)
@@ -243,6 +275,7 @@ func main() {
 	http.HandleFunc("/getAllMeetings", getAllMeetings)
 	http.HandleFunc("/deleteMeeting", deleteMeeting)
 	http.HandleFunc("/sendInvitationMail", sendInvitationMail)
+	http.HandleFunc("/updateMeeting", updateMeeting)
 
 	//VisitorHandler
 	http.HandleFunc("/getVisitorByID", getVisitorByID)

@@ -1,5 +1,3 @@
-
-
 const day = 86400000;
 let reservedDates;
 let currentMonday;
@@ -112,7 +110,7 @@ async function prevWeeks() {
         if (oldMark !== null) {
             oldMark.innerText = ""
         }
-        if(document.getElementById("terminOverview")!==null){
+        if (document.getElementById("terminOverview") !== null) {
             document.getElementById("terminOverview").innerText = ""
         }
 
@@ -143,8 +141,8 @@ async function nextWeek() {
     //setDates()
 }
 
-async function initTerminTable(debug=false) {
-    if(document.getElementById('id01')!==null){
+async function initTerminTable(debug = false) {
+    if (document.getElementById('id01') !== null) {
         document.getElementById('id01').style.display = 'block'
     }
     document.getElementById("prevWeek").addEventListener("click", prevWeeks)
@@ -180,7 +178,7 @@ async function initTerminTable(debug=false) {
 
 }
 
-function setDates(debug =false) {
+function setDates(debug = false) {
     let currenDate = new Date()
     currenDate.setSeconds(0, 0)
     let startTime = 8
@@ -282,39 +280,48 @@ function containsTime(start, end, disableTimes) {
 async function addTermin() {
     if (document.getElementById("wuser").value !== "") {
         let userId = document.getElementById("wuser").value
-        startTerminUser = startTerminUser.toISOString()
-        endTerminUser = endTerminUser.toISOString()
-        let me = new Meeting()
-        me.time_start = startTerminUser
-        me.time_end = endTerminUser
-        me.bewohner_id = await getRoomIDBYName(userId)
-        if (flagAddVisitor) {
-            console.log(userId)
-            let name = document.getElementById("nameVisitor").value
-            let mail = document.getElementById("mailVisitor").value
-            if (mail !== "" && name !== "") {
-                addNewVisitor(name, mail, me.bewohner_id).then((res) => {
-                    me.besucher_id = res.id
-                    sendMeetingPost(JSON.stringify(me))
-                })
-            }
-        } else {
-            let visitor = document.getElementById("visitor").value
-            if (visitor !== "") {
-                getVisitorByName(visitor).then((res) => {
-                    console.log(res)
-                    me.besucher_id = res.id
-                    sendMeetingPost(JSON.stringify(me))
-                })
-            }
+        getter("/getUserAuthenticationCookie?key=" + document.cookie.split('=')[1]).then((user) => {
+            getRoomIDBYName(userId).then((id) => {
+                console.log(user)
+                startTerminUser = startTerminUser.toISOString()
+                endTerminUser = endTerminUser.toISOString()
+                let me = new Meeting()
+                me.time_start = startTerminUser
+                me.time_end = endTerminUser
+                me.pending = true
+                me.request_bewohner = user.role_id <= 2;
+                console.log(user.role_id <= 2)
+                me.bewohner_id = id
+                if (flagAddVisitor) {
+                    let name = document.getElementById("nameVisitor").value
+                    let mail = document.getElementById("mailVisitor").value
+                    if (mail !== "" && name !== "") {
+                        addNewVisitor(name, mail, me.bewohner_id).then((res) => {
+                            me.besucher_id = res.id
+                            sendMeetingPost(JSON.stringify(me))
+                        })
+                    }
+                } else {
+                    let visitor = document.getElementById("visitor").value
+                    if (visitor !== "") {
+                        getVisitorByName(visitor).then((res) => {
+                            // console.log(res)
+                            me.besucher_id = res.id
+                           sendMeetingPost(JSON.stringify(me))
+                        })
+                    }
+                }
 
-        }
+            })
+        })
+
+
     }
 
 }
 
 
-function getAllMeetings(starttime, endtime,debug=false) {
+function getAllMeetings(starttime, endtime, debug = false) {
     let tempStart = new Date();
     tempStart.setFullYear(starttime.getFullYear(), starttime.getMonth(), starttime.getDate() - 1)
     tempStart.setHours(tempStart.getHours() + 2)
@@ -372,7 +379,6 @@ function deleteAllEventListener() {
         }
     }
 }
-
 
 
 let dates = {
@@ -475,7 +481,7 @@ function formatDate(date) {
 
 function generateDependingOnScreen() {
     const form = document.getElementById("test")
-    if (form!==null){
+    if (form !== null) {
         form.innerText = ""
         const terminOverview = document.getElementById("terminOverview")
         terminOverview.innerText = ""
@@ -624,7 +630,7 @@ async function generateInputInterfaceAddMeetingDesktop(div, startTime) {
                 terminOverview.appendChild(div)
             }
         } else {
-            lowerUserInterface(terminOverview,div)
+            lowerUserInterface(terminOverview, div)
         }
 
     }

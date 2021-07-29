@@ -49,6 +49,25 @@ func getStationIDByAccountID(id int) int {
 
 }
 
+func localGetRoomMeetingID(meetingID string) Resident {
+	var room2 Resident
+	var cache sql.NullInt32
+	queryStmt := fmt.Sprintf("Select * From bewohner Where joinLink like '%%s%'", meetingID)
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	if rows.Next() {
+		dberr = rows.Scan(&room2.Id, &room2.Name, &room2.StationId, &room2.Join, &room2.Create, &room2.Invite, &room2.MeetingRunningLink, &room2.Room, &cache)
+		if dberr != nil {
+			log.Println(dberr)
+		}
+	}
+	room2.AccountId = int(cache.Int32)
+	rows.Close()
+	return room2
+}
+
 func GetRoomByID(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["ID"]
 	if !err || len(keys[0]) < 1 {
@@ -121,6 +140,7 @@ func startConf(w http.ResponseWriter, r *http.Request) {
 	var link string
 	_ = json.NewDecoder(r.Body).Decode(&link)
 	//fmt.Println(test)
+
 	resp, err := http.Get(link)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)

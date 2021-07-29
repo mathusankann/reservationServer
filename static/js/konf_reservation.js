@@ -157,7 +157,7 @@ function generateViewSqlContainer(e) {
                 if (accounts[i].split(" ").length>1){
                     roomdiv.innerText = accounts[i].split(" ")[0]+"\n" +accounts[i].split(" ")[1];
                 }else{
-                    roomdiv.innerText = accounts[i].split(" ")[0]+"\n"
+                    roomdiv.innerText = accounts[i].split(" ")[0]+"\n"+"°"
                 }
                 const a = document.createElement("div")
                 a.className = "img"
@@ -449,14 +449,17 @@ function createStationWithAccount() {
         return;
     }
     getter("/getAccountByName?name="+name).then((val)=>{
-        if (val===0){
+        if (val!==0){
+            console.log(val)
             openAlert("Benutzername bereits vergeben",FAIL)
         }
         else{
-            for(let i=0;i<station.length;i++){
-                if(stationValue===station[i]){
-                    openAlert("Station exisitiert bereits",FAIL)
-                    return
+            if(station!==null){
+                for(let i=0;i<station.length;i++){
+                    if(stationValue===station[i]){
+                        openAlert("Station exisitiert bereits",FAIL)
+                        return
+                    }
                 }
             }
             createStation(stationValue).then(()=>{

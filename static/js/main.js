@@ -31,7 +31,6 @@ function showStationResidents(){
 }
 
 function showRequests(){
-    console.log("test")
     document.getElementById("termin").style.display="none"
 
     document.getElementById("terminOverview").style.display="none"
@@ -81,40 +80,133 @@ function generateIconOverViewUser(){
 }
 
 
-async function initReservedDatesOverview(reservedDate, counter) {
+/*async function initReservedDatesOverview(reservedDate, counter) {
+  const roverview = document.getElementById("reservedDates")
+   let divElement = document.createElement("div")
+   divElement.innerText = "Terminanfragen"
+   roverview.appendChild(divElement)
+   let divElement2 = document.createElement("div")
+   roverview.appendChild(divElement)
+   divElement2.innerText = "Anstehende Termine"
+   const innerReserver = document.createElement("div")
+   innerReserver.className = "innerReserver"
+   let len
+   let diff
+   let width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+   if (width < 1500) {
+       diff = 3
+   } else {
+       diff = 7
+   }
+   if (counter + diff > reservedDate.length) {
+       len = reservedDate.length
+   } else {
+       len = counter + diff
+   }
+   if (counter === -1) {
+       counter = 0
+   }
+   for(let i=0;i<reservedDate.length;i++){
+       let child = document.createElement("div")
+       child.className = "reserved"
+   }
+
+   for (let i = counter; i < len; i++) {
+       let child = document.createElement("div")
+       child.className = "reserved"
+       let x = await getRoomByID(reservedDate[i].bewohner_id, child, innerReserver, reservedDate[i].time_start, reservedDate[i].time_end)
+       child.addEventListener("click", getRoomForOverview)
+   }
+   divElement.appendChild(innerReserver)
+}*/
+async function initReservedDatesOverview(reservedDate, counter){
+
+
     const roverview = document.getElementById("reservedDates")
     let divElement = document.createElement("div")
     divElement.innerText = "Terminanfragen"
-    roverview.appendChild(divElement)
-    divElement = document.createElement("div")
-    roverview.appendChild(divElement)
-    divElement.innerText = "Anstehende Termine"
-    const innerReserver = document.createElement("div")
+    divElement.className ="requestChild"
+    if(roverview!==null){
+        roverview.appendChild(divElement)
+    }
+    let innerReserver = document.createElement("div")
     innerReserver.className = "innerReserver"
-    let len
-    let diff
-    let width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
-    if (width < 1500) {
-        diff = 3
-    } else {
-        diff = 7
-    }
-    if (counter + diff > reservedDate.length) {
-        len = reservedDate.length
-    } else {
-        len = counter + diff
-    }
-    if (counter === -1) {
-        counter = 0
-    }
-    for (let i = counter; i < len; i++) {
-        let child = document.createElement("div")
-        child.className = "reserved"
-        let x = await getRoomByID(reservedDate[i].bewohner_id, child, innerReserver, reservedDate[i].time_start, reservedDate[i].time_end)
-        child.addEventListener("click", getRoomForOverview)
+    for(let i=0;i<reservedDate.length;i++) {
+        if (reservedDate[i].pending && !reservedDate[i].request_bewohner) {
+            getter("/getVisitorByID?ID=" + reservedDate[i].besucher_id).then((visitor) => {
+                getter("/getRoomByID?ID=" + reservedDate[i].bewohner_id).then((resident) => {
+                    let requester = document.createElement("div")
+                    let child = document.createElement("div")
+                    requester.className = "requestText"
+                    let divText = document.createElement("div")
+                    divText.innerText = "Name: " + visitor.name + "\n" + "Mail: " + visitor.mail
+                    child.appendChild(requester)
+                    requester.appendChild(divText)
+                    let date = new Date(reservedDate[i].time_start).toLocaleDateString('de-DE', options)
+                    let starter = new Date(reservedDate[i].time_start).toLocaleTimeString()
+                    let ender = new Date(reservedDate[i].time_end).toLocaleTimeString()
+                    divText = document.createElement("div")
+                    divText.innerText = "Name: " + resident.name + "\n" + "Zeit: " + date + " " + starter + " - " + ender
+                    requester.appendChild(divText)
+                    let button = document.createElement("button")
+                    button.innerText = "Zusagen"
+                    button.style.backgroundColor = SUCCESS
+                    button.value = reservedDate[i].id
+                    button.addEventListener("click", updateMeeting)
+                    let button2 = document.createElement("button")
+                    button2.innerText = "Absagen"
+                    button.className = "requestButtons"
+                    button2.className = "requestButtons"
+                    button2.value = reservedDate[i].id
+                    button2.addEventListener("click",cancelMeeting)
+                    button2.style.backgroundColor = FAIL
+                    requester.appendChild(button)
+                    requester.appendChild(button2)
+                    innerReserver.appendChild(requester)
+                })
+            })
+        }
     }
     divElement.appendChild(innerReserver)
+    let divElement2 = document.createElement("div")
+    divElement2.className ="requestChild"
+    if(roverview!==null){
+        roverview.appendChild(divElement2)
+    }
+
+    divElement2.innerText = "Anstehende Termine"
+    let innerReserver2 = document.createElement("div")
+    innerReserver2.className = "innerReserver"
+    for (let i = 0; i < reservedDate.length; i++) {
+        if (!reservedDate[i].pending){
+            let child = document.createElement("div")
+            child.className = "reserved"
+            let x = await getRoomByID(reservedDate[i].bewohner_id, child, innerReserver2, reservedDate[i].time_start, reservedDate[i].time_end)
+            child.addEventListener("click", getRoomForOverview)
+        }
+    }
+    divElement2.appendChild(innerReserver2)
 }
+
+function updateMeeting(e){
+    getter("/updateMeeting?accept=0&meetingID="+e.target.value).then(()=>{
+        openAlert("Meeting wurde erfolgreich angenommen",SUCCESS)
+        setTimeout(function () {
+            location.reload()
+        },1500)
+    })
+}
+
+function cancelMeeting(e){
+    getter("/updateMeeting?accept=1&meetingID="+e.target.value).then(()=>{
+        openAlert("Meeting wurde erfolgreich abgelehnt",SUCCESS)
+        setTimeout(function () {
+            location.reload()
+        },1500)
+    })
+}
+
+
 
 
 function addButtons(rooms) {

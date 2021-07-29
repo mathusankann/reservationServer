@@ -32,13 +32,15 @@ class User {
 }
 
 class Meeting {
-    constructor(id, time_start, time_end, bewohnerid,besucherid, tabletid) {
+    constructor(id, time_start, time_end, bewohnerid,besucherid, tabletid,request_bewohner,pending) {
         this.id = id
         this.time_start = time_start;
         this.time_end = time_end;
         this.bewohner_id = bewohnerid;
         this.besucher_id = besucherid;
         this.tablets_id = tabletid;
+        this.pending = pending
+        this.request_bewohner =request_bewohner
     }
 }
 
@@ -290,11 +292,13 @@ function startRoomPost(createRoom) {
 function getRoom(name) {
     const room = name
     const request = createAjaxRequest();
+
     request.onreadystatechange = function () {
         if (4 === this.readyState) {
             if (200 === this.status) {
                 let r = JSON.parse(this.responseText)
-                openRoom(r)
+               // openRoom(r)
+
             } else {
                 console.log(this.status + ":" + this.responseText);
             }
@@ -313,6 +317,7 @@ function getRoomForOverview() {
             if (200 === this.status) {
                 let r = JSON.parse(this.responseText)
                 openRoom(r)
+
             } else {
                 console.log(this.status + ":" + this.responseText);
             }
