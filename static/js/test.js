@@ -1,12 +1,11 @@
 let settings
 let currentSettings
-let index
 
 
 window.addEventListener('DOMContentLoaded', function () {
+    let index = parseInt(localStorage.getItem("keyBBB"))
     setTimeout(async function () {
         settings = await getter("https://reservation.jitsi-mathu.de/getKonfSettings")
-
         getContent().then((content) => {
             currentSettings = settings[index].value
             console.log(settings)
@@ -19,7 +18,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
     }, 2000);
 
-
+})
     function getMeetingID() {
         return new Promise(((resolve, reject) => {
             let link = window.location.href
