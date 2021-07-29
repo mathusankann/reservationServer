@@ -35,14 +35,15 @@ var host Host
 func getActiveMeetings(w http.ResponseWriter, r *http.Request) {
 	var meetingIdentification meetingIdentification
 	keys, err := r.URL.Query()["meetingID"]
-	if !err || len(keys[0]) < 1 {
-		log.Println("Url Param 'meetingID' is missing")
+	name, err := r.URL.Query()["name"]
+	if !err || len(keys[0]) < 1 || len(name[0]) < 1 {
+		log.Println("Url Param 'meetingID or Name' is missing")
 		return
 	}
 	meetingID := ActiveMeetings[keys[0]]
 	if meetingID == false {
 		meetingIdentification.Running = false
-		if localGetRoomMeetingID(keys[0]).Name != "" {
+		if getRoom(name[0]).Name != "" {
 			ActiveMeetings[keys[0]] = true
 			meetingIdentification.Visitor = true
 		} else {
