@@ -16,7 +16,6 @@ func getSharedSecret(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllAccounts(w http.ResponseWriter, r *http.Request) {
-
 	var listNames []string
 	/*db, dberr := sql.Open("sqlite3", "Account.sqlite")
 	if dberr != nil {

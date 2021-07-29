@@ -292,12 +292,12 @@ function startRoomPost(createRoom) {
 function getRoom(name) {
     const room = name
     const request = createAjaxRequest();
-
     request.onreadystatechange = function () {
         if (4 === this.readyState) {
             if (200 === this.status) {
+                localStorage.setItem('keyBBB',"2")
                 let r = JSON.parse(this.responseText)
-               // openRoom(r)
+                openRoom(r)
 
             } else {
                 console.log(this.status + ":" + this.responseText);
@@ -316,6 +316,7 @@ function getRoomForOverview() {
         if (4 === this.readyState) {
             if (200 === this.status) {
                 let r = JSON.parse(this.responseText)
+                localStorage.setItem('keyBBB',"2")
                 openRoom(r)
 
             } else {

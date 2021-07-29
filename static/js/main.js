@@ -628,3 +628,7 @@ function addVisitorAccount() {
     })
 
 }
+
+function forwordingConv(){
+    localStorage.setItem('keyBBB',"3")
+}
