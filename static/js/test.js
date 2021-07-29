@@ -5,7 +5,7 @@ let index
 
 window.addEventListener('DOMContentLoaded', function () {
     setTimeout(async function () {
-        settings = await getter("")
+        settings = await getter("https://reservation.jitsi-mathu.de/getKonfSettings")
         getMeetingID().then((meetingID)=>{
             getter("/getActiveMeetings?meetingID="+meetingID).then((val)=>{
                 if (!val.running&&val.visitor) {
@@ -157,7 +157,7 @@ function getter(path) {
                 }
             }
         }
-        request.open("GET", "https://reservation.jitsi-mathu.de/getKonfSettings", true);
+        request.open("GET", path, true);
         request.send();
     }))
 }

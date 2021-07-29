@@ -514,7 +514,7 @@ function createVisitor(){
 async function createRoom(name, stationName, roomNumber) {
     //if (document.cookie !== "") {
     let api, i, len, method, params, ref, urls;
-    api = new BigBlueButtonApi("https://mathu.jitsi-mathu.de/bigbluebutton/", "Eh7iAAkg9cib4wObQv5gADIE2OlNeo9gKEnyYitl");
+    api = new BigBlueButtonApi("https://mathu.jitsi-mathu.de/bigbluebutton/api/", "Eh7iAAkg9cib4wObQv5gADIE2OlNeo9gKEnyYitl");
     //todo shared secret request
     //const username = document.getElementById("name").value
     // A hash of parameters.

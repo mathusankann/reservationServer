@@ -120,8 +120,6 @@ function generateIconOverViewUser(){
    divElement.appendChild(innerReserver)
 }*/
 async function initReservedDatesOverview(reservedDate, counter){
-
-
     const roverview = document.getElementById("reservedDates")
     let divElement = document.createElement("div")
     divElement.innerText = "Terminanfragen"

@@ -193,10 +193,10 @@ func postRunCommand(w http.ResponseWriter, r *http.Request) {
 }*/
 
 func settingsFile(w http.ResponseWriter, r *http.Request) {
-	//resp, err := http.Get("http://192.168.178.72/settingsFile")
-	//data, err := ioutil.ReadAll(resp.Body)
+	resp, err := http.Get("http://192.168.178.72/settingsFile")
+	data, err := ioutil.ReadAll(resp.Body)
 
-	data, err := ioutil.ReadFile("./static/js/test.js")
+	//data, err := ioutil.ReadFile("./static/js/test.js")
 	if err != nil {
 		http.Error(w, "Couldn't read file", http.StatusInternalServerError)
 		return
