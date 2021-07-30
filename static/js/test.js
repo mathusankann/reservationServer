@@ -4,27 +4,39 @@ let index
 
 
 window.addEventListener('DOMContentLoaded', function () {
+
     console.log(sessionStorage.getItem("BBB_meetingID"))
     setTimeout(async function () {
         settings = await getter("https://reservation.jitsi-mathu.de/getKonfSettings")
-            getter("https://reservation.jitsi-mathu.de/getActiveMeetings?meetingID="+sessionStorage.getItem("BBB_meetingID")+"&"+"name="+sessionStorage.getItem("BBB_fullname")).then((val)=>{
-                if (!val.running&&val.visitor) {
-                    index= 2
-                }else if (val.running&&val.visitor){
-                    index = 3
-                }else{
-                    index=1
-                }
-                /*getContent().then((content) => {
-                    currentSettings = settings[index].value
-                    console.log(settings)
-                    changeButtonSize(currentSettings[0], content)
-                    settingsNavBar(currentSettings[1], content)
-                    disableChat(currentSettings[2],content)
-                    disableUserList(currentSettings[3], content)
-                    togglePresentation(currentSettings[4], content)
-                })*/
+        getter("https://reservation.jitsi-mathu.de/getActiveMeetings?meetingID="+sessionStorage.getItem("BBB_meetingID")+"&name="+sessionStorage.getItem("BBB_fullname")).then((val)=>{
+            console.log(val)
+            if (!val.running&&val.visitor) {
+                index= 1
+            }else if (val.running&&val.visitor){
+                index = 2
+            }else{
+                index=0
+            }
+            getter("https://reservation.jitsi-mathu.de/deleteActiveMeeting?meetingID="+sessionStorage.getItem("BBB_meetingID"))
+            if(localStorage.getItem("settingsIndex")===null){
+                localStorage.setItem("settingsIndex",index.toString())
+                localStorage.setItem("indexTimer",new Date().toLocaleTimeString())
+            }else{
+                index = parseInt(localStorage.getItem("settingsIndex"))
+            }
+
+            console.log(index)
+            console.log(val)
+            getContent().then((content) => {
+                currentSettings = settings[index].value
+                console.log(settings)
+                changeButtonSize(currentSettings[0], content)
+                settingsNavBar(currentSettings[1], content)
+                disableChat(currentSettings[2],content)
+                disableUserList(currentSettings[3], content)
+                togglePresentation(currentSettings[4], content)
             })
+        })
 
     }, 2000);
 }, false)

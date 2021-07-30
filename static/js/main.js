@@ -12,7 +12,6 @@ let functionsArray=[()=>{
 
 
 
-
 function openRoom(room) {
     startRoomPost(room);
 }
@@ -542,6 +541,8 @@ function startConfWithVisitor() {
 function setEventListener() {
 
 }
+
+
 
 
 function openTab(evt, tabName) {

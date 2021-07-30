@@ -12,6 +12,7 @@ import (
 	"os"
 	_ "os"
 	"strings"
+	"time"
 	_ "time"
 )
 
@@ -57,6 +58,27 @@ func getActiveMeetings(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(jsonData)
+}
+
+func deleteActiveMeeting(w http.ResponseWriter, r *http.Request) {
+	keys, err := r.URL.Query()["meetingID"]
+	if !err || len(keys[0]) < 1 {
+		log.Println("Url Param 'startime' or 'endtime' is missing")
+		return
+	}
+	go localDeleteActiveMeeting(keys[0])
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	jsonData, _ := json.Marshal(ActiveMeetings[keys[0]])
+	w.Write(jsonData)
+}
+
+func localDeleteActiveMeeting(meetingID string) {
+	println(len(ActiveMeetings))
+	time.Sleep(2 * time.Hour)
+	delete(ActiveMeetings, meetingID)
+	println(len(ActiveMeetings))
+	println("done")
 }
 
 func insertAdminAccount() {
@@ -207,10 +229,10 @@ func testSiteReturn(w http.ResponseWriter, r *http.Request) {
 }*/
 
 func settingsFile(w http.ResponseWriter, r *http.Request) {
-	resp, err := http.Get("http://192.168.178.72/settingsFile")
-	data, err := ioutil.ReadAll(resp.Body)
+	//resp, err := http.Get("http://192.168.178.72/settingsFile")
+	//data, err := ioutil.ReadAll(resp.Body)
 
-	//data, err := ioutil.ReadFile("./static/js/test.js")
+	data, err := ioutil.ReadFile("./static/js/test.js")
 	if err != nil {
 		http.Error(w, "Couldn't read file", http.StatusInternalServerError)
 		return
@@ -244,6 +266,7 @@ func main() {
 	http.HandleFunc("/removeAuthenticateUser", removeAuthenticateUser)
 	http.HandleFunc("/getActiveMeetings", getActiveMeetings)
 	http.HandleFunc("/testSiteReturn", testSiteReturn)
+	http.HandleFunc("/deleteActiveMeeting", deleteActiveMeeting)
 
 	//ResidentHandler
 	http.HandleFunc("/getRoom", GetRoom)
