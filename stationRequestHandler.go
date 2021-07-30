@@ -414,10 +414,11 @@ func getKonfSettings(w http.ResponseWriter, r *http.Request) {
 	jsonFile, err := os.Open("./konfSetting.json")
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "week.json does not exist", http.StatusNotFound)
+		http.Error(w, "konfSetting.json does not exist", http.StatusNotFound)
 		return
 	}
 	byteValue, _ := ioutil.ReadAll(jsonFile)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(byteValue)
 }

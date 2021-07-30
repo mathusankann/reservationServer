@@ -7,7 +7,7 @@ window.addEventListener('DOMContentLoaded', function () {
     console.log(sessionStorage.getItem("BBB_meetingID"))
     setTimeout(async function () {
         settings = await getter("https://reservation.jitsi-mathu.de/getKonfSettings")
-            getter("/getActiveMeetings?meetingID="+meetingID).then((val)=>{
+            getter("https://reservation.jitsi-mathu.de/getActiveMeetings?meetingID="+sessionStorage.getItem("BBB_meetingID")+"&"+"name="+sessionStorage.getItem("BBB_fullname")).then((val)=>{
                 if (!val.running&&val.visitor) {
                     index= 2
                 }else if (val.running&&val.visitor){

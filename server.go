@@ -51,6 +51,7 @@ func getActiveMeetings(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		meetingIdentification.Running = true
+		meetingIdentification.Visitor = true
 	}
 	jsonData, _ := json.Marshal(meetingIdentification)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -229,6 +230,7 @@ func main() {
 	json.Unmarshal(byteValue, &host)
 	//insertAdminAccount()
 	UserMap = make(map[string]string)
+	ActiveMeetings = make(map[string]bool)
 	fileServer := http.FileServer(http.Dir("./static")) // New code
 
 	http.Handle("/", fileServer)
