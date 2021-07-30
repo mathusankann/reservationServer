@@ -45,12 +45,13 @@ window.addEventListener('DOMContentLoaded', function () {
 
 function getContent() {
     return new Promise(((resolve, reject) => {
-        let content
-        while (content === undefined || content === null) {
-            content = document.getElementById("app").children[0].childNodes[1].childNodes[0]
-        }
-        console.log(content)
-        resolve(content)
+        let test = setInterval(function () {
+            let content = document.getElementById("app").children[0].childNodes[1].childNodes[0]
+            if (content !== undefined ) {
+                clearInterval(test)
+                resolve(content)
+            }
+        }, 1000)
     }))
 }
 
