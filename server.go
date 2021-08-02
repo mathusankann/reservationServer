@@ -25,6 +25,12 @@ type meetingIdentification struct {
 	Visitor bool `json:"visitor"`
 }
 
+type frontendCommunication struct {
+	Message string
+	Color   string
+	Number  int
+}
+
 const charset = "abcdefghijklmnopqrstuvwxyz" +
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
@@ -38,6 +44,7 @@ func getActiveMeetings(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["meetingID"]
 	name, err := r.URL.Query()["name"]
 	if !err || len(keys[0]) < 1 || len(name[0]) < 1 {
+		http.Error(w, "Url Parameter meetingID oder Name fehlen", http.StatusFailedDependency)
 		log.Println("Url Param 'meetingID or Name' is missing")
 		return
 	}
@@ -63,7 +70,7 @@ func getActiveMeetings(w http.ResponseWriter, r *http.Request) {
 func deleteActiveMeeting(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["meetingID"]
 	if !err || len(keys[0]) < 1 {
-		log.Println("Url Param 'startime' or 'endtime' is missing")
+		http.Error(w, "Url Parameter meetingID fehlt", http.StatusFailedDependency)
 		return
 	}
 	go localDeleteActiveMeeting(keys[0])
@@ -105,8 +112,8 @@ func insertAdminAccount() {
 
 func initDbConnection() *sql.DB {
 	//var db, err = sql.Open("sqlite3", "Account.sqlite")
-	var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
-	//var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
+	//var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
+	var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -118,14 +125,14 @@ func sendGetRequest(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&requestString)
 	resp, err := http.Get(requestString)
 	if err != nil {
-		http.Error(w, "Couldn't reach local server", http.StatusInternalServerError)
+		http.Error(w, "Dockerservice ist nicht erreichbar", http.StatusInternalServerError)
 		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	sb := string(body)
 	//log.Println(sb)
 	if err != nil {
-		http.Error(w, "Couldn't read incoming message", http.StatusNotFound)
+		http.Error(w, "Fehler beim Lesen des Response", http.StatusNotFound)
 		return
 	}
 	jsonData, _ := json.Marshal(sb)
@@ -137,13 +144,13 @@ func sendGetRequest(w http.ResponseWriter, r *http.Request) {
 func getAllDockerContainer(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Get("http://192.168.178.102:7777/getAllDockerContainer")
 	if err != nil {
-		http.Error(w, "Couldn't reach local server", http.StatusInternalServerError)
+		http.Error(w, "Dockerservice ist nicht erreichbar", http.StatusInternalServerError)
 		return
 	}
 	//We Read the response body on the line below.
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		http.Error(w, "Couldn't read incoming message", http.StatusNotFound)
+		http.Error(w, "Fehler beim Lesen des Response", http.StatusNotFound)
 		return
 	}
 	//Convert the body to type string
@@ -183,20 +190,20 @@ func postRunCommand(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&cmds)
 	jsonData, err := json.Marshal(cmds)
 	if err != nil {
-		http.Error(w, "Faulty string", http.StatusFailedDependency)
+		http.Error(w, "unbekannter Befehl", http.StatusFailedDependency)
 		return
 	}
 
 	resp, err := http.Post("http://192.168.178.102:7777/runCommands", "application/json",
 		bytes.NewBuffer(jsonData))
 	if err != nil {
-		http.Error(w, "Couldn't reach local server", http.StatusInternalServerError)
+		http.Error(w, "Dockerservice ist nicht erreichbar", http.StatusInternalServerError)
 		return
 	}
 	//We Read the response body on the line below.
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		http.Error(w, "Couldn't read incoming message", http.StatusNotFound)
+		http.Error(w, "Fehler beim Lesen des Respons", http.StatusNotFound)
 		return
 	}
 	//Convert the body to type string
@@ -234,7 +241,7 @@ func settingsFile(w http.ResponseWriter, r *http.Request) {
 
 	data, err := ioutil.ReadFile("./static/js/test.js")
 	if err != nil {
-		http.Error(w, "Couldn't read file", http.StatusInternalServerError)
+		http.Error(w, "Setting.js ist nicht vorhanden", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
@@ -244,6 +251,7 @@ func settingsFile(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	insertAdminAccount()
+
 	jsonFile, err := os.Open("settings.json")
 	if err != nil {
 		log.Panic("something went wrong --> settings.json")
@@ -315,6 +323,7 @@ func main() {
 	http.HandleFunc("/deleteMeeting", deleteMeeting)
 	http.HandleFunc("/sendInvitationMail", sendInvitationMail)
 	http.HandleFunc("/updateMeeting", updateMeeting)
+	http.HandleFunc("/updateMeetingWithMail", updateMeetingWithMail)
 
 	//VisitorHandler
 	http.HandleFunc("/getVisitorByID", getVisitorByID)

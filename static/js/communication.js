@@ -144,6 +144,7 @@ function sendMeetingPost(data) {
                     location.reload();
                 },1000)
             } else {
+                openAlert("Fehler bei der Reservierung",FAIL)
                 console.log(this.status + ":" + this.responseText);
             }
         }
@@ -155,35 +156,30 @@ function sendMeetingPost(data) {
 
 async function getUserAuthentication() {
     if (document.cookie === "") {
-        document.getElementById("uname").innerText = ""
-        document.getElementById("psw").innerText = ""
+        console.log("test")
         await getAllRoom()
-        let user = new User(0, document.getElementById("uname").value, document.getElementById("psw").value, 0,null)
-        const request = createAjaxRequest();
-        request.onreadystatechange = async function () {
-            if (4 === this.readyState) {
-                if (200 === this.status) {
-                   /* document.getElementById("id01").style.display = "none";
-                    // document.getElementById("login_btn").style.display = "none";
-                    document.getElementById("logout_btn").style.display = "block";
-                    document.getElementById("v_blocker").style.display = "none"
-                    let user = JSON.parse(this.responseText)
-                    await getAllRoomNamesByStationID(user.id)
-                    getRoleByID(user.role_id)*/
-                    location.reload()
-
-                } else {
-                    console.log(this.status + ":" + this.responseText);
-                    if(counter>3){
-                        openAlert("Passwort oder Benutzername falsch",FAIL)
+        if(document.getElementById("uname").value!==""){
+            let user = new User(0, document.getElementById("uname").value, document.getElementById("psw").value, 0,null)
+            const request = createAjaxRequest();
+            request.onreadystatechange = async function () {
+                if (4 === this.readyState) {
+                    if (200 === this.status) {
+                        location.reload()
+                    } else {
+                        console.log(this.status + ":" + this.responseText);
+                        if(counter>3){
+                            openAlert("Passwort oder Benutzername falsch",FAIL)
+                        }
                     }
                 }
             }
+            request.open("POST", "/getUserAuthentication", true);
+            request.send(JSON.stringify(user));
+        }else{
+            openAlert("Passwort oder Benutzername falsch",FAIL)
         }
-        request.open("POST", "/getUserAuthentication", true);
-        request.send(JSON.stringify(user));
     } else {
-        getUserAuthenticationCookie()
+            getUserAuthenticationCookie()
     }
     console.log(counter)
     counter++
@@ -800,10 +796,11 @@ function setOuts(path,parameter) {
         request.onreadystatechange = function () {
             if (4 === this.readyState) {
                 if (200 === this.status) {
-                    openAlert(this.responseText)
+                    openAlert(this.responseText.replace(/['"]+/g, ''),SUCCESS)
+                    console.log(this.responseText.toString())
                     resolve(true)
                 } else {
-                    openAlert(this.responseText)
+                    openAlert(this.responseText.replace(/['"]+/g, ''),FAIL)
                     resolve(null)
                 }
             }
@@ -820,11 +817,14 @@ function getterPOst(path,parameter,flag =false) {
             if (4 === this.readyState) {
                 if (200 === this.status) {
                     let val = JSON.parse(this.responseText)
+                    if (flag){
+                        openAlert(val,SUCCESS)
+                    }
                     console.log(this.responseText)
                     resolve(val)
                 } else {
                     if (flag){
-                        openAlert(this.responseText,"red")
+                        openAlert(this.responseText,FAIL)
                     }
                     resolve(null)
                 }

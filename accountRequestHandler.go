@@ -24,7 +24,8 @@ func getAllAccounts(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select username From account")
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
-		log.Panic(dberr)
+		http.Error(w, "Datenbank nicht erreichbar", http.StatusNotFound)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -75,7 +76,7 @@ func getUserAuthentication(w http.ResponseWriter, r *http.Request) {
 
 	dbUser = getUser(incUser.Username)
 	if !dbUser.Check() {
-		http.Error(w, "Account does not exists", http.StatusBadRequest)
+		http.Error(w, "Account nicht vorhanden", http.StatusBadRequest)
 		return
 	}
 
@@ -98,7 +99,7 @@ func getUserAuthentication(w http.ResponseWriter, r *http.Request) {
 		w.Write(jsonFile)
 
 	} else {
-		http.Error(w, "Username or password incorrect  ", http.StatusBadRequest)
+		http.Error(w, "Benutzername oder passwort inkorrect  ", http.StatusBadRequest)
 		return
 	}
 }
@@ -106,6 +107,7 @@ func getUserAuthentication(w http.ResponseWriter, r *http.Request) {
 func removeAuthenticateUser(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["key"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "URl Parameter fehlt", http.StatusFailedDependency)
 		log.Println("Url Param 'Key' is missing")
 		return
 	}
@@ -124,7 +126,7 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	if getUser(incUser.Username).Check() {
-		http.Error(w, "Username already exists", http.StatusBadRequest)
+		http.Error(w, "Benutzername ist bereits vergeben", http.StatusBadRequest)
 		return
 	}
 	incUser.HashAndSalt([]byte(incUser.Password))
@@ -133,26 +135,30 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 	sqlStmt := fmt.Sprintf(`INSERT INTO account(username,password,role_id,station_id)VALUES(?,?,?,?)`)
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
-		log.Fatalln(err.Error())
+		http.Error(w, "Datenbank fehler", http.StatusNotFound)
 	}
 	_, err = statement.Exec(incUser.Username, incUser.Password, incUser.RoleId, incUser.StationID)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 	statement.Close()
-	w.Write([]byte("ok"))
+	var com string
+	com = "Erfolgreich angelegt"
+	jsonFile, _ := json.Marshal(com)
+	w.Write(jsonFile)
 }
 
 func getUserAuthenticationCookie(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["key"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'Key' is missing")
 		return
 	}
 	var dbUser Account
 	dbUser = getUser(UserMap[keys[0]])
 	if !dbUser.Check() {
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, "Benutzer nicht gefunden", http.StatusNotFound)
 		return
 	}
 	jsonFile, _ := json.Marshal(dbUser)
@@ -186,6 +192,7 @@ func getUser(name string) Account {
 func getUserByID(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["id"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'Name' is missing")
 		return
 	}
@@ -193,15 +200,21 @@ func getUserByID(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select * From account Where id= '%d'", id)
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(dberr)
+		return
 	}
 	var account Account
+	var cache sql.NullInt32
 	if rows.Next() {
-		dberr = rows.Scan(&account.ID, &account.Username, &account.Password, &account.RoleId, &account.StationID)
+		dberr = rows.Scan(&account.ID, &account.Username, &account.Password, &account.RoleId, &cache)
 		if dberr != nil {
 			log.Println(dberr)
+			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+			return
 		}
 	}
+	account.StationID = int(cache.Int32)
 	rows.Close()
 	w.Header().Set("Content-Type", "application/json")
 	jsonFile, _ := json.Marshal(account)
@@ -215,7 +228,7 @@ func updateAccount(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	if getUser(incUser.Username).Check() && getUser(incUser.Username).Password == incUser.Password {
-		http.Error(w, "Username already exists", http.StatusBadRequest)
+		http.Error(w, "Benutzer ist bereits vergeben", http.StatusBadRequest)
 		return
 	}
 	if getUser(incUser.Username).Password != incUser.Password {
@@ -226,15 +239,21 @@ func updateAccount(w http.ResponseWriter, r *http.Request) {
 	sqlStmt := fmt.Sprintf(`UPDATE account Set username =?,password=? Where id=?`)
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
-		log.Fatalln(err.Error())
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		log.Panic(err.Error())
+		return
 	}
 	_, err = statement.Exec(incUser.Username, incUser.Password, incUser.ID)
 	if err != nil {
-		log.Fatalln(err.Error())
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		log.Panic(err.Error())
+		return
 	}
 	statement.Close()
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte("ok"))
+	com := "Erfolgreich aktualisiert"
+	jsonFile, _ := json.Marshal(com)
+	w.Write(jsonFile)
 }
 
 func getAllRoles(w http.ResponseWriter, r *http.Request) {
@@ -242,7 +261,9 @@ func getAllRoles(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select name From rolle ")
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(dberr)
+		return
 	}
 	var role string
 	for rows.Next() {
@@ -256,6 +277,7 @@ func getAllRoles(w http.ResponseWriter, r *http.Request) {
 func getRoleByName(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["name"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Benutzer ist bereits vergeben", http.StatusBadRequest)
 		log.Println("Url Param 'Name' is missing")
 		return
 	}
@@ -263,13 +285,17 @@ func getRoleByName(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select * From rolle Where name ='%s'", keys[0])
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(dberr)
+		return
 	}
 	var role Role
 	if rows.Next() {
 		dberr = rows.Scan(&role.ID, &role.Name, &role.ViewTermin, &role.EditUser, &role.ViewAllStationUser, &role.ViewAllUser)
 		if dberr != nil {
+			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 			log.Println(dberr)
+			return
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -280,6 +306,7 @@ func getRoleByName(w http.ResponseWriter, r *http.Request) {
 func getRoleByID(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["ID"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'ID' is missing")
 		return
 	}
@@ -289,7 +316,9 @@ func getRoleByID(w http.ResponseWriter, r *http.Request) {
 
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(dberr)
+		return
 	}
 	var role Role
 	w.Header().Set("Content-Type", "application/json")

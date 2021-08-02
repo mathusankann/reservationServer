@@ -35,6 +35,7 @@ func GetAllRoomNamesByStationID(ID int) []string {
 func getAllRoomNamesByStation(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["ID"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'Name' is missing")
 		return
 	}

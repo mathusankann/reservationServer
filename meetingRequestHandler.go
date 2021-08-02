@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	_ "database/sql"
 	"encoding/json"
 	"fmt"
 	gomail "gopkg.in/mail.v2"
@@ -19,7 +20,7 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	if !getRoomByID(incMeeting.BewohnerId).Verify() {
-		http.Error(w, "Room does not exists", http.StatusBadRequest)
+		http.Error(w, "Bewohner existiert nicht", http.StatusBadRequest)
 		return
 	}
 	//transaction
@@ -28,13 +29,16 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 	sqlStmt := fmt.Sprintf(`INSERT INTO meeting(start_date,end_date,bewohner_id,besucher_id,pending,request_bewohner)VALUES(?,?,?,?,?,?)`)
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
-		log.Fatalln(err.Error())
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		log.Panic(err.Error())
+		return
 	}
 	//_, err = statement.Exec(incMeeting.MeetingDateStart, incMeeting.MeetingDateEnd, incMeeting.BewohnerId, incMeeting.BesucherId, incMeeting.TabletId)
 	_, err = statement.Exec(incMeeting.MeetingDateStart, incMeeting.MeetingDateEnd, incMeeting.BewohnerId, incMeeting.BesucherId, incMeeting.Pending, incMeeting.RequestBewohner)
 	if err != nil {
-		println("Hier Fehler: 3")
-		log.Fatalln(err.Error())
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		log.Panic(err.Error())
+		return
 	}
 	statement.Close()
 	timeString := incMeeting.MeetingDateStart.String()
@@ -53,19 +57,91 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	hour = hour + 2
-	wholeString := dateArray[0] + " um " + strconv.Itoa(hour) + ":" + timeArray[1] + "statt"
+	wholeString := dateArray[0] + " um " + strconv.Itoa(hour) + ":" + timeArray[1]
 
-	body := fmt.Sprintf("Ihr Konferenzlink: %s \n Die Konferenz findet am %s \n Sie haben "+
-		"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://%s/deleteMeeting?meetingID=%d", room.Invite, wholeString, host.Name, incMeeting.Id)
+	//body := fmt.Sprintf("Ihr Konferenzlink: %s \n Die Konferenz findet am %s \n Sie haben "+
+	//	"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://%s/deleteMeeting?meetingID=%d", room.Invite, wholeString, host.Name, incMeeting.Id)
+	visitor := getVisitor(incMeeting.BesucherId, "id")
+	acceptLink := fmt.Sprintf("https://localhost/updateMeetingWithMail?meetingID=%d", host.Name, incMeeting.Id)
+	body := fmt.Sprintf("Hallo %s \n\n"+
+		"%s würde gerne am %s mit Ihnen ein Videogespräch führen."+
+		"Falls es Ihnen zeitlich passt, können Sie mit folgendem Link zusagen:\n%s. \nBitte beachten Sie, dass diese Anfrage nur 24 Stunden gültig ist. \n\n", visitor.Name, room.Name, wholeString, acceptLink)
 	go sendInvitation(incMeeting, body)
 	w.Write([]byte("ok"))
+
+}
+
+func updateMeetingWithMail(w http.ResponseWriter, r *http.Request) {
+	mID, derr := r.URL.Query()["meetingID"]
+
+	if !derr || len(mID[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
+		return
+	}
+	meetingID, _ := strconv.ParseInt(mID[0], 10, 32)
+	incMeeting := localGetMeetingByID(int(meetingID))
+	if incMeeting.Pending {
+		sqlStmt := fmt.Sprintf(`UPDATE meeting Set pending =? Where id=?`)
+		statement, err := db.Prepare(sqlStmt)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+			return
+		}
+		_, err = statement.Exec(false, meetingID)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+			return
+		}
+		statement.Close()
+		timeString := incMeeting.MeetingDateStart.String()
+		timeArray := strings.Split(timeString, " ")
+		timeString = timeArray[0] + " " + timeArray[1] + "+00:00"
+		incMeeting.Id = getMeetingByTimestamp(timeString)
+		room := getRoomByID(incMeeting.BewohnerId)
+		dateString := incMeeting.MeetingDateStart.String()
+		dateString = strings.Split(dateString, "+")[0]
+		dateArray := strings.Split(dateString, " ")
+		timeArray = strings.Split(dateArray[1], ":")
+		hour, err := strconv.Atoi(timeArray[0])
+		if err != nil {
+			log.Println(err)
+		}
+		hour = hour + 2
+		wholeString := dateArray[0] + " um " + strconv.Itoa(hour) + ":" + timeArray[1] + " statt"
+		visitor := getVisitor(incMeeting.BesucherId, "id")
+		body := fmt.Sprintf("Hallo %s\n\n Schön das Sie Zeit gefunden haben.Ihr Konferenzlink: %s \n Die Konferenz findet am %s \n\n", visitor.Name, room.Invite, wholeString)
+		go sendInvitation(incMeeting, body)
+		w.Write([]byte("Meeting erfolgreich bestätigt"))
+	} else {
+		w.Write([]byte("Meeting wurde bereits beantwortet"))
+	}
+}
+
+func localGetMeetingByID(id int) Meeting {
+	queryStmt := fmt.Sprintf("Select * From meeting Where id= %d", id)
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Panic(dberr)
+	}
+	var meeting Meeting
+	if rows.Next() {
+		dberr = rows.Scan(&meeting.Id, &meeting.MeetingDateStart, &meeting.MeetingDateEnd, &meeting.BewohnerId, &meeting.BesucherId, &meeting.TabletId, &meeting.Pending, &meeting.RequestBewohner)
+		if dberr != nil {
+			log.Println(dberr)
+		}
+	}
+	rows.Close()
+	return meeting
 
 }
 
 func deleteMeeting(w http.ResponseWriter, r *http.Request) {
 	deleteID, errs := r.URL.Query()["meetingID"]
 	if !errs || len(deleteID[0]) < 1 {
-		log.Println("Url Param 'meetingID' is missing")
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
+		log.Println("Url Param 'Name' is missing")
 		return
 	}
 	//db, dberr := sql.Open("sqlite3", "Account.sqlite")
@@ -75,17 +151,21 @@ func deleteMeeting(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.ParseInt(deleteID[0], 10, 32)
 	localDeleteMeeting(int(id))
 
-	w.Write([]byte("Ihr Meeting wurde erfolgreich stoniert"))
+	com := "Ihr Meeting wurde erfolgreich stoniert"
+	jsonFile, _ := json.Marshal(com)
+	w.Write(jsonFile)
 }
 
 func localDeleteMeeting(deleteID int) {
 	stmt, err := db.Prepare("delete from meeting where id=?")
 	if err != nil {
 		log.Panic(err)
+		return
 	}
 	res, err := stmt.Exec(deleteID)
 	if err != nil {
 		log.Panic(err)
+		return
 	}
 	affect, err := res.RowsAffected()
 	fmt.Println(affect)
@@ -99,6 +179,7 @@ func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 	endTime, err := r.URL.Query()["endtime"]
 	//	e := strings.Split(endTime[0], "T")[0]
 	if !err || len(startTime[0]) < 1 || len(endTime[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'startime' or 'endtime' is missing")
 		return
 	}
@@ -109,15 +190,18 @@ func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select * From meeting where start_date >= '%s' and end_date  <= '%s' ORDER BY end_date ", startTime[0], endTime[0])
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
-		log.Panic(dberr)
+		log.Println(dberr)
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		return
 	}
 	for rows.Next() {
 		var cachedates CacheMeeting
 		var dates Meeting
 		err := rows.Scan(&cachedates.Id, &cachedates.MeetingDateStart, &cachedates.MeetingDateEnd, &cachedates.BewohnerId, &cachedates.BesucherId, &cachedates.TabletId, &cachedates.Pending, &cachedates.RequestBewohner)
 		if err != nil {
-			log.Print("GetAllMeetings: ")
 			log.Println(err)
+			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+			return
 		}
 		dates.Copy(cachedates)
 		reservedDates = append(reservedDates, dates)
@@ -144,7 +228,7 @@ func sendInvitation(incMeeting Meeting, body string) {
 
 	m.SetBody("text/plain", body)
 	// Settings for SMTP server
-	d := gomail.NewDialer("smtp.office365.com", 587, "Terminma3@outlook.de", "")
+	d := gomail.NewDialer("smtp.office365.com", 587, "Terminma3@outlook.de", "Spartan17")
 	// This is only needed when SSL/TLS certificate is not valid on server.
 	// In production this should be set to false.
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
@@ -182,6 +266,7 @@ func updateMeeting(w http.ResponseWriter, r *http.Request) {
 	mID, derr := r.URL.Query()["meetingID"]
 
 	if !derr || len(keys[0]) < 1 || len(mID[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'accept' is missing")
 		return
 	}
@@ -191,18 +276,30 @@ func updateMeeting(w http.ResponseWriter, r *http.Request) {
 		sqlStmt := fmt.Sprintf(`UPDATE meeting Set pending =? Where id=?`)
 		statement, err := db.Prepare(sqlStmt)
 		if err != nil {
-			log.Fatalln(err.Error())
+			log.Println(err)
+			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+			return
 		}
 		_, err = statement.Exec(false, meetingID)
 		if err != nil {
-			log.Fatalln(err.Error())
+			log.Println(err)
+			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+			return
 		}
 		statement.Close()
 	} else {
 		localDeleteMeeting(int(meetingID))
+		w.Header().Set("Content-Type", "application/json")
+		com := "Meeting erfolgreich storniert"
+		jsonFile, _ := json.Marshal(com)
+		w.Write(jsonFile)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte("ok"))
+	com := "Meeting erfolreich zugesagt"
+	jsonFile, _ := json.Marshal(com)
+	w.Write(jsonFile)
+
 }
 
 func sendInvitationMail(w http.ResponseWriter, r *http.Request) {
@@ -213,7 +310,7 @@ func sendInvitationMail(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println(incMeeting)
 	if !getRoomByID(incMeeting.BewohnerId).Verify() {
-		http.Error(w, "Room does not exists", http.StatusBadRequest)
+		http.Error(w, "Bewohner existiert nicht", http.StatusBadRequest)
 		return
 	}
 	room := getRoomByID(incMeeting.BewohnerId)

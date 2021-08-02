@@ -27,31 +27,33 @@ function createDivs() {
 
 function setDockerContainer() {
     const dContainer = document.getElementById("dockerContainer")
-    for (let i = 1; i < docker.length-1; i++) {
-        let container = document.createElement("div")
-        container.id = "structs" + i
-        container.appendChild(document.createElement("br"))
-        container.className = "dContainer"
-        container.value = i
-        container.innerText = docker[i][0]
-        container.addEventListener("click",setDockerSettingView)
-        const a = document.createElement("div")
-        a.className = "img"
-        const img = document.createElement("img")
-        img.src = "/static/media/img/docker_icon.png"
-        a.appendChild(document.createElement("br"))
-        a.appendChild(img)
-        img.className = "konfImg"
-        container.appendChild(a);
-        dContainer.appendChild(container)
-        const activ = document.createElement("img")
-        if(docker[i][4].includes("Up")){
-            activ.src = "/static/media/img/Green_Point.gif"
-        }else{
-            activ.src = "/static/media/img/redpoint.gif"
+    if(docker!==null) {
+        for (let i = 1; i < docker.length - 1; i++) {
+            let container = document.createElement("div")
+            container.id = "structs" + i
+            container.appendChild(document.createElement("br"))
+            container.className = "dContainer"
+            container.value = i
+            container.innerText = docker[i][0]
+            container.addEventListener("click", setDockerSettingView)
+            const a = document.createElement("div")
+            a.className = "img"
+            const img = document.createElement("img")
+            img.src = "/static/media/img/docker_icon.png"
+            a.appendChild(document.createElement("br"))
+            a.appendChild(img)
+            img.className = "konfImg"
+            container.appendChild(a);
+            dContainer.appendChild(container)
+            const activ = document.createElement("img")
+            if (docker[i][4].includes("Up")) {
+                activ.src = "/static/media/img/Green_Point.gif"
+            } else {
+                activ.src = "/static/media/img/redpoint.gif"
+            }
+            activ.className = "activind"
+            container.appendChild(activ)
         }
-        activ.className = "activind"
-        container.appendChild(activ)
     }
 
 }

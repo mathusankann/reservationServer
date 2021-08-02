@@ -2,46 +2,44 @@ let Grooms
 let flagAddStation;
 let userId;
 let residentName;
+let localReservedDates
 
-
-let functionsArray=[()=>{
+let functionsArray = [() => {
     console.log("placeholder")
-},openHomePage,showStationResidents,showRequests]
-
-
-
+}, openHomePage, showStationResidents, showRequests]
 
 
 function openRoom(room) {
     startRoomPost(room);
 }
 
-function openHomePage(){
+function openHomePage() {
     location.reload()
 }
-function showStationResidents(){
+
+function showStationResidents() {
     console.log("test")
-    document.getElementById("termin").style.display="none"
-    document.getElementById("terminOverview").style.display="none"
-    document.getElementById("reservedDates").style.display="none"
-    document.getElementById("buttonHolder").style.display="block"
-    document.getElementById("userButton").style.display="block"
+    document.getElementById("termin").style.display = "none"
+    document.getElementById("terminOverview").style.display = "none"
+    document.getElementById("reservedDates").style.display = "none"
+    document.getElementById("buttonHolder").style.display = "block"
+    document.getElementById("userButton").style.display = "block"
 
 }
 
-function showRequests(){
-    document.getElementById("termin").style.display="none"
+function showRequests() {
+    document.getElementById("termin").style.display = "none"
 
-    document.getElementById("terminOverview").style.display="none"
-    document.getElementById("buttonHolder").style.display="none"
-    document.getElementById("userButton").style.display="none"
-    document.getElementById("reservedDates").style.display="block"
+    document.getElementById("terminOverview").style.display = "none"
+    document.getElementById("buttonHolder").style.display = "none"
+    document.getElementById("userButton").style.display = "none"
+    document.getElementById("reservedDates").style.display = "block"
 }
 
 
 let test = setInterval(function () {
     clearInterval(test)
-},100)
+}, 100)
 
 function init(rooms) {
     Grooms = rooms
@@ -74,8 +72,8 @@ function init(rooms) {
 }
 
 
-function generateIconOverViewUser(){
-    generateIconOverview("icon.json",functionsArray)
+function generateIconOverViewUser() {
+    generateIconOverview("icon.json", functionsArray)
 }
 
 
@@ -118,17 +116,18 @@ function generateIconOverViewUser(){
    }
    divElement.appendChild(innerReserver)
 }*/
-async function initReservedDatesOverview(reservedDate, counter){
+async function initReservedDatesOverview(reservedDate, counter) {
     const roverview = document.getElementById("reservedDates")
+    roverview.innerHTML = ""
     let divElement = document.createElement("div")
     divElement.innerText = "Terminanfragen"
-    divElement.className ="requestChild"
-    if(roverview!==null){
-        roverview.appendChild(divElement)
-    }
+    divElement.className = "requestChild"
+    localReservedDates=reservedDate
+    roverview.appendChild(divElement)
+
     let innerReserver = document.createElement("div")
     innerReserver.className = "innerReserver"
-    for(let i=0;i<reservedDate.length;i++) {
+    for (let i = 0; i < reservedDate.length; i++) {
         if (reservedDate[i].pending && !reservedDate[i].request_bewohner) {
             getter("/getVisitorByID?ID=" + reservedDate[i].besucher_id).then((visitor) => {
                 getter("/getRoomByID?ID=" + reservedDate[i].bewohner_id).then((resident) => {
@@ -155,7 +154,7 @@ async function initReservedDatesOverview(reservedDate, counter){
                     button.className = "requestButtons"
                     button2.className = "requestButtons"
                     button2.value = reservedDate[i].id
-                    button2.addEventListener("click",cancelMeeting)
+                    button2.addEventListener("click", cancelMeeting)
                     button2.style.backgroundColor = FAIL
                     requester.appendChild(button)
                     requester.appendChild(button2)
@@ -166,16 +165,14 @@ async function initReservedDatesOverview(reservedDate, counter){
     }
     divElement.appendChild(innerReserver)
     let divElement2 = document.createElement("div")
-    divElement2.className ="requestChild"
-    if(roverview!==null){
-        roverview.appendChild(divElement2)
-    }
+    divElement2.className = "requestChild"
+    roverview.appendChild(divElement2)
 
     divElement2.innerText = "Anstehende Termine"
     let innerReserver2 = document.createElement("div")
     innerReserver2.className = "innerReserver"
     for (let i = 0; i < reservedDate.length; i++) {
-        if (!reservedDate[i].pending){
+        if (!reservedDate[i].pending) {
             let child = document.createElement("div")
             child.className = "reserved"
             let x = await getRoomByID(reservedDate[i].bewohner_id, child, innerReserver2, reservedDate[i].time_start, reservedDate[i].time_end)
@@ -185,25 +182,19 @@ async function initReservedDatesOverview(reservedDate, counter){
     divElement2.appendChild(innerReserver2)
 }
 
-function updateMeeting(e){
-    getter("/updateMeeting?accept=0&meetingID="+e.target.value).then(()=>{
-        openAlert("Meeting wurde erfolgreich angenommen",SUCCESS)
-        setTimeout(function () {
-            location.reload()
-        },1500)
+function updateMeeting(e) {
+    getter("/updateMeeting?accept=0&meetingID=" + e.target.value).then(() => {
+        openAlert("Meeting wurde erfolgreich angenommen", SUCCESS)
+        getAllMeetingsDate(currentWeeksMonday, currentSunday)
     })
 }
 
-function cancelMeeting(e){
-    getter("/updateMeeting?accept=1&meetingID="+e.target.value).then(()=>{
-        openAlert("Meeting wurde erfolgreich abgelehnt",SUCCESS)
-        setTimeout(function () {
-            location.reload()
-        },1500)
+function cancelMeeting(e) {
+    getter("/updateMeeting?accept=1&meetingID=" + e.target.value).then(() => {
+        openAlert("Meeting wurde erfolgreich abgelehnt", SUCCESS)
+        getAllMeetingsDate(currentWeeksMonday, currentSunday)
     })
 }
-
-
 
 
 function addButtons(rooms) {
@@ -228,8 +219,6 @@ function addButtons(rooms) {
     roverview.innerText = "Anstehende Termine"
     getAllMeetingsDate(currentWeeksMonday, currentSunday)
 }
-
-
 
 
 function initTermin() {
@@ -258,7 +247,7 @@ function something() {
 }
 
 function userLogout() {
-    getter("/removeAuthenticateUser?key="+ document.cookie.split('=')[1]).then(()=>{
+    getter("/removeAuthenticateUser?key=" + document.cookie.split('=')[1]).then(() => {
         let cookies = document.cookie.split(";");
         for (let i = 0; i < cookies.length; i++) {
             let cookie = cookies[i];
@@ -403,7 +392,7 @@ async function setResident() {
         stationID = await getStationByName(stationName)
         console.log(stationID)
         createRoom(residentName, stationName, roomNumber)
-        await createUser(0, userName, password, 2,stationID)
+        await createUser(0, userName, password, 2, stationID)
         getAccountIDByName(userName).then((userID) => {
 
         })
@@ -543,8 +532,6 @@ function setEventListener() {
 }
 
 
-
-
 function openTab(evt, tabName) {
     // Declare all variables
     evt.preventDefault()
@@ -565,12 +552,12 @@ function openTab(evt, tabName) {
     document.getElementById(tabName).style.display = "block";
     evt.currentTarget.className += " active";
 
-    if(evt.currentTarget.innerText ==="Anmelden"){
-        document.getElementById("psw").addEventListener("keydown",f)
-        document.getElementById("pswRegister").removeEventListener("keydown",f1)
-    }else{
-        document.getElementById("pswRegister").addEventListener("keydown",f1)
-        document.getElementById("psw").removeEventListener("keydown",f)
+    if (evt.currentTarget.innerText === "Anmelden") {
+        document.getElementById("psw").addEventListener("keydown", f)
+        document.getElementById("pswRegister").removeEventListener("keydown", f1)
+    } else {
+        document.getElementById("pswRegister").addEventListener("keydown", f1)
+        document.getElementById("psw").removeEventListener("keydown", f)
     }
 }
 
@@ -583,14 +570,15 @@ function showPasswordToggle() {
         x.type = "password";
     }
 }
+
 function f(e) {
-    if(e.code==="Enter"){
+    if (e.code === "Enter") {
         getUserAuthentication()
     }
 }
 
 function f1(e) {
-    if(e.code==="Enter"){
+    if (e.code === "Enter") {
         addVisitorAccount()
     }
 }
@@ -630,6 +618,6 @@ function addVisitorAccount() {
 
 }
 
-function forwordingConv(){
-    localStorage.setItem('keyBBB',"3")
+function forwordingConv() {
+    localStorage.setItem('keyBBB', "3")
 }

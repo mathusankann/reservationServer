@@ -45,6 +45,7 @@ func (tablets Tablet) Verify() bool {
 func getStationByID(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["ID"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'Name' is missing")
 		return
 	}
@@ -79,7 +80,9 @@ func getAllStation(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select name From station ")
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
-		log.Panic(dberr)
+		log.Println(dberr)
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		return
 	}
 	var listNames []string
 	for rows.Next() {
@@ -99,6 +102,7 @@ func getAllStation(w http.ResponseWriter, r *http.Request) {
 func getAllStationByName(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["name"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'name' is missing")
 		return
 	}
@@ -128,6 +132,7 @@ func getStation(name string) Station {
 func getTabletByName(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["name"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'Name' is missing")
 		return
 	}
@@ -139,6 +144,7 @@ func getTabletByName(w http.ResponseWriter, r *http.Request) {
 func getTabletByID(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["id"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'id' is missing")
 		return
 	}
@@ -146,7 +152,9 @@ func getTabletByID(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select * From tablets Where id= '%d'", id)
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(dberr)
+		return
 	}
 	var cache sql.NullInt32
 	var tablet Tablet
@@ -188,12 +196,12 @@ func createNewStation(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	if !incStation.Verify() {
-		http.Error(w, "Name required", http.StatusBadRequest)
+		http.Error(w, "Stationsname fehlt", http.StatusBadRequest)
 		return
 	}
 
 	if getStation(incStation.Name).Verify() {
-		http.Error(w, "Station already exists", http.StatusBadRequest)
+		http.Error(w, "Station exisitiert bereits", http.StatusBadRequest)
 		return
 	}
 	//transaction
@@ -208,7 +216,9 @@ func createNewStation(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln(err.Error())
 	}
 	statement.Close()
-	w.Write([]byte("ok"))
+	com := "Station erfolgreich erstellt"
+	jsonFile, _ := json.Marshal(com)
+	w.Write(jsonFile)
 }
 
 func getAllTablets(w http.ResponseWriter, r *http.Request) {
@@ -220,7 +230,9 @@ func getAllTablets(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select * From tablets")
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
-		log.Panic(dberr)
+		log.Println(dberr)
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -247,7 +259,9 @@ func getAllTabletsNames(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select name From tablets")
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
-		log.Panic(dberr)
+		log.Println(dberr)
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -272,7 +286,9 @@ func getAllTabletsByMaintenance(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select * From tablets where maintenance=0 ")
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
-		log.Panic(dberr)
+		log.Println(dberr)
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -286,6 +302,7 @@ func getAllTabletsByMaintenance(w http.ResponseWriter, r *http.Request) {
 		tablet.StationID = int(cache.Int32)
 		listTablets = append(listTablets, tablet)
 	}
+	w.Header().Set("Content-Type", "application/json")
 	jsonFile, _ := json.Marshal(listTablets)
 	w.Write(jsonFile)
 
@@ -298,26 +315,33 @@ func addTablet(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	if !incTablet.Verify() {
-		http.Error(w, "Name required", http.StatusBadRequest)
+		http.Error(w, "Tabletname fehlt", http.StatusBadRequest)
 		return
 	}
 
 	if getTablet(incTablet.Name).Verify() {
-		http.Error(w, "Tablet already exists", http.StatusBadRequest)
+		http.Error(w, "Tablet existiert bereits", http.StatusBadRequest)
 		return
 	}
 	//transaction
 	sqlStmt := fmt.Sprintf(`INSERT INTO tablets(name,maintenance)VALUES(?,?)`)
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Println(err)
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		return
 	}
 	_, err = statement.Exec(incTablet.Name, incTablet.Maintenance)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Println(err)
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		return
 	}
 	statement.Close()
-	w.Write([]byte("ok"))
+	w.Header().Set("Content-Type", "application/json")
+	com := "Tablet erfolgreich erstellt"
+	jsonFile, _ := json.Marshal(com)
+	w.Write(jsonFile)
 
 }
 
@@ -328,20 +352,27 @@ func updateTablet(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	if getTablet(incTablet.Name).Verify() && getTablet(incTablet.Name).Maintenance == incTablet.Maintenance {
-		http.Error(w, "Tablet already exists", http.StatusBadRequest)
+		http.Error(w, "Tablet exisitiert bereits", http.StatusBadRequest)
 		return
 	}
 	sqlStmt := fmt.Sprintf("UPDATE tablets SET name = ?, maintenance = ? WHERE Id = ?")
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Println(err)
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		return
 	}
 	_, err = statement.Exec(incTablet.Name, incTablet.Maintenance, incTablet.Id)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Println(err)
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		return
 	}
 	statement.Close()
-	w.Write([]byte("ok"))
+	w.Header().Set("Content-Type", "application/json")
+	com := "Tablet erfolgreich aktualisiert"
+	jsonFile, _ := json.Marshal(com)
+	w.Write(jsonFile)
 
 }
 
@@ -358,14 +389,17 @@ func setTimeOuts(w http.ResponseWriter, r *http.Request) {
 	}
 	file, _ := json.MarshalIndent(timeOuts, "", " ")
 	_ = ioutil.WriteFile("timeOuts.json", file, 0644)
-	w.Write([]byte("done"))
+	w.Header().Set("Content-Type", "application/json")
+	com := "Gewünschte Zeiten wurden deaktiviert"
+	jsonFile, _ := json.Marshal(com)
+	w.Write(jsonFile)
 }
 
 func getTimeOut(w http.ResponseWriter, r *http.Request) {
 	jsonFile, err := os.Open("./timeOuts.json")
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "no timeouts set", http.StatusNotFound)
+		http.Error(w, "timeOuts.json ist beschädigt", http.StatusNotFound)
 		return
 	}
 	byteValue, _ := ioutil.ReadAll(jsonFile)
@@ -383,7 +417,10 @@ func setDayOuts(w http.ResponseWriter, r *http.Request) {
 
 	file, _ := json.MarshalIndent(days, "", " ")
 	_ = ioutil.WriteFile("week.json", file, 0644)
-	w.Write([]byte("done"))
+	w.Header().Set("Content-Type", "application/json")
+	com := "Gewünschte(r) Tag(e) wurden deaktiviert"
+	jsonFile, _ := json.Marshal(com)
+	w.Write(jsonFile)
 
 }
 func getDayOuts(w http.ResponseWriter, r *http.Request) {
@@ -406,7 +443,10 @@ func setKonfSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	file, _ := json.MarshalIndent(settings, "", " ")
 	_ = ioutil.WriteFile("konfSetting.json", file, 0644)
-	w.Write([]byte("done"))
+	w.Header().Set("Content-Type", "application/json")
+	com := "Anpassung an BigBlueButton wurden gespeichert"
+	jsonFile, _ := json.Marshal(com)
+	w.Write(jsonFile)
 
 }
 
@@ -414,7 +454,7 @@ func getKonfSettings(w http.ResponseWriter, r *http.Request) {
 	jsonFile, err := os.Open("./konfSetting.json")
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "konfSetting.json does not exist", http.StatusNotFound)
+		http.Error(w, "Konfsettings.json ist beschädigt", http.StatusNotFound)
 		return
 	}
 	byteValue, _ := ioutil.ReadAll(jsonFile)

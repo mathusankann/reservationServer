@@ -430,7 +430,7 @@ function createTablet() {
         tabletPromise.then(() => {
             openAlert("Tabletname fehlt", SUCCESS)
             setTimeout(function () {
-                location.reload()
+                resetView()
             },1000)
 
         })
@@ -467,7 +467,7 @@ function createStationWithAccount() {
                     createUser(0,name,passwort,2,parseInt(id)).then(()=>{
                         openAlert("Account und Station hingefügt",SUCCESS)
                         setTimeout(function () {
-                            location.reload()
+                            resetView()
                         },1000)
                     })
                 })
@@ -500,7 +500,7 @@ function createResident() {
     createRoom(name,stationValue,raum).then(()=>{
         openAlert("Erfolgreich hingefügt",SUCCESS)
         setTimeout(function () {
-            location.reload()
+            resetView()
         },1000)
     })
 
@@ -514,7 +514,7 @@ function createVisitor(){
 async function createRoom(name, stationName, roomNumber) {
     //if (document.cookie !== "") {
     let api, i, len, method, params, ref, urls;
-    api = new BigBlueButtonApi("https://mathu.jitsi-mathu.de/bigbluebutton/api/", "Eh7iAAkg9cib4wObQv5gADIE2OlNeo9gKEnyYitl");
+    api = new BigBlueButtonApi("https://mathu.jitsi-mathu.de/bigbluebutton/api", "Eh7iAAkg9cib4wObQv5gADIE2OlNeo9gKEnyYitl");
     //todo shared secret request
     //const username = document.getElementById("name").value
     // A hash of parameters.
@@ -546,6 +546,7 @@ async function createRoom(name, stationName, roomNumber) {
             url: api.urlFor(method, params)
         });
     }
+    console.log(urls)
     params.password = "ap"
     params.fullName = "Besucher"
     let vistor = api.urlFor('join', params)
@@ -706,7 +707,7 @@ function executeUpdate() {
                     }else{
                         acc.password=divPass.value
                     }
-                    getterPOst("/updateAccount",acc)
+                    getterPOst("/updateAccount",acc,true)
                 }else{
                     openAlert("Erfolgreich gespeichert",SUCCESS)
                 }
@@ -722,7 +723,7 @@ function executeUpdate() {
                         resident.name =divName.value
                         resident.station_id=stations
                         resident.room =divRoom.value
-                        getterPOst("/updateResident",resident)
+                        getterPOst("/updateResident",resident,true)
                     }else{
                         openAlert("Erfolgreich gespeichert",SUCCESS)
                     }

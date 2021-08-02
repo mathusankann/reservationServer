@@ -12,6 +12,7 @@ import (
 func getVisitorByID(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["ID"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'ID' is missing")
 		return
 	}
@@ -25,6 +26,7 @@ func getVisitorByID(w http.ResponseWriter, r *http.Request) {
 func getVisitorByAccountID(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["AccountID"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'ID' is missing")
 		return
 	}
@@ -60,13 +62,14 @@ func getVisitor(id int, column string) Visitor {
 func getVisitorbyname(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["name"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'Name' is missing")
 		return
 	}
 	visitor := getVistorByNamesorMail("name", keys[0])
 
 	if !visitor.Verify() {
-		http.Error(w, "Username not found", http.StatusNotFound)
+		http.Error(w, "Benutzername nicht vorhanden", http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -105,7 +108,7 @@ func getVisitorByMail(w http.ResponseWriter, r *http.Request) {
 	}
 	visitor := getVistorByNamesorMail("mail", incVisitor.Mail)
 	if !visitor.Verify() {
-		http.Error(w, "Visitor not found", http.StatusNotFound)
+		http.Error(w, "Besucher nicht vorhanden", http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -117,11 +120,11 @@ func addVisitorToResident(visitor int, resident int) {
 	sqlStmt := fmt.Sprintf(`INSERT INTO bewohner_hat_besucher(bewohner_id,besucher_id)VALUES(?,?)`)
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Panic(err.Error())
 	}
 	_, err = statement.Exec(resident, visitor)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Panic(err.Error())
 	}
 	statement.Close()
 }
@@ -129,6 +132,7 @@ func addVisitorToResident(visitor int, resident int) {
 func addNewVisitor(w http.ResponseWriter, r *http.Request) {
 	keys, qerr := r.URL.Query()["ID"]
 	if !qerr || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'ID' is missing")
 		return
 	}
@@ -140,7 +144,7 @@ func addNewVisitor(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	if !incvisitor.Verify() {
-		http.Error(w, "faulty Visitor", http.StatusBadRequest)
+		http.Error(w, "Besucher entspricht nicht den vorgaben", http.StatusBadRequest)
 		return
 	}
 	visitor := getVistorByNamesorMail("mail", incvisitor.Mail)
@@ -156,11 +160,15 @@ func addNewVisitor(w http.ResponseWriter, r *http.Request) {
 
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
-		log.Fatalln(err.Error())
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		log.Panic(err.Error())
+		return
 	}
 	_, err = statement.Exec(incvisitor.Name, incvisitor.Mail)
 	if err != nil {
-		log.Fatalln(err.Error())
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		log.Panic(err.Error())
+		return
 	}
 	statement.Close()
 	visitor = getVistorByNamesorMail("mail", incvisitor.Mail)
@@ -189,27 +197,34 @@ func registerVisitor(w http.ResponseWriter, r *http.Request) {
 		sqlStmt := fmt.Sprintf("UPDATE besucher SET account_id = ? WHERE Id = ?")
 		statement, err := db.Prepare(sqlStmt)
 		if err != nil {
-			log.Fatalln(err.Error())
+			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+			log.Panic(err.Error())
+			return
 		}
 		_, err = statement.Exec(account.ID, visitor.ID)
 		if err != nil {
-			log.Fatalln(err.Error())
+			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+			log.Panic(err.Error())
+			return
 		}
 		statement.Close()
-		w.Write([]byte("Account has been created"))
+		w.Header().Set("Content-Type", "application/json")
+		com := "Account wurde erfolgreich erstellt"
+		jsonFile, _ := json.Marshal(com)
+		w.Write(jsonFile)
 	} else {
-		http.Error(w, "This Mail has already an account", http.StatusBadRequest)
+		http.Error(w, "Für diese Mail existiert bereits ein Account", http.StatusBadRequest)
 		return
 	}
 
 }
-
 
 func getAllResidentNamesByVisitorID(w http.ResponseWriter, r *http.Request) {
 	var visitorNames []string
 	var index []int
 	keys, err := r.URL.Query()["ID"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'ID' is missing")
 		return
 	}
@@ -217,7 +232,9 @@ func getAllResidentNamesByVisitorID(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select bewohner_id From bewohner_hat_besucher Where besucher_id=%s", keys[0])
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(dberr)
+		return
 	}
 	var ind int
 
@@ -231,7 +248,9 @@ func getAllResidentNamesByVisitorID(w http.ResponseWriter, r *http.Request) {
 		queryStmt := fmt.Sprintf("Select name From bewohner Where id= %d", index[i])
 		rows, dberr := db.Query(queryStmt)
 		if dberr != nil {
+			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 			log.Panic(dberr)
+			return
 		}
 		var name string
 		rows.Next()
@@ -246,4 +265,3 @@ func getAllResidentNamesByVisitorID(w http.ResponseWriter, r *http.Request) {
 	jsonFile, _ := json.Marshal(visitorNames)
 	w.Write(jsonFile)
 }
-

@@ -12,13 +12,14 @@ import (
 func GetRoom(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["name"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'Name' is missing")
 		return
 	}
 	room2 := getRoom(keys[0])
 
 	if !room2.Verify() {
-		http.Error(w, "Username not found", http.StatusNotFound)
+		http.Error(w, "Benutzername nicht gefunden", http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -71,6 +72,7 @@ func localGetRoomMeetingID(meetingID string) Resident {
 func GetRoomByID(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["ID"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'ID' is missing")
 		return
 	}
@@ -78,7 +80,7 @@ func GetRoomByID(w http.ResponseWriter, r *http.Request) {
 	room2 := getRoomByID(int(id))
 
 	if !room2.Verify() {
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, "Benutzername nicht gefunden", http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -100,11 +102,15 @@ func updateResident(w http.ResponseWriter, r *http.Request) {
 	sqlStmt := fmt.Sprintf(`UPDATE bewohner Set station_id =?,name=?,room=? Where id=?`)
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
-		log.Fatalln(err.Error())
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		log.Panic(err.Error())
+		return
 	}
 	_, err = statement.Exec(incResident.StationId, incResident.Name, incResident.Room, incResident.Id)
 	if err != nil {
-		log.Fatalln(err.Error())
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		log.Panic(err.Error())
+		return
 	}
 	statement.Close()
 	w.Header().Set("Content-Type", "application/json")
@@ -120,7 +126,9 @@ func GetAllRoomNames(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select name From bewohner")
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(dberr)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -144,6 +152,7 @@ func startConf(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Get(link)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(resp.Status))
@@ -155,10 +164,15 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-	if !croom.Verify() { //todo check for name already exisiting
-		http.Error(w, "faulty Account", http.StatusBadRequest)
+	if !croom.Verify() {
+		http.Error(w, "Bewohner entspricht den Anforderungen", http.StatusBadRequest)
 		return
 	}
+	if getRoom(croom.Name).Name != "" {
+		http.Error(w, "Bewohnername ist schon vergeben", http.StatusBadRequest)
+		return
+	}
+
 	/*db, dberr := sql.Open("sqlite3", "Account.sqlite")
 	if dberr != nil {
 		log.Panic(dberr)
@@ -169,15 +183,21 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 	statement, err := db.Prepare(sqlStmt)
 	if err != nil {
-		log.Fatalln(err.Error())
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		log.Panic(err.Error())
+		return
 	}
 	_, err = statement.Exec(croom.Name, croom.StationId, croom.Join, croom.Create, croom.Invite, &croom.MeetingRunningLink, &croom.Room)
 	if err != nil {
-		log.Fatalln(err.Error())
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		log.Panic(err.Error())
+		return
 	}
 	statement.Close()
-
-	w.Write([]byte("ok"))
+	com := "Bewohner erfolgreich hinzugefügt"
+	jsonFile, _ := json.Marshal(com)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonFile)
 
 }
 
@@ -228,7 +248,9 @@ func getAllVisitors(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select name From besucher")
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(dberr)
+		return
 	}
 	var name string
 	for rows.Next() {
@@ -246,6 +268,7 @@ func getAllVistorNamesByResidentID(w http.ResponseWriter, r *http.Request) {
 	var index []int
 	keys, err := r.URL.Query()["ID"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'ID' is missing")
 		return
 	}
@@ -254,10 +277,11 @@ func getAllVistorNamesByResidentID(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select besucher_id From bewohner_hat_besucher Where bewohner_id=%s", keys[0])
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(dberr)
+		return
 	}
 	var ind int
-
 	for rows.Next() {
 		dberr = rows.Scan(&ind)
 		index = append(index, ind)
@@ -268,7 +292,9 @@ func getAllVistorNamesByResidentID(w http.ResponseWriter, r *http.Request) {
 		queryStmt := fmt.Sprintf("Select name From besucher Where id= %d", index[i])
 		rows, dberr := db.Query(queryStmt)
 		if dberr != nil {
+			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 			log.Panic(dberr)
+			return
 		}
 		var name string
 
@@ -288,6 +314,7 @@ func getAllVistorNamesByResidentID(w http.ResponseWriter, r *http.Request) {
 func getAllRoomByStationID(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["ID"]
 	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'ID' is missing")
 		return
 	}
@@ -295,7 +322,9 @@ func getAllRoomByStationID(w http.ResponseWriter, r *http.Request) {
 	queryStmt := fmt.Sprintf("Select name From bewohner Where station_id= %d", id)
 	rows, dberr := db.Query(queryStmt)
 	if dberr != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(dberr)
+		return
 	}
 	var listNames []string
 	for rows.Next() {
@@ -315,7 +344,8 @@ func getAllRoomByStationID(w http.ResponseWriter, r *http.Request) {
 func getRoomIDByName(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["Name"]
 	if !err || len(keys[0]) < 1 {
-		log.Println("Url Param 'Name' is missing") //todo fehlermeldung!!!!!
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
+		log.Println("Url Param 'Name' is missing")
 		return
 	}
 	jsonFile, _ := json.Marshal(getRoom(keys[0]).Id)
@@ -325,16 +355,21 @@ func getRoomIDByName(w http.ResponseWriter, r *http.Request) {
 func deleteResident(w http.ResponseWriter, r *http.Request) {
 	deleteID, errs := r.URL.Query()["residentID"]
 	if !errs || len(deleteID[0]) < 1 {
+		http.Error(w, "Url Paramter fehlt", http.StatusNotFound)
 		log.Println("Url Param 'residentID' is missing")
 		return
 	}
 	stmt, err := db.Prepare("delete from bewohner_hat_besucher where bewohner_id=?")
 	if err != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(err)
+		return
 	}
 	res, err := stmt.Exec(deleteID[0])
 	if err != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(err)
+		return
 	}
 	affect, err := res.RowsAffected()
 	fmt.Println(affect)
@@ -342,11 +377,15 @@ func deleteResident(w http.ResponseWriter, r *http.Request) {
 
 	stmt, err = db.Prepare("delete from meeting where bewohner_id=?")
 	if err != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(err)
+		return
 	}
 	res, err = stmt.Exec(deleteID[0])
 	if err != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(err)
+		return
 	}
 	affect, err = res.RowsAffected()
 	fmt.Println(affect)
@@ -354,15 +393,20 @@ func deleteResident(w http.ResponseWriter, r *http.Request) {
 
 	stmt, err = db.Prepare("delete from bewohner where id=?")
 	if err != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(err)
+		return
 	}
 	res, err = stmt.Exec(deleteID[0])
 	if err != nil {
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
 		log.Panic(err)
+		return
 	}
 	affect, err = res.RowsAffected()
 	fmt.Println(affect)
 	stmt.Close()
-
-	w.Write([]byte("Ihr Bewohner wurde erfolgreich stoniert"))
+	com := "Ihr Bewohner wurde erfolgreich gelöscht"
+	jsonFile, _ := json.Marshal(com)
+	w.Write(jsonFile)
 }

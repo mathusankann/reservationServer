@@ -224,6 +224,7 @@ function getRunningCon() {
                     url: api.urlFor(method, params)
                 });
             }
+            console.log(urls)
             resolve(urls[6])
         }))
     })
