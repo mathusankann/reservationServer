@@ -11,16 +11,16 @@ let test2 = setInterval(function () {
 const mainFunctions = [
     expandMenu,
     () => {
-        location.href = "/static/htmls/configBBB.html"
+        location.href = "../htmls/configBBB.html"
     },
     () => {
-        location.href = "/static/htmls/configDocker.html"
+        location.href = "../htmls/configDocker.html"
     },
     () => {
-        location.href = "/static/htmls/configReserv.html"
+        location.href = "../htmls/configReserv.html"
     },
     () => {
-        location.href = "/static/htmls/configTraefik.html"
+        location.href = "../htmls/configTraefik.html"
     }
 ]
 
