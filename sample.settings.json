@@ -1,0 +1,7 @@
+{
+  "Traefik":"https://*traefik*",
+  "BigBlueButton": "https://*bbb*'",
+  "Reservation": "https://*reservation*",
+  "SharedKey": "*key*",
+  "Only_Origin": "*origin*"
+}

@@ -3,7 +3,7 @@ let currentSettings
 let index
 
 
-window.addEventListener('DOMContentLoaded', function () {
+window.addEventListener('DOMContentLoaded', function () { //todo add getter with settings
     console.log(sessionStorage.getItem("BBB_meetingID"))
     setTimeout(async function () {
         settings = await getter("https://reservation.jitsi-mathu.de/getKonfSettings")

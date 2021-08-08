@@ -14,6 +14,7 @@ type Meeting struct {
 	TabletId         int       `json:"tablets_id"`
 	Pending          bool      `json:"pending"`
 	RequestBewohner  bool      `json:"request_bewohner"`
+	Ts               time.Time `json:"ts"`
 }
 
 type CacheMeeting struct {
@@ -25,6 +26,7 @@ type CacheMeeting struct {
 	TabletId         sql.NullInt32 `json:"tablets_id"`
 	Pending          bool          `json:"pending"`
 	RequestBewohner  bool          `json:"request_bewohner"`
+	Ts               time.Time     `json:"ts"`
 }
 
 func (meeting *Meeting) Copy(cache CacheMeeting) {
@@ -36,4 +38,5 @@ func (meeting *Meeting) Copy(cache CacheMeeting) {
 	meeting.TabletId = int(cache.TabletId.Int32)
 	meeting.Pending = cache.Pending
 	meeting.RequestBewohner = cache.RequestBewohner
+	meeting.Ts = cache.Ts
 }

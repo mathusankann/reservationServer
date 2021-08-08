@@ -32,7 +32,7 @@ class User {
 }
 
 class Meeting {
-    constructor(id, time_start, time_end, bewohnerid,besucherid, tabletid,request_bewohner,pending) {
+    constructor(id, time_start, time_end, bewohnerid,besucherid, tabletid,request_bewohner,pending,ts) {
         this.id = id
         this.time_start = time_start;
         this.time_end = time_end;
@@ -41,6 +41,7 @@ class Meeting {
         this.tablets_id = tabletid;
         this.pending = pending
         this.request_bewohner =request_bewohner
+        this.ts=ts
     }
 }
 

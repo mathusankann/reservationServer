@@ -81,11 +81,8 @@ func deleteActiveMeeting(w http.ResponseWriter, r *http.Request) {
 }
 
 func localDeleteActiveMeeting(meetingID string) {
-	println(len(ActiveMeetings))
 	time.Sleep(2 * time.Hour)
 	delete(ActiveMeetings, meetingID)
-	println(len(ActiveMeetings))
-	println("done")
 }
 
 func insertAdminAccount() {
@@ -142,7 +139,8 @@ func sendGetRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllDockerContainer(w http.ResponseWriter, r *http.Request) {
-	resp, err := http.Get("http://192.168.178.102:7777/getAllDockerContainer")
+	resp, err := http.Get("http://192.168.178.102:7777/getAllDockerContainer") //todo get ip address
+
 	if err != nil {
 		http.Error(w, "Dockerservice ist nicht erreichbar", http.StatusInternalServerError)
 		return
@@ -195,7 +193,7 @@ func postRunCommand(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := http.Post("http://192.168.178.102:7777/runCommands", "application/json",
-		bytes.NewBuffer(jsonData))
+		bytes.NewBuffer(jsonData)) //todo get Ip Address
 	if err != nil {
 		http.Error(w, "Dockerservice ist nicht erreichbar", http.StatusInternalServerError)
 		return
@@ -249,9 +247,22 @@ func settingsFile(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+func getSettingJson(w http.ResponseWriter, r *http.Request) {
+	jsonFile, err := os.Open("./settings.json")
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "settings.json ist beschädigt", http.StatusNotFound)
+		return
+	}
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(byteValue)
+
+}
+
 func main() {
 	insertAdminAccount()
-
+	go deleteTimedOutMeetings()
 	jsonFile, err := os.Open("settings.json")
 	if err != nil {
 		log.Panic("something went wrong --> settings.json")
@@ -275,6 +286,7 @@ func main() {
 	http.HandleFunc("/getActiveMeetings", getActiveMeetings)
 	http.HandleFunc("/testSiteReturn", testSiteReturn)
 	http.HandleFunc("/deleteActiveMeeting", deleteActiveMeeting)
+	http.HandleFunc("/getSettingJson", getSettingJson)
 
 	//ResidentHandler
 	http.HandleFunc("/getRoom", GetRoom)

@@ -6,12 +6,22 @@ import (
 	"encoding/json"
 	"fmt"
 	gomail "gopkg.in/mail.v2"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"time"
 
 	"strings"
 )
+
+type smtpStruct struct {
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
 
 func setMeeting(w http.ResponseWriter, r *http.Request) {
 	var incMeeting Meeting
@@ -62,13 +72,36 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 	//body := fmt.Sprintf("Ihr Konferenzlink: %s \n Die Konferenz findet am %s \n Sie haben "+
 	//	"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://%s/deleteMeeting?meetingID=%d", room.Invite, wholeString, host.Name, incMeeting.Id)
 	visitor := getVisitor(incMeeting.BesucherId, "id")
-	acceptLink := fmt.Sprintf("https://localhost/updateMeetingWithMail?meetingID=%d", host.Name, incMeeting.Id)
+	acceptLink := fmt.Sprintf("https://localhost/updateMeetingWithMail?meetingID=%s", strconv.Itoa(incMeeting.Id)) //todo change to settings.json
+	println(incMeeting.Id)
 	body := fmt.Sprintf("Hallo %s \n\n"+
 		"%s würde gerne am %s mit Ihnen ein Videogespräch führen."+
 		"Falls es Ihnen zeitlich passt, können Sie mit folgendem Link zusagen:\n%s. \nBitte beachten Sie, dass diese Anfrage nur 24 Stunden gültig ist. \n\n", visitor.Name, room.Name, wholeString, acceptLink)
 	go sendInvitation(incMeeting, body)
 	w.Write([]byte("ok"))
 
+}
+
+func deleteTimedOutMeetings() {
+	time.Sleep(24 * time.Hour)
+	var meetings []int
+	queryStmt := fmt.Sprintf("Select Id From meeting where ts + INTERVAl 1 Day < NOW() AND pending =true ")
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Println(dberr)
+	}
+	for rows.Next() {
+		var dates int
+		err := rows.Scan(&dates)
+		if err != nil {
+			log.Println(err)
+		}
+		meetings = append(meetings, dates)
+	}
+	for i := 0; i < len(meetings); i++ {
+		localDeleteMeeting(meetings[i])
+	}
+	deleteTimedOutMeetings()
 }
 
 func updateMeetingWithMail(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +160,7 @@ func localGetMeetingByID(id int) Meeting {
 	}
 	var meeting Meeting
 	if rows.Next() {
-		dberr = rows.Scan(&meeting.Id, &meeting.MeetingDateStart, &meeting.MeetingDateEnd, &meeting.BewohnerId, &meeting.BesucherId, &meeting.TabletId, &meeting.Pending, &meeting.RequestBewohner)
+		dberr = rows.Scan(&meeting.Id, &meeting.MeetingDateStart, &meeting.MeetingDateEnd, &meeting.BewohnerId, &meeting.BesucherId, &meeting.TabletId, &meeting.Pending, &meeting.RequestBewohner, &meeting.Ts)
 		if dberr != nil {
 			log.Println(dberr)
 		}
@@ -197,7 +230,7 @@ func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var cachedates CacheMeeting
 		var dates Meeting
-		err := rows.Scan(&cachedates.Id, &cachedates.MeetingDateStart, &cachedates.MeetingDateEnd, &cachedates.BewohnerId, &cachedates.BesucherId, &cachedates.TabletId, &cachedates.Pending, &cachedates.RequestBewohner)
+		err := rows.Scan(&cachedates.Id, &cachedates.MeetingDateStart, &cachedates.MeetingDateEnd, &cachedates.BewohnerId, &cachedates.BesucherId, &cachedates.TabletId, &cachedates.Pending, &cachedates.RequestBewohner, &cachedates.Ts)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
@@ -205,7 +238,6 @@ func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 		}
 		dates.Copy(cachedates)
 		reservedDates = append(reservedDates, dates)
-
 	}
 	jsonFile, _ := json.Marshal(reservedDates)
 	w.Write(jsonFile)
@@ -213,12 +245,18 @@ func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendInvitation(incMeeting Meeting, body string) {
+	var smtpClient smtpStruct
+	jsonFile, err := ioutil.ReadFile("smtp.json")
+	if err != nil {
+		log.Panic(err.Error())
+	}
+	json.Unmarshal(jsonFile, &smtpClient)
 	//incoming
 	//Timestamp of the meeting and Email
 	//ro := getRoom(incMessage.Account)
 	m := gomail.NewMessage()
 	// Set E-Mail sender
-	m.SetHeader("From", "TerminMa3@outlook.de")
+	m.SetHeader("From", smtpClient.Username)
 	//Set E-Mail receivers
 	visitor := getVisitor(incMeeting.BesucherId, "id")
 	m.SetHeader("To", visitor.Mail)
@@ -228,7 +266,7 @@ func sendInvitation(incMeeting Meeting, body string) {
 
 	m.SetBody("text/plain", body)
 	// Settings for SMTP server
-	d := gomail.NewDialer("smtp.office365.com", 587, "Terminma3@outlook.de", "Spartan17")
+	d := gomail.NewDialer(smtpClient.Host, smtpClient.Port, smtpClient.Username, smtpClient.Password)
 	// This is only needed when SSL/TLS certificate is not valid on server.
 	// In production this should be set to false.
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}

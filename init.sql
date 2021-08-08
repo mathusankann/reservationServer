@@ -79,6 +79,7 @@ CREATE TABLE meeting
     tablets_id  int,
     pending     boolean not NULL,
     request_bewohner boolean not NULL ,
+    ts timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (Id),
     Foreign Key (tablets_id) REFERENCES tablets (Id),
     foreign key (bewohner_id) references bewohner (Id),

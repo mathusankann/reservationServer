@@ -1,6 +1,7 @@
 {
-  "Traefik":"",
-  "BigBlueButton": "",
-  "Reservation": "",
-  "SharedKey": ""
+  "Traefik":"https://docker.jitsi-mathu.de",
+  "BigBlueButton": "https://mathu.jitsi-mathu.de",
+  "Reservation": "https://reservation.jitsi-mathu.de",
+  "SharedKey": "Eh7iAAkg9cib4wObQv5gADIE2OlNeo9gKEnyYitl",
+  "Only_Origin": "toBeDone"
 }

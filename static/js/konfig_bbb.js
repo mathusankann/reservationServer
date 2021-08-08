@@ -17,40 +17,41 @@ let settings
 let currentSettings
 
 async function getAllSettingsBBB(e) {
-   // setPlaceHolderBackground(e.target.value)
+
+    // setPlaceHolderBackground(e.target.value)
     checkAuthentication()
     createDivs()
-    currentButton=undefined
-    imgArray=[]
+    currentButton = undefined
+    imgArray = []
     settings = await getter("/getKonfSettings")
     changePicture()
-    toggle(0,focusImage)
+    toggle(0, focusImage)
     generateUserDropMenu().then(() => {
     })
 }
 
-function createDivs(){
+function createDivs() {
     const main = document.getElementById("main")
-    main.innerHTML=""
+    main.innerHTML = ""
     let div = document.createElement("div")
-    div.id="title"
-    div.innerText="Konfigurator-BigBlueButton"
+    div.id = "title"
+    div.innerText = "Konfigurator-BigBlueButton"
     main.appendChild(div)
     createLogOutButton()
     div = document.createElement("div")
-    div.id="dropBoxUser"
+    div.id = "dropBoxUser"
     main.appendChild(div)
     div = document.createElement("div")
-    div.id="settingDropbox"
+    div.id = "settingDropbox"
     main.appendChild(div)
     div = document.createElement("div")
-    div.id="settingView"
+    div.id = "settingView"
     main.appendChild(div)
     div = document.createElement("div")
-    div.id="saveButton"
+    div.id = "saveButton"
     main.appendChild(div)
     div = document.createElement("div")
-    div.id="preview"
+    div.id = "preview"
     main.appendChild(div)
 
 
@@ -69,6 +70,7 @@ function generateUserDropMenu() {
         let container = document.createElement("div")
         container.className = "container"
         let dropdown = document.createElement("select")
+        dropdown.onchange=testChrome
         dropdown.name = "User"
         dropdown.id = "user"
         for (let i = 0; i < settings.length; i++) {
@@ -76,20 +78,7 @@ function generateUserDropMenu() {
             option.value = i.toString()
             option.innerText = settings[i].user
             dropdown.appendChild(option)
-            option.addEventListener("click", (e) => {
-                if (currentSettings !== undefined) {
-                    settings[currentView].value = currentSettings
-                }
-                currentView = e.target.value
-                currentSettings = settings[e.target.value].value
-                document.getElementById("settingView").innerHTML=""
-                dropMenu()
-                if (!flagChanged) {
-                    generateLiveViewButton()
-                } else {
-                    generateSaveButton(setSettings)
-                }
-            })
+            option.addEventListener("click", testChrome, false)
             if (i === 1) {
                 option.click()
             }
@@ -98,8 +87,25 @@ function generateUserDropMenu() {
         div.appendChild(container)
         resolve(true)
     }))
-
 }
+
+function testChrome(e) {
+    console.log("next")
+    if (currentSettings !== undefined) {
+        settings[currentView].value = currentSettings
+    }
+    currentView = e.target.value
+    currentSettings = settings[e.target.value].value
+    console.log(currentSettings)
+    document.getElementById("settingView").innerHTML = ""
+    dropMenu()
+    if (!flagChanged) {
+        generateLiveViewButton()
+    } else {
+        generateSaveButton(setSettings)
+    }
+}
+
 
 function dropMenu() {
     const div = document.getElementById("settingDropbox")
@@ -119,9 +125,9 @@ function dropMenu() {
         } else {
             button.innerText = buttonNames[i] + ":" + settingButtonNames[currentSettings[i]]
         }
-        if(currentButton===i){
+        if (currentButton === i) {
             button.className = "button"
-        }else{
+        } else {
             button.className = "button"
         }
 
@@ -140,8 +146,6 @@ function loadAllPictures() {
     //settingViewActionBar()
 
 }
-
-
 
 
 function settingViewActionBar() {
@@ -319,7 +323,6 @@ function generateLiveViewButton() {
 }
 
 
-
 function setSettings() {
     window.onbeforeunload = function () {
         // blank function do nothing
@@ -329,7 +332,7 @@ function setSettings() {
     const div = document.getElementById("dropBoxUser")
     settings[div.children[0].children[0].value].value = currentSettings
     flagChanged = false
-    openAlert("Erfolgreich gespeichert",SUCCESS)
+    openAlert("Erfolgreich gespeichert", SUCCESS)
     setOuts("/setKonfSettings", settings)
 }
 

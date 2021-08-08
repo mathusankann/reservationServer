@@ -513,16 +513,19 @@ function createVisitor(){
 
 async function createRoom(name, stationName, roomNumber) {
     //if (document.cookie !== "") {
+   let val= await getter("/getAllRoomNames")
+
     let api, i, len, method, params, ref, urls;
-    api = new BigBlueButtonApi("https://mathu.jitsi-mathu.de/bigbluebutton/api", "Eh7iAAkg9cib4wObQv5gADIE2OlNeo9gKEnyYitl");
-    //todo shared secret request
+    api = new BigBlueButtonApi(sessionStorage.getItem("BigBlueButton")+
+        "/bigbluebutton/api", sessionStorage.getItem("SharedKey"));
+
     //const username = document.getElementById("name").value
     // A hash of parameters.
     // The parameter names are the same names BigBlueButton expects to receive in the API calls.
     // The lib will make sure that, for each API call, only the parameters supported will be used.
     params = {
         name: name,
-        meetingID: "2", //todo request MeetingID
+        meetingID: val.length,
         moderatorPW: "mp",
         attendeePW: "ap",
         password: "ap", // usually equals "moderatorPW"
@@ -532,7 +535,7 @@ async function createRoom(name, stationName, roomNumber) {
         // random: "416074726",
         record: false,
         // recordID: "random-9998650",
-        //voiceBridge: "75858", //todo request videoBridgeID
+
         meta_anything: "My Meta Parameter",
         custom_customParameter: "Will be passed as 'customParameter' to all calls"
     };

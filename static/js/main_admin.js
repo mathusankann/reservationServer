@@ -1,6 +1,8 @@
 //const mainFunctions=[expandMenu,()=>{ location.reload()},getAllSettingsBBB,getSettingsDocker,getAllSettingsReservation,setTraefikInSite] ()=>{location.href="/static/htmls/configHome.html"}
 
 
+
+
 let test2 = setInterval(function () {
     clearInterval(test2)
 }, 100)
@@ -40,29 +42,37 @@ function generateIconOverviewAdmin() {
 }
 
 function generateIconOverview(path,array) {
-    const div = document.getElementById("iconBox")
-    const request = createAjaxRequest();
-    request.onreadystatechange = function () {
-        if ((4 === this.readyState) && (200 === this.status)) {
-            let imageList = JSON.parse(this.responseText)
-            for (let i = 0; i < imageList.length; i++) {
-                let image = document.createElement("img")
-                image.src = '/static/media/img/' + imageList[i].name
-                image.className = "icon"
-                image.value = i
-                let container = document.createElement("div")
-                container.className = "placeHolder"
-                container.appendChild(image)
-                container.addEventListener("click", array[i])
-                if (i === 0) {
-                    container.style.visibility = "hidden"
+    getter("/getSettingJson").then((settings)=>{
+        sessionStorage.setItem("BigBlueButton",settings.BigBlueButton)
+        sessionStorage.setItem("Only_Origin",settings.Only_Origin)
+        sessionStorage.setItem("Reservation",settings.Reservation)
+        sessionStorage.setItem("SharedKey",settings.SharedKey)
+        sessionStorage.setItem("Traefik",settings.Traefik)
+
+        const div = document.getElementById("iconBox")
+        const request = createAjaxRequest();
+        request.onreadystatechange = function () {
+            if ((4 === this.readyState) && (200 === this.status)) {
+                let imageList = JSON.parse(this.responseText)
+                for (let i = 0; i < imageList.length; i++) {
+                    let image = document.createElement("img")
+                    image.src = '/static/media/img/' + imageList[i].name
+                    image.className = "icon"
+                    image.value = i
+                    let container = document.createElement("div")
+                    container.className = "placeHolder"
+                    container.appendChild(image)
+                    container.addEventListener("click", array[i])
+                    if (i === 0) {
+                        container.style.visibility = "hidden"
+                    }
+                    div.appendChild(container)
                 }
-                div.appendChild(container)
             }
         }
-    }
-    request.open("GET", path, true);
-    request.send();
+        request.open("GET", path, true);
+        request.send();
+    })
 }
 
 
@@ -103,7 +113,8 @@ function setTraefikInSite() {
     div.innerText = "Traefik"
     main.appendChild(div)
     let iframe = document.createElement("iframe")
-    iframe.src = "http://docker.jitsi-mathu.de/"
+    console.log(sessionStorage.getItem("Traefik"))
+    iframe.src = sessionStorage.getItem("Traefik").toString()
     iframe.id = "traefik"
     main.appendChild(iframe)
     createLogOutButton()
@@ -193,8 +204,9 @@ function getRunningCon() {
     getter("/getAllRoomNames").then((val)=>{
         return new Promise(((resolve, reject) => {
             let api, i, len, method, params, ref, urls;
-            api = new BigBlueButtonApi("https://mathu.jitsi-mathu.de/bigbluebutton/api/", "Eh7iAAkg9cib4wObQv5gADIE2OlNeo9gKEnyYitl");
-            //todo shared secret request
+            api = new BigBlueButtonApi(sessionStorage.getItem("BigBlueButton") +
+                "/bigbluebutton/api/",sessionStorage.getItem("SharedKey") );
+
             //const username = document.getElementById("name").value
             // A hash of parameters.
             // The parameter names are the same names BigBlueButton expects to receive in the API calls.
