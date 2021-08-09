@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+    #########################################################
+    traefik:
+        image: traefik:v2.2
+        container_name: traefik
+        restart: always
+        command:
+            #- --api.insecure=true
+            #- --api.debug=true
+            - --api.dashboard=true
+            - --log.level=WARN
+            - --log.filepath=/etc/traefik/log/traefik.log
+            - --log.format=json
+            - --providers.docker=true
+            - --providers.docker.exposedbydefault=false
+            - --providers.docker.network=proxy
+            - --providers.file.filename=/etc/traefik/tls.yml
+            - --providers.file.watch=true
+            - --entrypoints.web.address=:80
+            - --entrypoints.websecure.address=:443
+
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - ./traefik:/etc/traefik
+            - ./traefik/certs:/certs
+            - ./traefik/log:/log
+            - /etc/localtime:/etc/localtime:ro
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.api.entrypoints=web"
+            - "traefik.http.routers.api.rule=Host(`traefik.example.com`)"
+            - "traefik.http.routers.api.service=api@internal"
+            - "traefik.http.routers.api.middlewares=auth"
+            - "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$nkTWQth8$$T.ArU2NmVdZP65sdMhPTG."
+        networks:
+            - proxy
+        ports:
+            - "80:80"     #Entrypoint: http
+            - "443:443"   #Entrypoint: https
+networks:
+    proxy:
+        external: true
