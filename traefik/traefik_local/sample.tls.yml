@@ -1,0 +1,20 @@
+tls:
+    options:
+        default:
+            minVersion: VersionTLS12
+            sniStrict: true
+
+    certificates:
+        - certFile: /etc/traefik/certs/konfernzcert
+          keyFile: /etc/traefik/certs/konferenzkey
+        - certFile: /etc/traefik/certs/reservcert
+          keyFile: /etc/traefik/certs/reservkey
+
+
+
+
+
+
+
+
+
