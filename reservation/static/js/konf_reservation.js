@@ -514,7 +514,7 @@ function createVisitor(){
 async function createRoom(name, stationName, roomNumber) {
     //if (document.cookie !== "") {
    let val= await getter("/getAllRoomNames")
-
+   let valLength=0;
     let api, i, len, method, params, ref, urls;
     api = new BigBlueButtonApi(sessionStorage.getItem("BigBlueButton")+
         "/bigbluebutton/api", sessionStorage.getItem("SharedKey"));
@@ -523,9 +523,14 @@ async function createRoom(name, stationName, roomNumber) {
     // A hash of parameters.
     // The parameter names are the same names BigBlueButton expects to receive in the API calls.
     // The lib will make sure that, for each API call, only the parameters supported will be used.
+
+    if(val!==null){
+     valLength=val.length
+    }
+
     params = {
         name: name,
-        meetingID: val.length,
+        meetingID: valLength,
         moderatorPW: "mp",
         attendeePW: "ap",
         password: "ap", // usually equals "moderatorPW"

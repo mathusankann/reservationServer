@@ -1,7 +1,7 @@
 {
-  "Traefik":"https://*traefik*",
-  "BigBlueButton": "https://*bbb*'",
-  "Reservation": "https://*reservation*",
-  "SharedKey": "*key*",
-  "Only_Origin": "*origin*"
+  "Traefik":"https://traefiklink",
+  "BigBlueButton": "https://bbblink",
+  "Reservation": "https://reservationlink",
+  "SharedKey": "schluessel",
+  "Only_Origin": "origin"
 }

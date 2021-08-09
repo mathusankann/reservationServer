@@ -109,8 +109,8 @@ func insertAdminAccount() {
 
 func initDbConnection() *sql.DB {
 	//var db, err = sql.Open("sqlite3", "Account.sqlite")
-	//var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
-	var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
+	var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
+	//var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
 	if err != nil {
 		log.Fatalln(err)
 	}
