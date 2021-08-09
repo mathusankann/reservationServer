@@ -171,7 +171,7 @@ sed -i "s/settingsServer/$fqdnBBB/" $cpmainHtml
 sed -i "s/reservationlink/$fqdnReserver/" $cpsettingsJson
 #shaerkey
 sed -i "s/schluessel/$RANDOM_1/" $cpsettingsJson
-
+chmod 600 ./traefik/traefik_wild/data/acme.json
 ###############docker-compose####################################################################
 docker network create proxy
 
