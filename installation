@@ -1,0 +1,182 @@
+#!/bin/bash
+################Needed Packages#################################################
+#Docker
+#apt-get install \
+#    apt-transport-https \
+#    ca-certificates \
+#    curl \
+#    gnupg \
+#    lsb-release -y
+
+#curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg 
+
+#echo \
+#  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+#  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null 
+
+#apt-get update
+#apt-get install docker-ce docker-ce-cli containerd.io -y
+
+#Docker-compose
+#curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+#chmod +x /usr/local/bin/docker-compose
+
+#Dialog 
+#apt install dialog -y
+
+#apt-get install apache2-utils -y
+#############Traefik####################################################################
+
+EXTERNAL_IPv4=$(curl -4 -s https://icanhazip.com)
+
+#echo $EXTERNAL_IPv4
+
+echo Benutzername für Traefik:
+read userName
+
+while [ "$userName" == "" ];
+do
+        echo Benutzername darf nicht leer sein
+        echo Benutzername:
+        read userName
+
+done
+
+echo Passwort:
+read password
+
+echo Passwort bestätigen:
+read cpassword
+
+while [ "$password" != "$cpassword" ];
+do
+	echo Passwort und Passwort-Bestätigung stimmen nicht über ein
+	echo Passwort:
+	read password
+
+	echo Passwort bestätigen:
+	read cpassword
+
+done
+
+userString=$(echo $(htpasswd -nb $userName $password) | sed -e s/\\$/\\$\\$/g)
+echo $userString
+
+
+traefikfilename="./traefik/traefik_wild/sampley.docker-compose.yml"
+searchDomain="traefik.example.com"
+searchUser="USER:PASSWORD"
+cptraefikfilename=."/traefik/traefik_wild/docker-compose.yml"
+
+cp $traefikfilename $cptraefikfilename
+
+if [[ $searchDomain != "" && $EXTERNAL_IPv4/ != "" ]]; then
+sed -i "s/$searchDomain/$EXTERNAL_IPv4/" $cptraefikfilename
+fi
+
+#if [[ $searchUser != "" && $userString/ != "" ]]; then
+#sed -i "s/$searchUser/$userString/" $cptraefikfilename
+#fi
+
+traefikData="./traefik/traefik_wild/data/sample.traefik.yml"
+cptraefikData="./traefik/traefik_wild/data/traefik.yml"
+searchMail="email@example.com"
+echo Mail-Addresse für Traefik Wildcard Zertifikat:
+read traefikmail
+
+while [ "$traefikmail" == "" ];
+do
+        echo traefikmail darf nicht leer sein
+        echo traefikmail:
+        read traefikmail
+done
+#echo traefikmail
+
+cp $traefikData $cptraefikData
+
+if [[ $searchMail != "" && $traefikmail/ != "" ]]; then
+sed -i "s/$searchMail/$traefikmail/" $cptraefikData
+fi
+
+
+#####################BBB##########################################################
+git clone --recurse-submodules https://github.com/mathusankann/bbb-custom
+
+bash ./bbb-custom/bigbluebutton-docker/scripts/setup
+
+echo Webaddresse für Videokonferenzsystem:
+read fqdnBBB
+
+while [ "$fqdnBBB" == "" ];
+do
+        echo Webaddresse darf nicht leer sein
+        echo Webaddresse:
+        read fqdnBBB
+
+done
+
+#echo fqdnBBB
+bbbdocker="./bbb-custom/bigbluebutton-docker/sample.docker-compose.yml"
+cpbbbdocker="./bbb-custom/bigbluebutton-docker/docker-compose.yml"
+bbbsearch="bbb.euredomain.de"
+
+cp $bbbdocker $cpbbbdocker
+
+if [[ $fqdnBBB != "" && $bbbsearch/ != "" ]]; then
+sed -i "s/$bbbsearch/$fqdnBBB/" $cpbbbdocker
+fi
+
+
+###########################Reservation##########################################################
+echo Webaddresse für Reservierungsserver:
+read fqdnReserver
+while [ "$fqdnReserver" == "" ];
+do
+        echo Webaddresse darf nicht leer sein
+        echo Webaddresse:
+        read fqdnReserver
+
+done
+
+
+reservdocker="./reservation/sample.reserv.docker-compose.yml"
+cpreservdocker="./reservation/reserv.docker-compose.yml"
+reservsearch="reservation.example.de"
+
+cp $reservdocker $cpreservdocker
+
+if [[ $fqdnReserver != "" && $reservsearch/ != "" ]]; then
+sed -i "s/$reservsearch/$fqdnReserver/" $cpreservdocker
+fi
+
+##/////////////////////////////////////////
+settingsJson="./reservation/sample.settings.json"
+cpsettingsJson="./reservation/settings.json"
+mainHtml="./bbb-custom/bigbluebutton-standard/bigbluebutton-html5/client/sample.main.html"
+cpmainHtml="./bbb-custom/bigbluebutton-standard/bigbluebutton-html5/client/main.html"
+RANDOM_1=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 40)
+sed -i "s/SHARED_SECRET=.*/SHARED_SECRET=$RANDOM_1/" "./bbb-custom/bigbluebutton-docker/.env"
+
+cp $mainHtml $cpmainHtml
+cp $settingsJson $cpsettingsJson
+
+#traefik
+sed -i "s/traefiklink/$EXTERNAL_IPv4/" $cpsettingsJson
+#bbb
+sed -i "s/bbblink/$fqdnBBB/" $cpsettingsJson
+sed -i "s/settingsServer/$fqdnBBB/" $cpmainHtml
+
+#reservation
+sed -i "s/reservationlink/$fqdnReserver/" $cpsettingsJson
+#shaerkey
+sed -i "s/schluessel/$RANDOM_1/" $cpsettingsJson
+
+###############docker-compose####################################################################
+docker network create proxy
+
+docker-compose -f ./reservation/database.docker-compose.yml up -d
+docker-compose -f ./traefik/traefik_wild/docker-compose.yml up -d
+bash bbb-custom/bigbluebutton-docker/scripts/compose up -d
+
+docker-compose -f ./reservation/reserv.docker-compose.yml up -d
