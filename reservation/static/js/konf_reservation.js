@@ -486,6 +486,10 @@ function createResident() {
         openAlert("Bitte alle Felder ausfüllen",FAIL)
         return;
     }
+    if(station===null){
+        openAlert("Station exisitiert nicht", FAIL)
+        return
+    }
     for(let i=0;i<station.length;i++) {
         if (stationValue !== station[i]) {
            if(i===station.length-1){
@@ -678,7 +682,8 @@ function editTablet(value) {
 }
 
 
-function resetView() {
+async function resetView() {
+    station = await getter("/getAllStation")
     generateViewSqlContainer(currentSql)
 }
 
