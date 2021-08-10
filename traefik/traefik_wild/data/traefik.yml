@@ -12,7 +12,7 @@ providers:
 certificatesResolvers:
   http:
     acme:
-      email: mathusan13@live.de   #### hier eure E-Mail angeben ####
+      email: mathusankannathasan@gmail.com   #### hier eure E-Mail angeben ####
       storage: acme.json
       httpChallenge:
         entryPoint: http

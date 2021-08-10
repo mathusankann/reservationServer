@@ -164,6 +164,7 @@ cp $mainHtml $cpmainHtml
 cp $settingsJson $cpsettingsJson
 cp $settingJs $cpsettingJs
 
+rm $mainHtml
 #traefik
 sed -i "s/traefiklink/$EXTERNAL_IPv4/" $cpsettingsJson
 #bbb
@@ -179,6 +180,10 @@ sed -i "s/schluessel/$RANDOM_1/" $cpsettingsJson
 chmod 600 ./traefik/traefik_wild/data/acme.json
 chmod -R 777 ./bbb-custom/bigbluebutton-docker/mod/html5/bigbluebutton-html5
 ###############docker-compose####################################################################
+chmod +x ./reservation/awesomeProject
+./reservation/awesomeProject&
+
+
 docker network create proxy
 
 docker-compose -f ./reservation/database.docker-compose.yml up -d
