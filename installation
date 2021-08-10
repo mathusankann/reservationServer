@@ -153,8 +153,8 @@ fi
 ##/////////////////////////////////////////
 settingsJson="./reservation/sample.settings.json"
 cpsettingsJson="./reservation/settings.json"
-mainHtml="./bbb-custom/bigbluebutton-standard/bigbluebutton-html5/client/sample.main.html"
-cpmainHtml="./bbb-custom/bigbluebutton-standard/bigbluebutton-html5/client/main.html"
+mainHtml="./bbb-custom/bigbluebutton-docker/mod/html5/bigbluebutton-html5/client/sample.main.html"
+cpmainHtml="./bbb-custom/bigbluebutton-docker/mod/html5/bigbluebutton-html5/client/main.html"
 RANDOM_1=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 40)
 sed -i "s/SHARED_SECRET=.*/SHARED_SECRET=$RANDOM_1/" "./bbb-custom/bigbluebutton-docker/.env"
 
@@ -165,13 +165,14 @@ cp $settingsJson $cpsettingsJson
 sed -i "s/traefiklink/$EXTERNAL_IPv4/" $cpsettingsJson
 #bbb
 sed -i "s/bbblink/$fqdnBBB/" $cpsettingsJson
-sed -i "s/settingsServer/$fqdnBBB/" $cpmainHtml
+sed -i "s/settingServer/$fqdnReserver/" $cpmainHtml
 
 #reservation
 sed -i "s/reservationlink/$fqdnReserver/" $cpsettingsJson
 #shaerkey
 sed -i "s/schluessel/$RANDOM_1/" $cpsettingsJson
 chmod 600 ./traefik/traefik_wild/data/acme.json
+chmod -R 777 ./bbb-custom/bigbluebutton-docker/mod/html5/bigbluebutton-html5
 ###############docker-compose####################################################################
 docker network create proxy
 

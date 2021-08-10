@@ -1,7 +1,7 @@
 {
   "Traefik":"https://84.129.28.64",
-  "BigBlueButton": "https://my.jitsi-mathu.de",
-  "Reservation": "https://kon.jitsi-mathu.de",
-  "SharedKey": "FL0XcBxMA26uNg2pDrGQh5vyAWfPpwd1OWNTZfCf",
+  "BigBlueButton": "https://ko.jitsi-mathu.de",
+  "Reservation": "https://re.jitsi-mathu.de",
+  "SharedKey": "eItJSA4ajKAfgeimXWnfk1b3upak4RujJIrjGvxB",
   "Only_Origin": "origin"
 }
