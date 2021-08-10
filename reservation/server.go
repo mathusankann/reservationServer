@@ -112,8 +112,8 @@ func insertAdminAccount() {
 
 func initDbConnection() *sql.DB {
 	//var db, err = sql.Open("sqlite3", "Account.sqlite")
-	//var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
-	var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
+	var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
+	//var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -252,6 +252,7 @@ func settingsFile(w http.ResponseWriter, r *http.Request) {
 
 func getSettingJson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(localGetSettingJson())
 }
 func localGetSettingJson() []byte {
