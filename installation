@@ -179,10 +179,9 @@ sed -i "s/schluessel/$RANDOM_1/" $cpsettingsJson
 chmod 600 ./traefik/traefik_wild/data/acme.json
 chmod -R 777 ./bbb-custom/bigbluebutton-docker/mod/html5/bigbluebutton-html5
 ###############docker-compose####################################################################
-#docker network create proxy
+docker network create proxy
 
-#docker-compose -f ./reservation/database.docker-compose.yml up -d
-#docker-compose -f ./traefik/traefik_wild/docker-compose.yml up -d
-#bash bbb-custom/bigbluebutton-docker/scripts/compose up -d
-
-#docker-compose -f ./reservation/reserv.docker-compose.yml up -d
+docker-compose -f ./reservation/database.docker-compose.yml up -d
+docker-compose -f ./traefik/traefik_wild/docker-compose.yml up -d
+bash bbb-custom/bigbluebutton-docker/scripts/compose up -d
+docker-compose -f ./reservation/reserv.docker-compose.yml up -d
