@@ -25,10 +25,12 @@ type meetingIdentification struct {
 	Visitor bool `json:"visitor"`
 }
 
-type frontendCommunication struct {
-	Message string
-	Color   string
-	Number  int
+type settings struct {
+	Traefik       string `json:"Traefik"`
+	BigBlueButton string `json:"BigBlueButton"`
+	Reservation   string `json:"Reservation"`
+	SharedKey     string `json:"SharedKey"`
+	OnlyOrigin    string `json:"OnlyOrigin"`
 }
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
@@ -38,6 +40,7 @@ var db = initDbConnection()
 var UserMap map[string]string
 var ActiveMeetings map[string]bool
 var host Host
+var setting settings
 
 func getActiveMeetings(w http.ResponseWriter, r *http.Request) {
 	var meetingIdentification meetingIdentification
@@ -109,8 +112,8 @@ func insertAdminAccount() {
 
 func initDbConnection() *sql.DB {
 	//var db, err = sql.Open("sqlite3", "Account.sqlite")
-	var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
-	//var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
+	//var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
+	var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -139,7 +142,7 @@ func sendGetRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllDockerContainer(w http.ResponseWriter, r *http.Request) {
-	resp, err := http.Get("http://192.168.178.102:7777/getAllDockerContainer") //todo get ip address
+	resp, err := http.Get(setting.Traefik + ":7777/getAllDockerContainer")
 
 	if err != nil {
 		http.Error(w, "Dockerservice ist nicht erreichbar", http.StatusInternalServerError)
@@ -192,8 +195,8 @@ func postRunCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := http.Post("http://192.168.178.102:7777/runCommands", "application/json",
-		bytes.NewBuffer(jsonData)) //todo get Ip Address
+	resp, err := http.Post(setting.Traefik+":7777/runCommands", "application/json",
+		bytes.NewBuffer(jsonData))
 	if err != nil {
 		http.Error(w, "Dockerservice ist nicht erreichbar", http.StatusInternalServerError)
 		return
@@ -248,16 +251,16 @@ func settingsFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSettingJson(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(localGetSettingJson())
+}
+func localGetSettingJson() []byte {
 	jsonFile, err := os.Open("./settings.json")
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "settings.json ist beschädigt", http.StatusNotFound)
-		return
+		log.Panic(err)
 	}
 	byteValue, _ := ioutil.ReadAll(jsonFile)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(byteValue)
-
+	return byteValue
 }
 
 func main() {
@@ -269,6 +272,8 @@ func main() {
 	}
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	json.Unmarshal(byteValue, &host)
+	json.Unmarshal(localGetSettingJson(), &setting)
+
 	//insertAdminAccount()
 	UserMap = make(map[string]string)
 	ActiveMeetings = make(map[string]bool)

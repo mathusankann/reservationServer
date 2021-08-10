@@ -71,7 +71,7 @@ func setMeeting(w http.ResponseWriter, r *http.Request) {
 	//body := fmt.Sprintf("Ihr Konferenzlink: %s \n Die Konferenz findet am %s \n Sie haben "+
 	//	"die Möglichkeit den Termin zu stonieren, falls etwas dazwischen kommt: http://%s/deleteMeeting?meetingID=%d", room.Invite, wholeString, host.Name, incMeeting.Id)
 	visitor := getVisitor(incMeeting.BesucherId, "id")
-	acceptLink := fmt.Sprintf("https://localhost/updateMeetingWithMail?meetingID=%s", strconv.Itoa(incMeeting.Id)) //todo change to settings.json
+	acceptLink := fmt.Sprintf("%s/updateMeetingWithMail?meetingID=%s", setting.Reservation, strconv.Itoa(incMeeting.Id))
 	println(incMeeting.Id)
 	body := fmt.Sprintf("Hallo %s \n\n"+
 		"%s würde gerne am %s mit Ihnen ein Videogespräch führen."+

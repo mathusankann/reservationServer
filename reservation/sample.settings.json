@@ -1,5 +1,5 @@
 {
-  "Traefik":"https://traefiklink",
+  "Traefik":"http://traefiklink",
   "BigBlueButton": "https://bbblink",
   "Reservation": "https://reservationlink",
   "SharedKey": "schluessel",
