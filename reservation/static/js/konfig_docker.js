@@ -110,7 +110,9 @@ function setDockerSettingView() {
     button.className="dockerButtons"
     button.addEventListener("click",()=>{
         let array =["docker","stop",this.firstChild.data.replace(/\s/g, '')]
-        setterDockerContainer(array)
+        if(confirm("Sind Sie sich sicher, dass Sie diesen Container runterfahren wollen?")){
+            setterDockerContainer(array)
+        }
     })
     div.appendChild(button)
 }

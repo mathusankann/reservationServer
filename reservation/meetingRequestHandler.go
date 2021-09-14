@@ -240,7 +240,31 @@ func getAllMeetings(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonFile, _ := json.Marshal(reservedDates)
 	w.Write(jsonFile)
+}
 
+func getAllValidMeetings(w http.ResponseWriter, r *http.Request) {
+	var reservedDates []Meeting
+	queryStmt := fmt.Sprintf("Select * From meeting where end_date > NOW() ORDER BY start_date")
+	rows, dberr := db.Query(queryStmt)
+	if dberr != nil {
+		log.Println(dberr)
+		http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+		return
+	}
+	for rows.Next() {
+		var cachedates CacheMeeting
+		var dates Meeting
+		err := rows.Scan(&cachedates.Id, &cachedates.MeetingDateStart, &cachedates.MeetingDateEnd, &cachedates.BewohnerId, &cachedates.BesucherId, &cachedates.TabletId, &cachedates.Pending, &cachedates.RequestBewohner, &cachedates.Ts)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Ein Datenbank fehler ist aufgetretten", http.StatusBadGateway)
+			return
+		}
+		dates.Copy(cachedates)
+		reservedDates = append(reservedDates, dates)
+	}
+	jsonFile, _ := json.Marshal(reservedDates)
+	w.Write(jsonFile)
 }
 
 func sendInvitation(incMeeting Meeting, body string) {
@@ -345,7 +369,6 @@ func sendInvitationMail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-	log.Println(incMeeting)
 	if !getRoomByID(incMeeting.BewohnerId).Verify() {
 		http.Error(w, "Bewohner existiert nicht", http.StatusBadRequest)
 		return
@@ -354,5 +377,8 @@ func sendInvitationMail(w http.ResponseWriter, r *http.Request) {
 	body := fmt.Sprintf("Ihr Konferenzlink: %s \n Für die Konferenz mit %s", room.Invite, room.Name)
 	println(body)
 	go sendInvitation(incMeeting, body)
-	w.Write([]byte("ok"))
+	w.Header().Set("Content-Type", "application/json")
+	com := "Meeting wird gestartet"
+	jsonFile, _ := json.Marshal(com)
+	w.Write(jsonFile)
 }

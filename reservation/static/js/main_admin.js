@@ -20,7 +20,7 @@ const mainFunctions = [
         location.href = "../htmls/configReserv.html"
     },
     () => {
-        location.href = "../htmls/configTraefik.html"
+        location.href =  sessionStorage.getItem("Traefik")
     }
 ]
 
@@ -48,7 +48,6 @@ function generateIconOverview(path,array) {
         sessionStorage.setItem("Reservation",settings.Reservation)
         sessionStorage.setItem("SharedKey",settings.SharedKey)
         sessionStorage.setItem("Traefik",settings.Traefik)
-
         const div = document.getElementById("iconBox")
         const request = createAjaxRequest();
         request.onreadystatechange = function () {
@@ -201,8 +200,8 @@ function settingInit(e) {
 
 
 function getRunningCon() {
-    getter("/getAllRoomNames").then((val)=>{
         return new Promise(((resolve, reject) => {
+            getter("/getAllRoomNames").then((val)=>{
             let api, i, len, method, params, ref, urls;
             api = new BigBlueButtonApi(sessionStorage.getItem("BigBlueButton") +
                 "/bigbluebutton/api/",sessionStorage.getItem("SharedKey") );
@@ -212,7 +211,7 @@ function getRunningCon() {
             // The parameter names are the same names BigBlueButton expects to receive in the API calls.
             // The lib will make sure that, for each API call, only the parameters supported will be used.
             params = {
-                name: name,
+                name: "Administrator_Test_Ansicht",
                 meetingID: val.length.toString(),
                 moderatorPW: "mp",
                 attendeePW: "admin",
@@ -237,8 +236,7 @@ function getRunningCon() {
                 });
             }
             console.log(urls)
-            resolve(urls[6])
+            resolve(urls)
+            })
         }))
-    })
-
 }

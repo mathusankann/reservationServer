@@ -29,11 +29,11 @@ function showStationResidents() {
 
 function showRequests() {
     document.getElementById("termin").style.display = "none"
-
     document.getElementById("terminOverview").style.display = "none"
     document.getElementById("buttonHolder").style.display = "none"
     document.getElementById("userButton").style.display = "none"
     document.getElementById("reservedDates").style.display = "block"
+
 }
 
 
@@ -122,13 +122,16 @@ async function initReservedDatesOverview(reservedDate, counter) {
     let divElement = document.createElement("div")
     divElement.innerText = "Terminanfragen"
     divElement.className = "requestChild"
-    localReservedDates=reservedDate
+    localReservedDates = reservedDate
     roverview.appendChild(divElement)
-
+    let counterPending=0
     let innerReserver = document.createElement("div")
     innerReserver.className = "innerReserver"
     for (let i = 0; i < reservedDate.length; i++) {
+        console.log(reservedDate)
         if (reservedDate[i].pending && !reservedDate[i].request_bewohner) {
+            counterPending++
+            document.getElementById("iconBox").children[document.getElementById("iconBox").children.length -1].children[0].src ="/static/media/img/anfrage_aktiv.png"
             getter("/getVisitorByID?ID=" + reservedDate[i].besucher_id).then((visitor) => {
                 getter("/getRoomByID?ID=" + reservedDate[i].bewohner_id).then((resident) => {
                     let requester = document.createElement("div")
@@ -162,6 +165,9 @@ async function initReservedDatesOverview(reservedDate, counter) {
                 })
             })
         }
+    }
+    if(counterPending===0){
+        document.getElementById("iconBox").children[document.getElementById("iconBox").children.length -1].children[0].src ="/static/media/img/anfrage.png"
     }
     divElement.appendChild(innerReserver)
     let divElement2 = document.createElement("div")
@@ -478,14 +484,18 @@ function generateInterfaceRoom() {
     form.appendChild(dropdownLabel)
     button = document.createElement("button")
     button.innerText = "Löschen"
-    button.type = "type"
+    button.type = "button"
     button.style.background = "red"
     button.onclick = () => {
-        deleteResident(userId).then(() => {
-            location.reload()
-        })
-    }
+        if (confirm("Sind Sie sich Sicher, dass Sie diesen Bewohner löschen wollen?")){
+            deleteResident(userId).then(() => {
+                location.reload()
+            })
+        }else {
+            document.getElementById('formReservation').style.display = 'none'
+        }
 
+    }
     div = document.createElement("div")
     div.style.width = "100%"
     div.appendChild(button)
@@ -506,9 +516,12 @@ async function getVisitorsRoomInterface(name) {
 function addVisitorRoomInterface() {
     let name = document.getElementById("nameVisitor").value
     let mail = document.getElementById("mailVisitor").value
+    if(!checkMailPattern(mail)){
+        openAlert("Mail entspricht nicht den vorgaben: *@*.*", FAIL)
+        return;
+    }
     addNewVisitor(name, mail, userId)
     document.getElementById("formReservation").style.display = "none"
-
 }
 
 function startConfWithVisitor() {
@@ -604,15 +617,18 @@ function addVisitorAccount() {
     let visitor = new Visitor(0, visitorName, visitorMail, 0)
     getterPOst("/getVisitorByMail", visitor, true).then((res) => {
         if (res !== null) {
-            (visitorName !== "" && visitorMail !== "" && password !== "")
-            {
+            if (visitorName !== "" && visitorMail !== "" && password !== "") {
                 createUser(0, visitorName, password, 3).then(() => {
                     let visitorStruct = new Visitor(0, visitorName, visitorMail, 0)
                     setOuts("/registerVisitor", visitorStruct).then(() => {
-                        location.reload()
+                        //openAlert("Account erfolgreich registriert", SUCCESS)
+                        document.getElementById("defaultTab").click()
                     })
                 })
+            } else {
+                openAlert("Bitte alle Felder ausfüllen", SUCCESS)
             }
+
         }
     })
 

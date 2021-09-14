@@ -191,7 +191,6 @@ span.psw {
 #reservedDates{
     font-size: 0.8cm;
     display: none;
-    float: left;
     width: 100%;
 }
 
@@ -329,4 +328,8 @@ span.psw {
     float: left;
     width: 40%;
     margin-left: 5%;
+}
+
+.alert {
+    width:40%;
 }

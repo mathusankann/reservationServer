@@ -185,11 +185,11 @@ func registerVisitor(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&incVisitor)
 	if err != nil {
 		log.Println(err)
+		http.Error(w, "Bitte prüfen Sie den Besucher", http.StatusFailedDependency)
 	}
-
 	visitor := getVistorByNamesorMail("mail", incVisitor.Mail)
 	if !visitor.Verify() {
-		http.Error(w, "This Mail has no rights to make an account", http.StatusBadRequest)
+		http.Error(w, "Diese Mail ist dem System nicht bekannt", http.StatusBadRequest)
 		return
 	}
 	if visitor.AccountID == 0 {
@@ -212,11 +212,11 @@ func registerVisitor(w http.ResponseWriter, r *http.Request) {
 		com := "Account wurde erfolgreich erstellt"
 		jsonFile, _ := json.Marshal(com)
 		w.Write(jsonFile)
+
 	} else {
 		http.Error(w, "Für diese Mail existiert bereits ein Account", http.StatusBadRequest)
 		return
 	}
-
 }
 
 func getAllResidentNamesByVisitorID(w http.ResponseWriter, r *http.Request) {

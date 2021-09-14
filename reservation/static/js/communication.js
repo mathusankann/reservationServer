@@ -292,7 +292,7 @@ function getRoom(name) {
     request.onreadystatechange = function () {
         if (4 === this.readyState) {
             if (200 === this.status) {
-                localStorage.setItem('keyBBB',"2")
+
                 let r = JSON.parse(this.responseText)
                 openRoom(r)
 
@@ -443,8 +443,8 @@ function getAllMeetingsDate(starttime, endtime) {
                 reservedDates = JSON.parse(this.responseText)
                 if (reservedDates == null) {
                     document.getElementById("reservedDates").style.display="none"
-                    document.getElementById("buttonHolder").style.float="left"
-                    document.getElementById("userButton").style.float="left"
+                    //document.getElementById("buttonHolder").style.float="left"
+                    //document.getElementById("userButton").style.float="left"
 
                     //document.getElementById("")
                     return
@@ -459,7 +459,9 @@ function getAllMeetingsDate(starttime, endtime) {
                         }
                     }
                 }
-                initReservedDatesOverview(reservedDates, counter)
+                getter("/getAllValidMeetings").then((validDates)=>{
+                    initReservedDatesOverview(validDates, counter)
+                })
             } else {
                 console.log(this.status + ":" + this.responseText);
             }

@@ -203,14 +203,15 @@ function settingViewPresentation() {
 }
 
 function resetView() {
-    currentSettings = [1, 0, 0, 0, 0]
-    const div = document.getElementById("settingDropbox")
-    div.innerHTML = ""
-    setEventListenerUnload()
-    dropMenu()
-    document.getElementById("saveButton").innerHTML = ""
-    generateSaveButton(setSettings)
-
+    if (confirm("Wollen Sie alle Einstellung zurücksetzen?")){
+        currentSettings = [1, 0, 0, 0, 0]
+        const div = document.getElementById("settingDropbox")
+        div.innerHTML = ""
+        setEventListenerUnload()
+        dropMenu()
+        document.getElementById("saveButton").innerHTML = ""
+        generateSaveButton(setSettings)
+    }
 }
 
 function initPreview() {
@@ -319,7 +320,18 @@ function generateLiveViewButton() {
     let button = document.createElement("button")
     button.innerText = "Live-Ansicht"
     button.className = "imgSetting"
+    button.addEventListener("click", initLiveView)
     container.appendChild(button)
+}
+
+function initLiveView(){
+    getter("/setCurrentAdminView?viewID=" + document.getElementById("user").value).then(()=>{
+        getRunningCon().then((url)=>{
+           getterPOst("/startRoom",url[1].url).then(()=>{
+               location.href = url[2].url
+            })
+        })
+    })
 }
 
 
