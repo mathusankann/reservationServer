@@ -151,6 +151,8 @@ sed -i "s/$reservsearch/$fqdnReserver/" $cpreservdocker
 fi
 
 ##/////////////////////////////////////////
+settingJs="./reservation/static/js/sample.test.js"
+cpsettingJs="./reservation/static/js/test.js"
 settingsJson="./reservation/sample.settings.json"
 cpsettingsJson="./reservation/settings.json"
 mainHtml="./bbb-custom/bigbluebutton-docker/mod/html5/bigbluebutton-html5/client/sample.main.html"
@@ -160,12 +162,16 @@ sed -i "s/SHARED_SECRET=.*/SHARED_SECRET=$RANDOM_1/" "./bbb-custom/bigbluebutton
 
 cp $mainHtml $cpmainHtml
 cp $settingsJson $cpsettingsJson
+cp $settingJs $cpsettingJs
 
+rm $mainHtml
 #traefik
 sed -i "s/traefiklink/$EXTERNAL_IPv4/" $cpsettingsJson
 #bbb
 sed -i "s/bbblink/$fqdnBBB/" $cpsettingsJson
 sed -i "s/settingServer/$fqdnReserver/" $cpmainHtml
+sed -i "s/settingServer/$fqdnReserver/" $cpmainHtml
+sed -i "s/settingServer/$fqdnReserver/" $cpsettingJs
 
 #reservation
 sed -i "s/reservationlink/$fqdnReserver/" $cpsettingsJson
@@ -174,10 +180,13 @@ sed -i "s/schluessel/$RANDOM_1/" $cpsettingsJson
 chmod 600 ./traefik/traefik_wild/data/acme.json
 chmod -R 777 ./bbb-custom/bigbluebutton-docker/mod/html5/bigbluebutton-html5
 ###############docker-compose####################################################################
+chmod +x ./reservation/awesomeProject
+./reservation/awesomeProject&
+
+
 docker network create proxy
 
 docker-compose -f ./reservation/database.docker-compose.yml up -d
 docker-compose -f ./traefik/traefik_wild/docker-compose.yml up -d
 bash bbb-custom/bigbluebutton-docker/scripts/compose up -d
-
 docker-compose -f ./reservation/reserv.docker-compose.yml up -d

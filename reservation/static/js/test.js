@@ -3,25 +3,21 @@ let currentSettings
 let index
 
 
-window.addEventListener('DOMContentLoaded', function () {
+window.addEventListener('DOMContentLoaded', function () { //todo add getter with settings
     console.log(sessionStorage.getItem("BBB_meetingID"))
     setTimeout(async function () {
         settings = await getter("https://reservation.jitsi-mathu.de/getKonfSettings")
         getter("https://reservation.jitsi-mathu.de/getActiveMeetings?meetingID="+sessionStorage.getItem("BBB_meetingID")+"&name="+sessionStorage.getItem("BBB_fullname")).then((val)=>{
             console.log(val)
-            if(sessionStorage.getItem("BBB_confname")==="Administrator_Test_Ansicht"){
-
-
-            }else {
-                if (!val.running&&val.visitor) {
-                    getter("https://reservation.jitsi-mathu.de/deleteActiveMeeting?meetingID="+sessionStorage.getItem("BBB_meetingID"))
-                    index= 1
-                }else if (val.running&&val.visitor){
-                    index = 2
-                }else{
-                    index=0
-                }
+            if (!val.running&&val.visitor) {
+                getter("https://reservation.jitsi-mathu.de/deleteActiveMeeting?meetingID="+sessionStorage.getItem("BBB_meetingID"))
+                index= 1
+            }else if (val.running&&val.visitor){
+                index = 2
+            }else{
+                index=0
             }
+
             if(localStorage.getItem("settingsIndex")===null){
                 localStorage.setItem("settingsIndex",index.toString())
                 localStorage.setItem("indexTimer",new Date().toLocaleTimeString())
