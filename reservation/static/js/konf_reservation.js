@@ -431,7 +431,7 @@ function createTablet() {
         let tablet = new Tablet(0, name, false)
         let tabletPromise = setOuts("/addTablet", tablet)
         tabletPromise.then(() => {
-            openAlert("Tabletname fehlt", SUCCESS)
+            openAlert("Tabletname hinzugefügt", SUCCESS)
             setTimeout(function () {
                 resetView()
             }, 1000)

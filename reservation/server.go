@@ -11,19 +11,30 @@ import (
 	"net/http"
 	"os"
 	_ "os"
+	"strconv"
 	"strings"
 	"time"
 	_ "time"
 )
 
+/**
+Hostname
+*/
 type Host struct {
 	Name string `json:"name"`
 }
 
+/**
+Wird benötigt für die rollenbasierte Ansicht
+*/
 type meetingIdentification struct {
 	Running bool `json:"running"`
 	Visitor bool `json:"visitor"`
 }
+
+/**
+Struct mit allen Informationen für das Frontend
+*/
 
 type settings struct {
 	Traefik       string `json:"Traefik"`
@@ -36,11 +47,62 @@ type settings struct {
 const charset = "abcdefghijklmnopqrstuvwxyz" +
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
+//Datenbank
 var db = initDbConnection()
+
+//aktive Anmeldungen
 var UserMap map[string]string
+
+//aktive Meetings
 var ActiveMeetings map[string]bool
+
+//für die live-ansicht in der Admin-Ansicht
+var CurrentAdminView int
 var host Host
 var setting settings
+
+/**
+Legt die bearbeite Ansicht fest
+*/
+func setCurrentAdminView(w http.ResponseWriter, r *http.Request) {
+	keys, err := r.URL.Query()["viewID"]
+	if !err || len(keys[0]) < 1 {
+		http.Error(w, "Url Parameter viewID fehlt", http.StatusFailedDependency)
+		return
+	}
+	incAdminview, stErr := strconv.Atoi(keys[0])
+	if stErr != nil {
+		http.Error(w, "Url Parameter viewID fehlerhaft", http.StatusFailedDependency)
+		return
+	}
+	if incAdminview > 2 {
+		http.Error(w, "Url Parameter viewID fehlerhaft", http.StatusFailedDependency)
+		return
+	}
+	CurrentAdminView = incAdminview
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	jsonData, _ := json.Marshal(CurrentAdminView)
+	w.Write(jsonData)
+}
+
+/**
+Holt die aktuell bearbeite Ansicht
+*/
+
+func getCurrentAdminView(w http.ResponseWriter, r *http.Request) {
+	jsonData, _ := json.Marshal(CurrentAdminView)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write(jsonData)
+}
+
+/**
+Rollenbasierte Ansicht
+Die Fallunterscheidung
+-----Bewohner wenn Konf nicht läuft und name in der Bewohnertablle enthalten ist
+----Besucher wenn Konf läuft und angefragte Konf in aktivMeetings Map enthalten
+---Admin wenn beide nicht zu treffen
+*/
 
 func getActiveMeetings(w http.ResponseWriter, r *http.Request) {
 	var meetingIdentification meetingIdentification
@@ -70,6 +132,9 @@ func getActiveMeetings(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
+/**
+leeren der activeMeeting Map nach abschluss des Meetings
+*/
 func deleteActiveMeeting(w http.ResponseWriter, r *http.Request) {
 	keys, err := r.URL.Query()["meetingID"]
 	if !err || len(keys[0]) < 1 {
@@ -83,10 +148,17 @@ func deleteActiveMeeting(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
+/**
+Goroutine für das löschen von inaktiven Meetings
+*/
 func localDeleteActiveMeeting(meetingID string) {
 	time.Sleep(2 * time.Hour)
 	delete(ActiveMeetings, meetingID)
 }
+
+/**
+Bei erst Installation wird der Admin-Account der Db hinzugefügt
+*/
 
 func insertAdminAccount() {
 	var check = getUser("admin")
@@ -110,16 +182,23 @@ func insertAdminAccount() {
 	statement.Close()
 }
 
+/**
+Datenbankverbindung wird initsiert
+*/
+
 func initDbConnection() *sql.DB {
 	//var db, err = sql.Open("sqlite3", "Account.sqlite")
-	var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
-	//var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
+	//var db, err = sql.Open("mysql", "root:Spartan17@tcp(192.168.124.110:3306)/reservationDB?parseTime=true")
+	var db, err = sql.Open("mysql", "root:Spartan17@tcp(127.0.0.1:3306)/reservationDB?parseTime=true")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	return db
 }
 
+/**
+Austausch zwischen Dockerserver
+*/
 func sendGetRequest(w http.ResponseWriter, r *http.Request) {
 	var requestString string
 	_ = json.NewDecoder(r.Body).Decode(&requestString)
@@ -141,6 +220,9 @@ func sendGetRequest(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
+/**
+Austausch zwischen Dockerserver
+*/
 func getAllDockerContainer(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Get(setting.Traefik + ":7777/getAllDockerContainer")
 
@@ -186,6 +268,9 @@ func getAllDockerContainer(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
+/**
+Austausch zwischen Dockerserver
+*/
 func postRunCommand(w http.ResponseWriter, r *http.Request) {
 	var cmds []string
 	_ = json.NewDecoder(r.Body).Decode(&cmds)
@@ -227,15 +312,9 @@ func testSiteReturn(w http.ResponseWriter, r *http.Request) {
 
 }
 
-/*func getAllMeetingsRunning(w http.ResponseWriter, r *http.Request) {
-
-	resp, err := http.Get("https://jitsi.jitsi-mathu.de/bigbluebutton/api/getMeetings?checksum=bf1fff0cc4ae42bda9322c62f3c359bd1a463726")
-	if err != nil {
-		http.Error(w, "Couldn't reach local server", http.StatusInternalServerError)
-		return
-	}
-}*/
-
+/**
+rollenbasierte Ansicht JavaScript
+*/
 func settingsFile(w http.ResponseWriter, r *http.Request) {
 	//resp, err := http.Get("http://192.168.178.72/settingsFile")
 	//data, err := ioutil.ReadAll(resp.Body)
@@ -250,11 +329,18 @@ func settingsFile(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+/**
+Requesthandler für setting.Json
+*/
 func getSettingJson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(localGetSettingJson())
 }
+
+/**
+lokale methode für settings.json
+*/
 func localGetSettingJson() []byte {
 	jsonFile, err := os.Open("./settings.json")
 	if err != nil {
@@ -264,6 +350,10 @@ func localGetSettingJson() []byte {
 	return byteValue
 }
 
+/**
+Main Methode
+mit allen Requesthandlern
+*/
 func main() {
 	insertAdminAccount()
 	go deleteTimedOutMeetings()
@@ -293,6 +383,8 @@ func main() {
 	http.HandleFunc("/testSiteReturn", testSiteReturn)
 	http.HandleFunc("/deleteActiveMeeting", deleteActiveMeeting)
 	http.HandleFunc("/getSettingJson", getSettingJson)
+	http.HandleFunc("/getCurrentAdminView", getCurrentAdminView)
+	http.HandleFunc("/setCurrentAdminView", setCurrentAdminView)
 
 	//ResidentHandler
 	http.HandleFunc("/getRoom", GetRoom)
@@ -342,6 +434,7 @@ func main() {
 	http.HandleFunc("/sendInvitationMail", sendInvitationMail)
 	http.HandleFunc("/updateMeeting", updateMeeting)
 	http.HandleFunc("/updateMeetingWithMail", updateMeetingWithMail)
+	http.HandleFunc("/getAllValidMeetings", getAllValidMeetings)
 
 	//VisitorHandler
 	http.HandleFunc("/getVisitorByID", getVisitorByID)
