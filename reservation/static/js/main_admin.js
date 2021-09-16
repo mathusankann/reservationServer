@@ -38,7 +38,6 @@ function checkAuthentication() {
 function generateIconOverviewAdmin() {
     checkAuthentication()
     generateIconOverview("/static/htmls/icon.json",mainFunctions)
-
 }
 
 function generateIconOverview(path,array) {
@@ -53,9 +52,12 @@ function generateIconOverview(path,array) {
         request.onreadystatechange = function () {
             if ((4 === this.readyState) && (200 === this.status)) {
                 let imageList = JSON.parse(this.responseText)
+                console.log(imageList)
                 for (let i = 0; i < imageList.length; i++) {
                     let image = document.createElement("img")
                     image.src = '/static/media/img/' + imageList[i].name
+                    image.title =imageList[i].title
+
                     image.className = "icon"
                     image.value = i
                     let container = document.createElement("div")

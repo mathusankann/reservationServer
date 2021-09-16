@@ -1,14 +1,18 @@
-[{
-  "name": "home_icon.png"
-},
+[
   {
-    "name": "home_icon.png"
+    "name": "home_icon.png",
+    "title": "Home"
   },
   {
-    "name": "conference.png"
+    "name": "home_icon.png",
+    "title": "Home"
   },
   {
-    "name": "anfrage.png"
+    "name": "conference.png",
+    "title": "Bewohner-Übersicht"
+  },
+  {
+    "name": "anfrage.png",
+    "title": "Anfragenübersicht"
   }
-
 ]

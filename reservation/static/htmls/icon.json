@@ -1,18 +1,23 @@
 [
   {
-    "name": "menu.png"
+    "name": "menu.png",
+    "title": "Menue"
   },
   {
-    "name": "bbb.png"
+    "name": "bbb.png",
+    "title": "BigBlueButton-Konfigurator"
   },
   {
-    "name": "docker_icon.png"
+    "name": "docker_icon.png",
+    "title": "Docker-Konfigurator"
   },
   {
-    "name": "conference.png"
+    "name": "conference.png",
+    "title": "Termin-Verwaltung"
   },
   {
-    "name": "traefik.png"
+    "name": "traefik.png",
+    "title": "Traefik"
   }
 
 ]
