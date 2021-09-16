@@ -163,7 +163,6 @@ async function initTerminTable(debug = false) {
             document.getElementById(weekdayEN[i]).innerText = appendString + weekday[i] + appendString
         }
     }
-
     await initCurrentWeeksMonday()
     await setCaption()
     MAX_TABLETS = await getter("/getAllTabletsByMaintenance")
@@ -307,7 +306,7 @@ async function addTermin() {
                         getVisitorByName(visitor).then((res) => {
                             // console.log(res)
                             me.besucher_id = res.id
-                           sendMeetingPost(JSON.stringify(me))
+                            sendMeetingPost(JSON.stringify(me))
                         })
                     }
                 }

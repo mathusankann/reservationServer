@@ -13,7 +13,7 @@ function createDivs() {
     main.innerHTML = ""
     let div = document.createElement("div")
     div.id = "title"
-    div.innerText = "Konfigurator-Docker"
+    div.innerText = "Docker-Konfigurator"
     main.appendChild(div)
     div = document.createElement("div")
     div.id = "dockerContainer"

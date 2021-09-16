@@ -252,20 +252,6 @@ function getRoleByID(id) {
     request.send();
 }
 
-function sendUserPost(data) {
-    const request = createAjaxRequest();
-    request.onreadystatechange = function () {
-        if (4 === this.readyState) {
-            if (200 === this.status) {
-                console.log(this.responseText)
-            } else {
-                console.log(this.status + ":" + this.responseText);
-            }
-        }
-    }
-    request.open("POST", "/addUser", true);
-    request.send(JSON.stringify(data));
-}
 
 
 function startRoomPost(createRoom) {
@@ -544,23 +530,7 @@ function addNewVisitor(name, mail, id) {
 }
 
 
-function addVisitorToResident(visitor, resident) {
-    return new Promise(((resolve, reject) => {
-        let rhv = new ResidentHasVisitor(0, visitor, resident)
-        let path = "/addVisitorToResident"
 
-        const request = createAjaxRequest();
-        request.onreadystatechange = function () {
-            if (4 === this.readyState) {
-                if (200 === this.status) {
-                    resolve(this.responseText)
-                }
-            }
-            request.open("POST", path, true);
-            request.send(JSON.stringify(rhv));
-        }
-    }))
-}
 
 function getAllStation() {
     return new Promise(((resolve, reject) => {
@@ -637,24 +607,7 @@ function createUser(id, name, password, roleID,accountID) {
     }))
 }
 
-function createMinder(id, station, name, accountID) {
-    let minder = new Betreuer(id, station, name, accountID)
-    return new Promise(((resolve, reject) => {
-        const request = createAjaxRequest();
-        request.onreadystatechange = function () {
-            if (4 === this.readyState) {
-                if (200 === this.status) {
-                    // let val = JSON.parse(this.responseText)
-                    //console.log(this.responseText)
-                    console.log("created")
-                    resolve("done")
-                }
-            }
-        }
-        request.open("POST", "/addNewMinder", true);
-        request.send(JSON.stringify(minder));
-    }))
-}
+
 
 function getAccountIDByName(name) {
     return new Promise(((resolve, reject) => {
@@ -710,27 +663,6 @@ function getAllTablets() {
 
 }
 
-/*
-function getAllTimeouts(){
-    return new Promise(((resolve, reject) => {
-        const request = createAjaxRequest();
-        request.onreadystatechange = function () {
-            if (4 === this.readyState) {
-                if (200 === this.status) {
-                    let val = JSON.parse(this.responseText)
-                    //console.log(this.responseText)
-                    resolve(val)
-                }else{
-                    console.log(this.responseText)
-                    resolve(null)
-                }
-            }
-        }
-        request.open("GET", "/getTimeOut", true);
-        request.send();
-    }))
-}
-*/
 
 function getter(path) {
     return new Promise(((resolve, reject) => {

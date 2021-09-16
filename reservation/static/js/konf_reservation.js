@@ -274,7 +274,7 @@ function createDivsReservation() {
         let div = document.createElement("div")
         div.id = "title"
         setStyleWithOutFloat(div)
-        div.innerText = "Verwaltung-Terminplaner"
+        div.innerText = "Terminplaner-Verwaltung"
         main.appendChild(div)
         let configureContainer = document.createElement("div")
         configureContainer.id = "configureContainer"
@@ -517,9 +517,6 @@ function createResident() {
 }
 
 
-function createVisitor() {
-
-}
 
 async function createRoom(name, stationName, roomNumber) {
     //if (document.cookie !== "") {
@@ -652,7 +649,7 @@ function editTablet(value) {
     divTablet.style.display = "block"
     divTablet.innerHTML = ""
     let divElement = document.createElement("div")
-    divElement.innerText = "in Wartung..."
+    divElement.innerText = "ist betriebsbereit..."
     divElement.className = "labelReserv"
     divElement.id = "maintenanceLabel"
     let button = document.createElement("button")

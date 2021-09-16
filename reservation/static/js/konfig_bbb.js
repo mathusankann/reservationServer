@@ -35,7 +35,7 @@ function createDivs() {
     main.innerHTML = ""
     let div = document.createElement("div")
     div.id = "title"
-    div.innerText = "Konfigurator-BigBlueButton"
+    div.innerText = "BigBlueButton-Konfigurator"
     main.appendChild(div)
     createLogOutButton()
     div = document.createElement("div")
