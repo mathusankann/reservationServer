@@ -443,6 +443,7 @@ function createTablet() {
 }
 
 function createStationWithAccount() {
+
     let stationValue, name, passwort
     stationValue = document.getElementById("myInput").value
     name = document.getElementById("Benutzername").value

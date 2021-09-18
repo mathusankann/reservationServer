@@ -376,6 +376,10 @@ function addVisitorAccount() {
     let visitorMail = document.getElementById("mailRegister").value
     let password = document.getElementById("pswRegister").value
     let visitor = new Visitor(0, visitorName, visitorMail, 0)
+    if(visitorName ===""||visitorMail===""||password===""){
+        openAlert("Bitte alle Felder ausfüllen", FAIL)
+        return
+    }
     getterPOst("/getVisitorByMail", visitor, true).then((res) => {
         if (res !== null) {
             if (visitorName !== "" && visitorMail !== "" && password !== "") {
@@ -387,7 +391,7 @@ function addVisitorAccount() {
                     })
                 })
             } else {
-                openAlert("Bitte alle Felder ausfüllen", SUCCESS)
+                openAlert("Bitte alle Felder ausfüllen", FAIL)
             }
 
         }

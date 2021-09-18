@@ -45,9 +45,7 @@ func getStationIDByAccountID(id int) int {
 			log.Println(err)
 		}
 	}
-
 	return stationID
-
 }
 
 func localGetRoomMeetingID(meetingID string) Resident {
